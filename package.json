@@ -1,0 +1,40 @@
+{
+  "name": "heropad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HeroPad — phygital ecosystem on Solana (figurines + cards + packaging → cNFT + V-DASH)",
+  "license": "MIT",
+  "author": "SuperVictor Universe",
+  "homepage": "https://heropad.supervictornft.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dnsv123/heropad.git"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:web dev:api",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "build": "npm-run-all build:shared build:web build:api",
+    "build:web": "npm --workspace apps/web run build",
+    "build:api": "npm --workspace apps/api run build",
+    "build:shared": "npm --workspace packages/shared run build",
+    "lint": "npm-run-all --parallel lint:*",
+    "lint:web": "npm --workspace apps/web run lint",
+    "lint:api": "npm --workspace apps/api run lint",
+    "typecheck": "npm-run-all --parallel typecheck:*",
+    "typecheck:web": "npm --workspace apps/web run typecheck",
+    "typecheck:api": "npm --workspace apps/api run typecheck"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
