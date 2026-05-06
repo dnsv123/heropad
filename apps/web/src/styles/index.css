@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TODO: add brand-level CSS variables (colors, gradients) when designs land. */
-
 :root {
   color-scheme: dark;
 }
@@ -12,4 +10,54 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+/* Smooth scroll for anchor jumps + a tiny scrollbar polish for dark theme. */
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgba(245, 200, 66, 0.35); /* hero-gold tint */
+  color: #fff;
+}
+
+/* Custom scrollbar — applies to Chromium / WebKit only, but degrades cleanly. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 95, 186, 0.4); /* hero-blue/40 */
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(93, 211, 255, 0.5); /* hero-cyan/50 */
+}
+
+/* Subtle gradient drift on big wordmarks. Apply with class `.text-shimmer`. */
+@keyframes shimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.text-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+/* Slow rotating ring animation reused across the app via Tailwind's animate-* utilities. */
+@keyframes slow-spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 18s linear infinite;
 }
