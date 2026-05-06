@@ -19,7 +19,9 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@heropad/shared": ["../../packages/shared/src/index.ts"],
+      "@heropad/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src"]
