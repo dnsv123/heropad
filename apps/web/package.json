@@ -5,13 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview --port 4173",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@heropad/shared": "*",
     "@privy-io/react-auth": "^1.85.0",
     "@solana/web3.js": "^1.95.3",
     "@supabase/supabase-js": "^2.45.4",

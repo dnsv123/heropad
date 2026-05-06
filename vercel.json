@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm --workspace apps/web run build",
+  "buildCommand": "cd apps/web && npm install && npm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "npm install",
+  "installCommand": "echo 'install handled by buildCommand'",
   "framework": "vite",
   "rewrites": [
     {
