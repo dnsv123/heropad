@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Claim from './pages/Claim';
 import Profile from './pages/Profile';
 import Play from './pages/Play';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 // Top-level layout: shared <Header/> + <Footer/> on every page, page content
 // rendered between them via React Router. The flex column + min-h-screen
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/claim" element={<Claim />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/v-dash" element={<Play />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           {/* Catch-all: send unknown paths back to the landing page. */}
           <Route path="*" element={<Home />} />
         </Routes>

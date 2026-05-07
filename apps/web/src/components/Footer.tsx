@@ -30,7 +30,13 @@ export default function Footer() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+          <a href="/privacy" className="hover:text-hero-cyan transition">
+            Privacy
+          </a>
+          <a href="/terms" className="hover:text-hero-cyan transition">
+            Terms
+          </a>
           <a
             href="https://github.com/dnsv123/heropad"
             target="_blank"

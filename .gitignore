@@ -1,3 +1,9 @@
+# =============================================================================
+# HeroPad — .gitignore
+# Anything here NEVER reaches GitHub. Review before adding to ignore list:
+# if a file should be tracked but excluded for one user, use .git/info/exclude.
+# =============================================================================
+
 # Dependencies
 node_modules/
 .pnp
@@ -5,13 +11,15 @@ node_modules/
 .yarn/
 .pnpm-store/
 
-# Environment variables (NEVER COMMIT)
+# Environment variables — NEVER commit (.env.example IS tracked, has placeholders only)
 .env
 .env.local
 .env.development
 .env.test
 .env.production
+.env.staging
 .env.*.local
+.envrc
 
 # Build output
 dist/
@@ -22,11 +30,14 @@ out/
 .cache/
 .parcel-cache/
 
-# Vercel
+# Vercel / Railway / hosting metadata
 .vercel/
+.railway/
+.netlify/
 
-# Turbo
+# Turbo / Nx caches
 .turbo/
+.nx/
 
 # Logs
 *.log
@@ -56,16 +67,56 @@ Thumbs.db
 playwright-report/
 test-results/
 
-# TypeScript
+# TypeScript build info
 *.tsbuildinfo
 
-# Solana
+# =============================================================================
+# Cryptographic material — DOUBLE PARANOIA
+# Anything that even LOOKS like a key, secret, or seed.
+# =============================================================================
+
+# Solana / generic crypto keypairs
 keypairs/
 *.keypair.json
+*.solana-keypair
+id.json
+id_*.json
 
+# Generic secrets / certs
+secrets/
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.kdbx
+seedphrase*.txt
+mnemonic*.txt
+private*.txt
+
+# AWS / GCP / generic cloud creds
+.aws/
+.gcloud/
+service-account*.json
+credentials.json
+
+# AI assistant cache (some IDEs leak project context here)
+.cursor/
+.aider*
+.claude/
+.copilot-cache/
+
+# =============================================================================
 # Misc
+# =============================================================================
 .eslintcache
 .stylelintcache
 .firebase/
 tmp/
 temp/
+*.private
+*.local
+*.bak
+*.orig
