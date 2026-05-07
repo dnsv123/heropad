@@ -73,10 +73,16 @@ async function main() {
 
   console.log(`✓ Inserted ${rows.length} demo codes (batch ${BATCH_ID})\n`);
   console.log('Use any of these to test the claim flow:\n');
+
+  // Production URL is what you write to NFC chips / print on QR cards.
+  // Override with PUBLIC_BASE_URL env var if you have a custom domain set up.
+  const publicBase = process.env.PUBLIC_BASE_URL ?? 'https://heropad.vercel.app';
+
   for (const r of rows) {
     console.log(`  Code: ${r.code}`);
     console.log(`  Sig : ${r.signature}`);
-    console.log(`  URL : http://localhost:5173/claim?c=${r.code}&s=${r.signature}`);
+    console.log(`  Local : http://localhost:5173/claim?c=${r.code}&s=${r.signature}`);
+    console.log(`  Prod  : ${publicBase}/claim?c=${r.code}&s=${r.signature}`);
     console.log('');
   }
 }
