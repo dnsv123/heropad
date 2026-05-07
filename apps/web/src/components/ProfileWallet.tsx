@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
+import Collectibles from './Collectibles';
+
 // Profile card showing the user's identity, all linked Solana wallets, and
 // account-management actions.
 //
@@ -269,9 +271,9 @@ export default function ProfileWallet() {
         </p>
       </div>
 
-      {/* Collectibles placeholder — wired to /api/user/me on Day 4. */}
-      <div className="rounded-xl border border-dashed border-hero-blue/30 p-4 text-center text-xs text-slate-500">
-        BITS balance and your collectibles will appear here after your first claim.
+      {/* Collectibles widget — fetches BITS + cNFT-uri din Helius DAS. */}
+      <div className="border-t border-hero-blue/15 pt-5">
+        <Collectibles walletAddress={wallets[0].address} />
       </div>
     </div>
   );

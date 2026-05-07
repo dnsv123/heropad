@@ -60,6 +60,9 @@ export default function Header() {
           <NavLink to="/claim" className={navLinkClass}>
             Claim
           </NavLink>
+          <NavLink to="/v-dash" className={navLinkClass}>
+            V-DASH
+          </NavLink>
           {authenticated && (
             <NavLink to="/profile" className={navLinkClass}>
               Profile
@@ -136,6 +139,9 @@ export default function Header() {
             </NavLink>
             <NavLink to="/claim" className={navLinkClass} onClick={() => setMobileOpen(false)}>
               Claim
+            </NavLink>
+            <NavLink to="/v-dash" className={navLinkClass} onClick={() => setMobileOpen(false)}>
+              V-DASH
             </NavLink>
             {authenticated && (
               <NavLink to="/profile" className={navLinkClass} onClick={() => setMobileOpen(false)}>

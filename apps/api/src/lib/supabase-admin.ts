@@ -117,9 +117,11 @@ export async function recordClaim(input: RecordClaimInput): Promise<void> {
 // --- BITS economy ----------------------------------------------------------
 
 /**
- * Credits BITS to a wallet. Append-only ledger entry + materialized balance
- * upsert. Both happen in two queries — for hackathon scale this is fine; later
- * we can wrap them in an RPC for atomicity.
+ * Credits BITS to a wallet. Append-only ledger entry + maintained balance row.
+ * We avoid `upsert` here because our wallet_address unique guard is a PARTIAL
+ * index, which Supabase's `onConflict` parameter cannot target. Explicit
+ * select-then-update-or-insert is more verbose but bullet-proof and easy to
+ * audit. (Two queries; for hackathon scale concurrency is a non-issue.)
  */
 export async function creditBits(
   walletAddress: string,
@@ -128,6 +130,8 @@ export async function creditBits(
   metadata: Record<string, unknown> = {}
 ): Promise<void> {
   const supa = getSupabaseAdmin();
+
+  // 1. Append-only ledger entry — always insert.
   const { error: txErr } = await supa.from('bits_transactions').insert({
     wallet_address: walletAddress,
     amount,
@@ -137,29 +141,65 @@ export async function creditBits(
   });
   if (txErr) throw new Error(`[Supabase] creditBits tx: ${txErr.message}`);
 
-  // Upsert the materialized balance.
+  // 2. Maintain materialized balance row.
   const { data: existing, error: readErr } = await supa
     .from('bits_balance')
-    .select('current_balance, total_earned')
+    .select('id, current_balance, total_earned, total_spent')
     .eq('wallet_address', walletAddress)
     .maybeSingle();
   if (readErr) throw new Error(`[Supabase] creditBits read: ${readErr.message}`);
 
-  const newBalance = (existing?.current_balance ?? 0) + amount;
-  const newEarned = (existing?.total_earned ?? 0) + Math.max(0, amount);
-
-  const { error: upErr } = await supa.from('bits_balance').upsert(
-    {
+  if (existing) {
+    const newBalance = Number(existing.current_balance ?? 0) + amount;
+    const newEarned = Number(existing.total_earned ?? 0) + Math.max(0, amount);
+    const { error: updErr } = await supa
+      .from('bits_balance')
+      .update({
+        current_balance: newBalance,
+        total_earned: newEarned,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
+    if (updErr) throw new Error(`[Supabase] creditBits update: ${updErr.message}`);
+  } else {
+    const { error: insErr } = await supa.from('bits_balance').insert({
       wallet_address: walletAddress,
-      current_balance: newBalance,
-      total_earned: newEarned,
-      total_spent: existing ? undefined : 0,
+      current_balance: amount,
+      total_earned: Math.max(0, amount),
+      total_spent: 0,
       updated_at: new Date().toISOString(),
       user_id: null,
-    },
-    { onConflict: 'wallet_address' }
-  );
-  if (upErr) throw new Error(`[Supabase] creditBits upsert: ${upErr.message}`);
+    });
+    if (insErr) throw new Error(`[Supabase] creditBits insert: ${insErr.message}`);
+  }
+}
+
+/**
+ * Reads the BITS balance for a wallet. We compute this as SUM(amount) over
+ * the bits_transactions ledger, which is the source of truth and self-heals
+ * past claims where the materialized bits_balance row may have failed to
+ * update (e.g. the partial-unique-index upsert quirk). For hackathon scale
+ * (low write rate), summing on read is cheap and accurate.
+ */
+export async function getBitsBalance(walletAddress: string): Promise<{
+  current: number;
+  earned: number;
+  spent: number;
+}> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('bits_transactions')
+    .select('amount')
+    .eq('wallet_address', walletAddress);
+  if (error) throw new Error(`[Supabase] getBitsBalance: ${error.message}`);
+
+  let earned = 0;
+  let spent = 0;
+  for (const row of data ?? []) {
+    const a = Number(row.amount);
+    if (a > 0) earned += a;
+    else spent += Math.abs(a);
+  }
+  return { current: earned - spent, earned, spent };
 }
 
 // --- Solana config (Bubblegum tree address etc.) ---------------------------

@@ -63,6 +63,34 @@ async function postJson<TReq, TRes>(path: string, body: TReq): Promise<TRes> {
   return data as TRes;
 }
 
+async function getJson<TRes>(path: string): Promise<TRes> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`);
+  } catch {
+    throw makeApiError(
+      `Cannot reach the HeroPad API at ${API_BASE_URL}.`,
+      'network_error',
+      0
+    );
+  }
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {
+    /* not json */
+  }
+  if (!res.ok) {
+    const errBody = (data as Partial<ApiError>) ?? {};
+    throw makeApiError(
+      errBody.message ?? `Request failed with ${res.status}`,
+      errBody.error ?? 'unknown_error',
+      res.status
+    );
+  }
+  return data as TRes;
+}
+
 // --- Endpoints --------------------------------------------------------------
 
 export interface ClaimApiInput extends ClaimRequest {
@@ -75,4 +103,29 @@ export type ClaimApiOutput = ClaimResponse & {
 
 export function postClaim(input: ClaimApiInput): Promise<ClaimApiOutput> {
   return postJson<ClaimApiInput, ClaimApiOutput>('/api/claim', input);
+}
+
+export interface CollectibleSummary {
+  assetId: string;
+  name: string;
+  symbol: string;
+  imageUrl: string | null;
+  description: string | null;
+  royaltyBps: number;
+  jsonUri: string | null;
+  attributes: Array<{ trait: string; value: string }>;
+}
+
+export interface UserMeResponse {
+  ok: true;
+  wallet: string;
+  bits: { current: number; earned: number; spent: number };
+  collectibles: CollectibleSummary[];
+  collectibleCount: number;
+  cached: boolean;
+}
+
+export function getUserMe(walletAddress: string): Promise<UserMeResponse> {
+  const qs = new URLSearchParams({ wallet: walletAddress }).toString();
+  return getJson<UserMeResponse>(`/api/user/me?${qs}`);
 }
