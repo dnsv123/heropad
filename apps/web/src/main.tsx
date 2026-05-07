@@ -26,3 +26,13 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     </PrivyProvider>
   </React.StrictMode>
 );
+
+// Register the service worker only in production. In dev, Vite HMR conflicts
+// with SW caching and we don't need offline support while iterating.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Silent fail — PWA is a progressive enhancement, not critical.
+    });
+  });
+}

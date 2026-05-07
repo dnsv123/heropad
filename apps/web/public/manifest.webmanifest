@@ -1,0 +1,32 @@
+{
+  "name": "HeroPad — phygital × Solana",
+  "short_name": "HeroPad",
+  "description": "Where physical heroes become digital superpowers. Scan a figurine, card, or pack — claim a Solana cNFT, unlock V-DASH.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A1B3A",
+  "theme_color": "#0A1B3A",
+  "categories": ["entertainment", "games", "lifestyle"],
+  "icons": [
+    {
+      "src": "/super-victor-pfp.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/super-victor-pfp.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/super-victor-pfp.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
