@@ -1,0 +1,29 @@
+{
+  "name": "Super Victor",
+  "symbol": "HEROPAD",
+  "description": "Super Victor is the flagship hero of the SuperVictor Universe — a phygital collectible bridging physical figurines, NFC-tagged cards, and Solana cNFTs. Each Super Victor cNFT represents a verified bond between a real-world hero and its digital twin. Holders unlock exclusive skins, BITS rewards, and gameplay perks in V-DASH.",
+  "image": "https://heropad.vercel.app/super-victor.png",
+  "external_url": "https://heropad.vercel.app",
+  "attributes": [
+    { "trait_type": "Hero", "value": "Super Victor" },
+    { "trait_type": "Edition", "value": "Genesis" },
+    { "trait_type": "Rarity", "value": "Common" },
+    { "trait_type": "Universe", "value": "SuperVictor Universe" },
+    { "trait_type": "Source", "value": "HeroPad" }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://heropad.vercel.app/super-victor.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "AdVcBq4pMgAtu2AsT493TS5uu5VKpCRFX613dW5NQZp6",
+        "share": 100
+      }
+    ]
+  }
+}

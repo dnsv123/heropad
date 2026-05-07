@@ -15,7 +15,13 @@
 // asks for confirmation before creating a new tree. This avoids accidental
 // orphaning of an existing tree.
 
-import 'dotenv/config';
+// Resolve .env from repo root regardless of where the script is invoked from.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: path.resolve(__dirname, '../../../.env'), override: true });
+
 import { createTree } from '@metaplex-foundation/mpl-bubblegum';
 import { generateSigner } from '@metaplex-foundation/umi';
 
