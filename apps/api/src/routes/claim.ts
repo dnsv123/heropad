@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 import { verifyClaimPayload, isWellFormedClaimCode } from '../lib/hmac.js';
@@ -33,6 +34,26 @@ import {
 //     risk since claim codes are single-use anyway.
 
 export const claimRouter = Router();
+
+// Rate limiting — 30 requests / minute / IP. A successful claim makes ~1
+// request, so a real user is far below this. A spammer / brute-force attempt
+// hits the wall fast. The 429 response body is JSON to keep frontend handling
+// uniform with the rest of the API.
+claimRouter.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 30,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        ok: false,
+        error: 'rate_limited',
+        message: 'Too many claim attempts. Please slow down and try again in a minute.',
+      });
+    },
+  })
+);
 
 const ClaimBody = z.object({
   code: z.string().refine(isWellFormedClaimCode, {
