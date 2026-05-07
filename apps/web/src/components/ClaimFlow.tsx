@@ -37,6 +37,8 @@ function explainError(code: string, fallback: string): string {
       return 'Code format is invalid. Expected HVPD-XXXX-XXXX.';
     case 'network_error':
       return 'We can’t reach the HeroPad API. Check your internet, or try again in a moment.';
+    case 'rate_limited':
+      return 'Too many attempts. Wait a minute and try again.';
     default:
       return fallback || 'Something went wrong. Please try again.';
   }
