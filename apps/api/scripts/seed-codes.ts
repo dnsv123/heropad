@@ -8,7 +8,13 @@
 // Usage from repo root:
 //   tsx apps/api/scripts/seed-codes.ts
 
-import 'dotenv/config';
+// Resolve .env from repo root regardless of where the script is invoked from.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: path.resolve(__dirname, '../../../.env'), override: true });
+
 import { randomBytes } from 'node:crypto';
 
 import { signPayload } from '../src/lib/hmac.js';
@@ -50,8 +56,10 @@ async function main() {
       cnft_template: {
         name: `Super Victor — ${r.code.slice(-4)}`,
         symbol: 'HEROPAD',
-        // Placeholder metadata URI; Day 4 we wire real Pinata / R2 uploads.
-        uri: 'https://heropad.vercel.app/cnft/placeholder.json',
+        // Metadata JSON hosted by our own Vercel deployment. Includes image,
+        // attributes, creator info. Day 4+ we'll move to Arweave/Pinata for
+        // permanence; for the hackathon devnet, vercel-hosted JSON is fine.
+        uri: 'https://heropad.vercel.app/cnft/super-victor.json',
       },
       distribution_channel: 'event',
       batch_id: BATCH_ID,

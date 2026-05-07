@@ -1,4 +1,14 @@
-import 'dotenv/config';
+// Load env vars BEFORE any other import that reads from process.env.
+// We explicitly point dotenv at the repo-root .env so the API works regardless
+// of CWD (npm run dev runs from apps/api, but our single source of truth for
+// secrets lives at the monorepo root).
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: path.resolve(__dirname, '../../../.env'), override: true });
+
 import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -78,10 +88,23 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 };
 app.use(errorHandler);
 
+// Quick startup self-check: confirm critical secrets are loaded. We log only
+// presence (yes/no), never the actual values.
+const envCheck = {
+  HMAC_SECRET: Boolean(process.env.HMAC_SECRET) && (process.env.HMAC_SECRET?.length ?? 0) >= 32,
+  SOLANA_ADMIN_PRIVATE_KEY: Boolean(process.env.SOLANA_ADMIN_PRIVATE_KEY),
+  SUPABASE_URL: Boolean(process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL),
+  SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+  SOLANA_RPC_URL: Boolean(process.env.SOLANA_RPC_URL ?? process.env.VITE_SOLANA_RPC_URL),
+};
+const allEnvOk = Object.values(envCheck).every(Boolean);
+
 const port = Number(process.env.PORT ?? 8787);
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[heropad-api] listening on http://localhost:${port}`);
+  // eslint-disable-next-line no-console
+  console.log('[heropad-api] env check:', envCheck, allEnvOk ? '✓ all good' : '✗ MISSING VARS');
   // eslint-disable-next-line no-console
   console.log(`[heropad-api] CORS allowlist: ${allowedOrigins.join(', ')}`);
 });

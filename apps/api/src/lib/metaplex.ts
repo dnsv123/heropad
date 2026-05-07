@@ -1,5 +1,11 @@
-import { mintV1, parseLeafFromMintV1Transaction } from '@metaplex-foundation/mpl-bubblegum';
+import {
+  mintV1,
+  parseLeafFromMintV1Transaction,
+  fetchMerkleTree,
+  findLeafAssetIdPda,
+} from '@metaplex-foundation/mpl-bubblegum';
 import { publicKey } from '@metaplex-foundation/umi';
+import bs58 from 'bs58';
 
 import { getAdminUmi } from './solana-admin.js';
 import { getSolanaConfig } from './supabase-admin.js';
@@ -10,14 +16,18 @@ import { getSolanaConfig } from './supabase-admin.js';
 // address is created once (scripts/create-tree.ts), saved in `solana_config`,
 // and reused for every claim.
 //
-// `mintCnftToWallet` takes the metadata + recipient and returns the asset ID
-// (which is what wallets / explorers use to look the cNFT up).
+// `mintCnftToWallet` takes the metadata + recipient and returns the asset ID.
+// Two paths to obtain the asset ID:
+//   1. parseLeafFromMintV1Transaction(umi, signature) — fast, but brittle
+//      against RPC log-format quirks. Will throw "Could not parse leaf" on
+//      certain Helius / public-RPC responses.
+//   2. Fallback: fetch the tree state, read sequenceNumber, derive the leaf
+//      PDA. Costs one extra RPC call but is bulletproof.
 
 const TREE_CONFIG_KEY = 'bubblegum_tree';
 
 /** Reads the configured Bubblegum tree address. Throws if not initialized. */
 export async function getBubblegumTreeAddress(): Promise<string> {
-  // Allow override via env for emergency / local-only testing.
   if (process.env.BUBBLEGUM_TREE_ADDRESS) {
     return process.env.BUBBLEGUM_TREE_ADDRESS;
   }
@@ -31,44 +41,33 @@ export async function getBubblegumTreeAddress(): Promise<string> {
 }
 
 export interface MintCnftInput {
-  recipient: string; // Solana wallet address (base58)
+  recipient: string;
   name: string;
   symbol?: string;
-  uri: string; // Off-chain metadata JSON URL (Pinata / Arweave / our own R2)
+  uri: string;
   /**
    * Secondary-sale royalty in basis points (0–10000). Default 500 = 5%.
-   * Marketplace honoring royalty enforcement (Magic Eden default, Tensor,
-   * Hyperspace) will pay this share back to the creator address on every resale.
-   * Set to 0 if you want no royalty (e.g. for free-distribution drops).
    */
   sellerFeeBasisPoints?: number;
 }
 
-// HeroPad standard royalty: 5% to the SuperVictor Universe creator wallet on
-// every secondary sale. Aligns with industry default for collectibles.
 const DEFAULT_SELLER_FEE_BPS = 500;
 
 export interface MintCnftResult {
-  /** Asset ID — the cNFT identifier wallets use. */
+  /** Asset ID — the cNFT identifier wallets / explorers use. */
   assetId: string;
-  /** Solana transaction signature (for Explorer link). */
+  /** Solana transaction signature, base58 (Explorer-friendly). */
   signature: string;
 }
 
-/**
- * Mints a single compressed NFT into the configured tree, transferred to
- * `recipient`. Returns asset ID + tx signature.
- *
- * Errors bubble up — the caller decides how to surface them (typically the
- * claim endpoint maps them to a 500 with a "mint failed" message).
- */
 export async function mintCnftToWallet(input: MintCnftInput): Promise<MintCnftResult> {
   const umi = getAdminUmi();
   const treeAddr = await getBubblegumTreeAddress();
+  const treePk = publicKey(treeAddr);
 
   const builder = mintV1(umi, {
     leafOwner: publicKey(input.recipient),
-    merkleTree: publicKey(treeAddr),
+    merkleTree: treePk,
     metadata: {
       name: input.name,
       symbol: input.symbol ?? 'HEROPAD',
@@ -85,15 +84,45 @@ export async function mintCnftToWallet(input: MintCnftInput): Promise<MintCnftRe
     },
   });
 
-  // Send + confirm. Bubblegum mints land in ~1–2s on Helius devnet.
   const { signature } = await builder.sendAndConfirm(umi, {
     confirm: { commitment: 'confirmed' },
   });
 
-  // Parse the signed tx to get the leaf (asset ID).
-  const leaf = await parseLeafFromMintV1Transaction(umi, signature);
-  return {
-    assetId: leaf.id.toString(),
-    signature: Buffer.from(signature).toString('base64'),
-  };
+  // Solana tx signatures are 64 bytes; explorers want them base58.
+  const sigBase58 = bs58.encode(signature);
+
+  // 1. Try the canonical parser first — it's a single call when it works.
+  let assetId: string | null = null;
+  try {
+    const leaf = await parseLeafFromMintV1Transaction(umi, signature);
+    assetId = leaf.id.toString();
+  } catch (parseErr) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[Bubblegum] parseLeafFromMintV1Transaction failed, deriving from tree state:',
+      (parseErr as Error).message
+    );
+  }
+
+  // 2. Fallback — read tree state, derive asset ID from the latest leaf index.
+  // After our mint, the tree's sequenceNumber == previous + 1. Our new leaf
+  // sits at index (sequenceNumber - 1).
+  if (!assetId) {
+    const treeAccount = await fetchMerkleTree(umi, treePk);
+    // The tree header lives at `treeAccount.tree`; field name is `sequenceNumber`
+    // (bigint). For freshly minted leaves we want sequenceNumber - 1.
+    const seq = (treeAccount.tree as unknown as { sequenceNumber: bigint })
+      .sequenceNumber;
+    const leafIndex = Number(seq) - 1;
+    if (leafIndex < 0) {
+      throw new Error('[Bubblegum] Tree sequenceNumber is 0 after mint — cannot derive asset id.');
+    }
+    const [assetIdPk] = findLeafAssetIdPda(umi, {
+      merkleTree: treePk,
+      leafIndex,
+    });
+    assetId = assetIdPk.toString();
+  }
+
+  return { assetId, signature: sigBase58 };
 }
