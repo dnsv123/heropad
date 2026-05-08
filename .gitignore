@@ -109,6 +109,16 @@ credentials.json
 .copilot-cache/
 
 # =============================================================================
+# Private working files — NEVER on GitHub.
+# Internal docs, scratch notes, large binary assets, deck source PPTX,
+# anything that shouldn't be visible to hackathon judges or the public.
+# =============================================================================
+_private/
+.private/
+docs/internal/
+docs/_*.md
+
+# =============================================================================
 # Misc
 # =============================================================================
 .eslintcache
