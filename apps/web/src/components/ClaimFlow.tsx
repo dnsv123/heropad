@@ -165,6 +165,10 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
 
   const [input, setInput] = useState(initialInput);
   const [status, setStatus] = useState<Status>({ phase: 'idle' });
+  // IMPORTANT: every useState/useEffect must live at the top of the function
+  // body, BEFORE any conditional return. Hooks called after `if (success) return …`
+  // would change the hook count between renders → React error #300.
+  const [scanHelpOpen, setScanHelpOpen] = useState(false);
   const restoredFromStorage = !initialCode && persisted !== null;
 
   // Whenever a fresh URL ?c=&s= arrives, persist for 10 min.
@@ -322,7 +326,6 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
   }
 
   // ---- Form / error state ------------------------------------------------
-  const [scanHelpOpen, setScanHelpOpen] = useState(false);
   // Visual hints under the input.
   const inputState =
     parsed.code && parsed.signature
