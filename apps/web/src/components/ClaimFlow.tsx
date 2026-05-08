@@ -6,25 +6,68 @@ import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import { postClaim, type ApiCallError } from '../lib/api';
 
+// localStorage backup for an in-progress claim. We persist the parsed
+// {code, signature} pair when the URL has them, so a refresh / accidental
+// navigation doesn't erase the claim. Self-expires after 10 minutes.
+const LS_KEY = 'heropad:pending-claim';
+const LS_TTL_MS = 10 * 60 * 1000;
+
+interface PendingClaim {
+  code: string;
+  signature: string;
+  ts: number;
+}
+
+function readPendingClaim(): PendingClaim | null {
+  try {
+    const raw = window.localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingClaim;
+    if (!parsed || typeof parsed.ts !== 'number') return null;
+    if (Date.now() - parsed.ts > LS_TTL_MS) {
+      window.localStorage.removeItem(LS_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writePendingClaim(p: { code: string; signature: string }): void {
+  try {
+    window.localStorage.setItem(
+      LS_KEY,
+      JSON.stringify({ ...p, ts: Date.now() })
+    );
+  } catch {
+    /* localStorage may be disabled in private mode — fail silently */
+  }
+}
+
+function clearPendingClaim(): void {
+  try {
+    window.localStorage.removeItem(LS_KEY);
+  } catch {
+    /* no-op */
+  }
+}
+
 interface ClaimFlowProps {
   /** Pre-filled claim code from the URL (?c=ABC). */
   initialCode?: string | null;
 }
 
-// Possible UI states. Driven by API response, not by the input field state.
 type Status =
   | { phase: 'idle' }
   | { phase: 'submitting' }
   | { phase: 'success'; mintAddress: string; bitsAwarded: number; txSignature: string }
   | { phase: 'error'; code: string; message: string };
 
-// Solana Explorer link — devnet for now. Once we go mainnet, the cluster
-// param drops or switches to mainnet-beta.
 function explorerLink(asset: string): string {
   return `https://explorer.solana.com/address/${asset}?cluster=devnet`;
 }
 
-// Friendly mapping of API error codes → user-facing messages.
 function explainError(code: string, fallback: string): string {
   switch (code) {
     case 'unknown_code':
@@ -32,9 +75,11 @@ function explainError(code: string, fallback: string): string {
     case 'already_claimed':
       return 'This collectible has already been claimed. Each code is one-shot — by design.';
     case 'bad_signature':
-      return 'The code signature did not verify. The QR/NFC may be damaged or counterfeit.';
+      return 'The signature did not verify. The QR/NFC may be damaged, copied incorrectly, or counterfeit.';
     case 'bad_code':
       return 'Code format is invalid. Expected HVPD-XXXX-XXXX.';
+    case 'missing_signature':
+      return 'We need the signed link, not just the code. Scan the QR/NFC again, or paste the full URL printed on your card.';
     case 'network_error':
       return 'We can’t reach the HeroPad API. Check your internet, or try again in a moment.';
     case 'rate_limited':
@@ -44,38 +89,107 @@ function explainError(code: string, fallback: string): string {
   }
 }
 
+// Heuristics for parsing whatever the user pastes / types.
+const HEX64 = /^[a-f0-9]{64}$/i;
+const CODE_RE = /^HVPD-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
+
+interface ParsedClaim {
+  code: string | null;
+  signature: string | null;
+  hint?: 'just_code' | 'invalid';
+}
+
+/**
+ * Smart-parse the user's input. Accepts:
+ *   - Full URL:           https://heropad.vercel.app/claim?c=HVPD-...&s=<hex>
+ *   - Combined payload:   HVPD-XXXX-XXXX:<hex>
+ *   - Just the code:      HVPD-XXXX-XXXX            (returns hint='just_code')
+ *   - Garbage:            anything else             (returns hint='invalid')
+ */
+function parseClaimInput(raw: string): ParsedClaim {
+  const trimmed = raw.trim();
+  if (!trimmed) return { code: null, signature: null };
+
+  // 1. URL form
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const u = new URL(trimmed);
+      const c = (u.searchParams.get('c') ?? '').toUpperCase();
+      const s = (u.searchParams.get('s') ?? '').toLowerCase();
+      if (CODE_RE.test(c) && HEX64.test(s)) return { code: c, signature: s };
+      if (CODE_RE.test(c)) return { code: c, signature: null, hint: 'just_code' };
+      return { code: null, signature: null, hint: 'invalid' };
+    } catch {
+      return { code: null, signature: null, hint: 'invalid' };
+    }
+  }
+
+  // 2. Combined "CODE:SIG"
+  if (trimmed.includes(':')) {
+    const [c, s] = trimmed.split(':').map((x) => x.trim());
+    const codeUp = (c ?? '').toUpperCase();
+    const sigLow = (s ?? '').toLowerCase();
+    if (CODE_RE.test(codeUp) && HEX64.test(sigLow)) {
+      return { code: codeUp, signature: sigLow };
+    }
+    return { code: null, signature: null, hint: 'invalid' };
+  }
+
+  // 3. Just the code, no signature
+  const codeUp = trimmed.toUpperCase();
+  if (CODE_RE.test(codeUp)) {
+    return { code: codeUp, signature: null, hint: 'just_code' };
+  }
+
+  return { code: null, signature: null, hint: 'invalid' };
+}
+
 export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
   const { ready, authenticated, login } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [params] = useSearchParams();
 
-  // The signature comes from the URL alongside the code (?c=...&s=...).
-  // For manual code entry (typed in the field) we don't have a signature →
-  // demo flow: when developing, we'd use seed-codes.ts which prints both.
+  // Pre-build the input value if we landed via ?c=&s= URL.
   const initialSignature = params.get('s') ?? '';
+  // If URL doesn't carry the pair, fall back to whatever we persisted last
+  // time (within the 10-minute window) so a stray refresh / navigation
+  // doesn't make the user re-scan.
+  const persisted = !initialCode || !initialSignature ? readPendingClaim() : null;
+  const effectiveCode = initialCode ?? persisted?.code ?? null;
+  const effectiveSig = initialSignature || persisted?.signature || '';
 
-  const [code, setCode] = useState(initialCode ?? '');
-  const [signature, setSignature] = useState(initialSignature);
+  const initialInput =
+    effectiveCode && effectiveSig
+      ? `${effectiveCode}:${effectiveSig}`
+      : effectiveCode ?? '';
+
+  const [input, setInput] = useState(initialInput);
   const [status, setStatus] = useState<Status>({ phase: 'idle' });
+  const restoredFromStorage = !initialCode && persisted !== null;
 
-  // Auto-submit when both `c` and `s` are in the URL, the user is authenticated,
-  // and we have a wallet. This handles the "scan a QR → land here → claim" flow
-  // with no extra clicks. (We still expose the form for manual entry / debug.)
+  // Whenever a fresh URL ?c=&s= arrives, persist for 10 min.
   useEffect(() => {
-    const c = initialCode;
-    const s = initialSignature;
+    if (initialCode && initialSignature) {
+      writePendingClaim({ code: initialCode, signature: initialSignature });
+    }
+  }, [initialCode, initialSignature]);
+
+  const parsed = parseClaimInput(input);
+
+  // Auto-submit when both come from the URL (or were restored from
+  // localStorage), the user is authenticated, and we have a wallet.
+  useEffect(() => {
     if (
-      c &&
-      s &&
+      effectiveCode &&
+      effectiveSig &&
       authenticated &&
       wallets.length > 0 &&
       status.phase === 'idle'
     ) {
-      // Don't await; let it kick off and the state machine takes over.
-      void submit(c, s);
+      void submit(effectiveCode.toUpperCase(), effectiveSig.toLowerCase());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCode, initialSignature, authenticated, wallets.length]);
+  }, [effectiveCode, effectiveSig, authenticated, wallets.length]);
 
   async function submit(c: string, s: string) {
     const walletAddress = wallets[0]?.address;
@@ -94,8 +208,10 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
         code: c,
         signature: s,
         walletAddress,
-        scanMethod: 'qr_card', // TODO Day 4: detect from URL params
+        scanMethod: 'qr_card',
       });
+      // Successful claim — we no longer need the persisted pending claim.
+      clearPendingClaim();
       setStatus({
         phase: 'success',
         mintAddress: res.cnftMintAddress,
@@ -104,6 +220,12 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
       });
     } catch (err) {
       const apiErr = err as ApiCallError;
+      // If the code was already claimed or unknown, the persisted entry is
+      // stale — drop it so we don't auto-retry on every page load.
+      if (apiErr.code === 'already_claimed' || apiErr.code === 'unknown_code' ||
+          apiErr.code === 'bad_signature' || apiErr.code === 'bad_code') {
+        clearPendingClaim();
+      }
       setStatus({
         phase: 'error',
         code: apiErr.code ?? 'unknown_error',
@@ -114,19 +236,34 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim() || !signature.trim()) return;
-    void submit(code.trim().toUpperCase(), signature.trim().toLowerCase());
+    if (parsed.code && parsed.signature) {
+      void submit(parsed.code, parsed.signature);
+      return;
+    }
+    if (parsed.hint === 'just_code') {
+      setStatus({
+        phase: 'error',
+        code: 'missing_signature',
+        message: explainError('missing_signature', ''),
+      });
+      return;
+    }
+    setStatus({
+      phase: 'error',
+      code: 'bad_code',
+      message: 'We could not parse that. Paste the full link from your QR code, or tap your NFC figurine again.',
+    });
   };
 
   const canSubmit =
     ready &&
     authenticated &&
     wallets.length > 0 &&
-    code.trim().length > 0 &&
-    signature.trim().length > 0 &&
+    parsed.code !== null &&
+    parsed.signature !== null &&
     status.phase !== 'submitting';
 
-  // ---- Success state ------------------------------------------------------
+  // ---- Success state -----------------------------------------------------
   if (status.phase === 'success') {
     return (
       <AnimatePresence mode="wait">
@@ -139,16 +276,8 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
         >
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-solana-green/20">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#14F195"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="#14F195" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
@@ -192,63 +321,64 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
     );
   }
 
-  // ---- Form / error state -------------------------------------------------
+  // ---- Form / error state ------------------------------------------------
+  const [scanHelpOpen, setScanHelpOpen] = useState(false);
+  // Visual hints under the input.
+  const inputState =
+    parsed.code && parsed.signature
+      ? { color: 'text-solana-green', text: '✓ Looks good — ready to claim' }
+      : parsed.hint === 'just_code'
+      ? { color: 'text-amber-400', text: 'Code looks valid — paste the full link with signature, or scan the QR/NFC.' }
+      : input.length > 0 && parsed.hint === 'invalid'
+      ? { color: 'text-red-400', text: 'Could not parse. Paste the full URL from your QR / NFC.' }
+      : null;
+
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="space-y-5 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8"
     >
+      {restoredFromStorage && (
+        <div className="rounded-xl border border-hero-cyan/30 bg-hero-cyan/5 p-3 text-xs text-hero-cyan">
+          ↻ Restored your last scanned link from this browser. Confirm below to claim.
+        </div>
+      )}
       <div>
         <label
-          htmlFor="claim-code"
+          htmlFor="claim-input"
           className="text-xs uppercase tracking-wider text-slate-500"
         >
-          Claim code
+          Claim link or code
         </label>
         <div className="mt-2 flex items-stretch gap-2">
           <input
-            id="claim-code"
+            id="claim-input"
             type="text"
             inputMode="text"
             autoComplete="off"
             spellCheck={false}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="HVPD-XXXX-XXXX"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Paste your scanned URL or HVPD-XXXX-XXXX:signature"
             className="flex-1 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-4 py-3 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan"
           />
           <button
             type="button"
-            onClick={() => alert('Scanner coming soon — Day 4 build.')}
+            onClick={() => setScanHelpOpen(true)}
             className="shrink-0 rounded-lg border border-hero-cyan/30 px-3 py-2 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
-            aria-label="Scan QR or NFC"
+            aria-label="How to scan a HeroPad QR or NFC"
           >
             Scan
           </button>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
-          Tip: tap your figurine (NFC) or scan a QR card to auto-fill this.
-        </p>
-      </div>
-
-      <div>
-        <label
-          htmlFor="claim-sig"
-          className="text-xs uppercase tracking-wider text-slate-500"
-        >
-          Signature <span className="text-slate-600">(from QR/NFC payload)</span>
-        </label>
-        <input
-          id="claim-sig"
-          type="text"
-          inputMode="text"
-          autoComplete="off"
-          spellCheck={false}
-          value={signature}
-          onChange={(e) => setSignature(e.target.value)}
-          placeholder="64-char hex"
-          className="mt-2 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-4 py-3 font-mono text-xs text-slate-100 placeholder:text-slate-600 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan"
-        />
+        {inputState ? (
+          <p className={`mt-2 text-xs ${inputState.color}`}>{inputState.text}</p>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">
+            Tip: tap your figurine (NFC) or scan its QR card — the link auto-fills here.
+          </p>
+        )}
       </div>
 
       {status.phase === 'error' && (
@@ -286,5 +416,72 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
         )}
       </div>
     </form>
+
+    {/* Scan-help modal — explains how scanning actually works (camera-app
+        first, NFC tap, in-app scanner roadmap). Triggered by the Scan button. */}
+    <AnimatePresence>
+      {scanHelpOpen && (
+        <motion.div
+          key="scan-help-bg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setScanHelpOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ duration: 0.25 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-hero-blue/30 bg-hero-deep p-6 shadow-2xl"
+          >
+            <h3 className="font-display text-lg font-semibold text-hero-cyan">
+              How to scan your HeroPad item
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              You don't actually scan inside this app — your phone does it for you.
+              Pick the kind of item you have:
+            </p>
+
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-3">
+                <p className="text-hero-gold">QR card / pack sticker</p>
+                <p className="mt-1 text-xs text-slate-300">
+                  Open your phone's <strong>Camera</strong> app, point at the QR.
+                  When the URL bubble pops up, tap it — HeroPad opens with the
+                  claim ready.
+                </p>
+              </div>
+              <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-3">
+                <p className="text-hero-cyan">NFC figurine</p>
+                <p className="mt-1 text-xs text-slate-300">
+                  Unlock your phone, then tap it to the figurine's base. Most
+                  modern phones (iOS 14+, Android 9+) read NFC URLs without any
+                  extra app.
+                </p>
+              </div>
+              <div className="rounded-xl border border-dashed border-slate-700 p-3">
+                <p className="text-slate-400">In-app scanner</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Coming after the hackathon — for now, the camera app does the
+                  job perfectly.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setScanHelpOpen(false)}
+              className="mt-5 w-full rounded-full bg-hero-gold px-4 py-2 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
+            >
+              Got it
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
