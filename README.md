@@ -175,9 +175,9 @@ npm run dev   # frontend on :5173, API on :8787
 
 ## Roadmap
 
-- **Q3 2026** — HeroPad mainnet launch · first 1,000 NFC figurines · marketplace
+- **Q3-Q4 2026** — HeroPad mainnet launch · first 1,000 NFC figurines · marketplace
   integration (Magic Eden + Tensor royalty enforcement)
-- **Q4 2026** — V-DASH Chapter 2: Hero Gear cNFT equipment, cross-chain skin
+- **Q3Q4 2026** — V-DASH Chapter 2: Hero Gear cNFT equipment, cross-chain skin
   sync (MultiversX ↔ Solana via oracle gateway)
 - **2027** — V-DASH season passes, B2B figurine partnerships (white-label
   HeroPad infrastructure for other toy brands), Solana-native game mode
@@ -197,4 +197,4 @@ the personal-display licence granted by the cNFT terms is prohibited.
 Code: MIT · Brand assets: All Rights Reserved · cNFTs: see `/terms` on the
 live site.
 
-Built with care in Bucharest by **SuperVictor Universe**.
+Built with care in Sibiu by **SuperVictor Universe**.
