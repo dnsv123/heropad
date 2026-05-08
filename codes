@@ -12,10 +12,14 @@ Use any of these to test the claim flow:
   Sig : 88554f792e8da062b197e6050e4a4fbc34c1ecf2db5e11fbb54440c6caec2597
   Prod  : https://heropad.vercel.app/claim?c=HVPD-E5J3-PPJV&s=88554f792e8da062b197e6050e4a4fbc34c1ecf2db5e11fbb54440c6caec2597
 
-  Code: HVPD-JKPB-LV9R
-  Sig : f5b9be5a9336e337288a42e7ec9f0fb3729f41214155036c44adbc82cb6260a8
-  Prod  : https://heropad.vercel.app/claim?c=HVPD-JKPB-LV9R&s=f5b9be5a9336e337288a42e7ec9f0fb3729f41214155036c44adbc82cb6260a8
+  Code: HVPD-LDK9-5PHH
+  Sig : 036e9cfa31f341979cd6d15a6642f82260a44585c2deade85dd6993c01f27b2e
+  Prod  : https://heropad.vercel.app/claim?c=HVPD-LDK9-5PHH&s=036e9cfa31f341979cd6d15a6642f82260a44585c2deade85dd6993c01f27b2e
 
-  Code: HVPD-DQGZ-82LH
-  Sig : 792f6063ae4a54e42ed1920b178c50293824fdf380e2acf3010a8b5ed9bbca6b
-  Prod  : https://heropad.vercel.app/claim?c=HVPD-DQGZ-82LH&s=792f6063ae4a54e42ed1920b178c50293824fdf380e2acf3010a8b5ed9bbca6b
+  Code: HVPD-RDFF-QUG9
+  Sig : 76213af62fedb4d2507265f688118d060be3f507fdc4f51218f044d09e7a0cca
+  Prod  : https://heropad.vercel.app/claim?c=HVPD-RDFF-QUG9&s=76213af62fedb4d2507265f688118d060be3f507fdc4f51218f044d09e7a0cca
+
+  Code: HVPD-4PCD-UXR8
+  Sig : bb0c521cd3f5834bdad5d443257163d4e2d1b66ac5278eb77e4b0ae30029e430
+  Prod  : https://heropad.vercel.app/claim?c=HVPD-4PCD-UXR8&s=bb0c521cd3f5834bdad5d443257163d4e2d1b66ac5278eb77e4b0ae30029e430
