@@ -197,4 +197,4 @@ the personal-display licence granted by the cNFT terms is prohibited.
 Code: MIT · Brand assets: All Rights Reserved · cNFTs: see `/terms` on the
 live site.
 
-Built with care in Bucharest by **SuperVictor Universe**.
+Built with care in Sibiu by **SuperVictor Universe**.
