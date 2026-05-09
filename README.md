@@ -175,12 +175,15 @@ npm run dev   # frontend on :5173, API on :8787
 
 ## Roadmap
 
-- **Q3 2026** — HeroPad mainnet launch · first 1,000 NFC figurines · marketplace
-  integration (Magic Eden + Tensor royalty enforcement)
-- **Q4 2026** — V-DASH Chapter 2: Hero Gear cNFT equipment, cross-chain skin
-  sync (MultiversX ↔ Solana via oracle gateway)
-- **2027** — V-DASH season passes, B2B figurine partnerships (white-label
-  HeroPad infrastructure for other toy brands), Solana-native game mode
+- **Live now** — V-DASH playable on MultiversX · HeroPad cNFT mint on Solana devnet
+- **Q3 2026** — HeroPad mainnet launch · marketplace integration (Magic Eden +
+  Tensor royalty enforcement)
+- **Q3 – Q4 2026** — V-DASH Chapter 2 — Hall of Heroes integration ·
+  cross-chain skins MultiversX + Solana (oracle gateway)
+- **Q4 2026 – Q1 2027** — First 100 NFC figurines shipped · early-adopter
+  drops via Shopify
+- **2027** — V-DASH season passes · figurine partnerships (white-label HeroPad
+  infrastructure for other toy brands) · Solana-native game mode
 
 ---
 
