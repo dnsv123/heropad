@@ -35,10 +35,11 @@ const FEATURES = [
 ];
 
 const ROADMAP = [
-  { label: '✅ Live now', body: 'V-DASH playable on MultiversX · HeroPad cNFT mint on Solana devnet' },
-  { label: 'Q3 2026', body: 'HeroPad mainnet launch · first 1,000 NFC figurines · marketplace integration' },
-  { label: 'Q4 2026', body: 'V-DASH Chapter 2: Hero Gear cNFT equipment, cross-chain skin sync' },
-  { label: '2027', body: 'V-DASH season passes, B2B figurine partnerships, Solana-native game mode' },
+  { label: '✅ Live now',          body: 'V-DASH playable on MultiversX · HeroPad cNFT mint on Solana devnet' },
+  { label: 'Q3 2026',              body: 'HeroPad mainnet launch · marketplace integration' },
+  { label: 'Q3 – Q4 2026',         body: 'V-DASH Chapter 2 — Hall of Heroes integration · cross-chain skins MultiversX + Solana' },
+  { label: 'Q4 2026 – Q1 2027',    body: 'First 100 NFC figurines shipped · early-adopter drops via Shopify' },
+  { label: '2027',                 body: 'V-DASH season passes · figurine partnerships · Solana-native game mode' },
 ];
 
 export default function Play() {
