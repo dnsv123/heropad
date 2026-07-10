@@ -27,7 +27,7 @@ const SECTIONS = [
   },
   {
     title: '4. Intellectual property',
-    body: `The Super Victor character, V-mark, and all artwork remain the exclusive
+    body: `The SuperVictor character, V-mark, and all artwork remain the exclusive
     intellectual property of SVU Journey SRL (EUIPO trademark filing 019287298).
     Owning a HeroPad cNFT grants you a personal, non-exclusive, non-transferable
     licence to display the artwork in connection with the specific token you own.

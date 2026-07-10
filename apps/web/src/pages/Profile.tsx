@@ -1,7 +1,9 @@
 import { usePrivy } from '@privy-io/react-auth';
 
+import AccountCard from '../components/AccountCard';
 import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
+import CollectionCard from '../components/CollectionCard';
 
 // /profile is auth-gated. Unauthenticated visitors see a CTA that triggers
 // Privy login; once logged in they see ProfileWallet. We avoid `<Navigate />`
@@ -31,12 +33,16 @@ export default function Profile() {
           </div>
         ) : (
           <>
-            {/* Power Pass first — it's the daily-value widget; the wallet and
-                collectibles (where trophies land) follow below. */}
-            <LoyaltyStats />
+            {/* Order: who you are → your daily value (Power Pass) → the
+                plumbing (wallets) → what you own (collection). */}
+            <AccountCard />
+            <div className="mt-8">
+              <LoyaltyStats />
+            </div>
             <div className="mt-8">
               <ProfileWallet />
             </div>
+            <CollectionCard />
           </>
         )}
       </div>

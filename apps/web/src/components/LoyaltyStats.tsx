@@ -5,16 +5,31 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson } from '../services/apiClient';
 
-// Profile → Power Pass widget. Three stat tiles (stamps / rewards / trophies),
-// each tappable — they open a visual detail sheet: per-venue mug strips,
-// rewards with venue names, and a trophy gallery with Explorer links.
-// Naming: the character is "Super Victor" (two words) everywhere user-facing.
+// Profile → Power Pass widget. Three stat tiles; EACH opens its own specific
+// detail sheet:
+//   ☕ Stamps   → per-venue mug grids (all lifetime stamps, venue named)
+//   🎁 Rewards  → per-venue rewards with the venue's own reward label
+//   🏆 Trophies → SuperVictor trophy gallery: graphic, venue, date, edition,
+//                 clickable mint-tx + asset links to Solana Explorer (the
+//                 on-chain PROOF).
+// Brand rule: the character is written "SuperVictor" — one word, everywhere.
 
 interface TrophyDetail {
   venueName: string;
   edition: number;
   assetId: string;
+  mintTx: string | null;
   redeemedAt: string;
+}
+
+interface VenueStat {
+  slug: string;
+  name: string;
+  current: number;
+  required: number;
+  totalStamps: number;
+  cardsCompleted: number;
+  rewardLabel: string | null;
 }
 
 interface StatsResponse {
@@ -23,19 +38,20 @@ interface StatsResponse {
   cardsCompleted: number;
   trophiesMinted: number;
   trophies: TrophyDetail[];
-  venues: Array<{
-    slug: string;
-    name: string;
-    current: number;
-    required: number;
-    cardsCompleted: number;
-  }>;
+  venues: VenueStat[];
 }
 
-function explorerUrl(assetId: string): string {
+type DetailKind = 'stamps' | 'rewards' | 'trophies' | null;
+
+function txUrl(sig: string): string {
+  return `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
+}
+function assetUrl(assetId: string): string {
   return `https://explorer.solana.com/address/${assetId}?cluster=devnet`;
 }
-
+function shortHash(h: string): string {
+  return `${h.slice(0, 4)}…${h.slice(-4)}`;
+}
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString('en-GB', {
@@ -52,7 +68,7 @@ export default function LoyaltyStats() {
   const { ready, authenticated, getAccessToken } = usePrivy();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [detail, setDetail] = useState<DetailKind>(null);
 
   useEffect(() => {
     if (!ready || !authenticated) return;
@@ -74,20 +90,12 @@ export default function LoyaltyStats() {
 
   if (!ready || !authenticated) return null;
 
-  const tiles = stats
-    ? [
-        { value: stats.totalStamps, label: '☕ Stamps', color: 'text-hero-cyan' },
-        { value: stats.cardsCompleted, label: '🎁 Rewards claimed', color: 'text-solana-green' },
-        { value: stats.trophiesMinted, label: '🏆 Trophies minted', color: 'text-hero-gold' },
-      ]
-    : [];
-
   return (
     <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
       <h2 className="font-display text-lg font-semibold text-white">⚡ Power Pass</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">
-        Your hero cards at partner venues. Every purchase charges Super Victor —
-        a full card earns a free reward, a <strong>Super Victor Trophy</strong>{' '}
+        Your hero cards at partner venues. Every purchase charges SuperVictor —
+        a full card earns a free reward, a <strong>SuperVictor Trophy</strong>{' '}
         minted into your collection, and BITS.
       </p>
 
@@ -107,33 +115,56 @@ export default function LoyaltyStats() {
       ) : (
         <>
           <div className="mt-4 grid grid-cols-3 gap-2">
-            {tiles.map((t) => (
-              <button
-                key={t.label}
-                type="button"
-                onClick={() => setDetailOpen(true)}
-                className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-hero-cyan/40 hover:bg-hero-deep"
-              >
-                <p className={`font-display text-2xl font-bold ${t.color}`}>{t.value}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                  {t.label}
-                </p>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => setDetail('stamps')}
+              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-hero-cyan/50 hover:bg-hero-deep"
+            >
+              <p className="font-display text-2xl font-bold text-hero-cyan">
+                {stats.totalStamps}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                ☕ Stamps
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetail('rewards')}
+              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-solana-green/50 hover:bg-hero-deep"
+            >
+              <p className="font-display text-2xl font-bold text-solana-green">
+                {stats.cardsCompleted}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                🎁 Rewards claimed
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetail('trophies')}
+              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-hero-gold/50 hover:bg-hero-deep"
+            >
+              <p className="font-display text-2xl font-bold text-hero-gold">
+                {stats.trophiesMinted}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                🏆 Trophies minted
+              </p>
+            </button>
           </div>
           <p className="mt-2 text-center text-[11px] text-slate-600">
             Tap any card for details ↑
           </p>
 
-          {/* ---- Detail sheet ---- */}
+          {/* ---- Detail sheets (one per tile) ---- */}
           <AnimatePresence>
-            {detailOpen && (
+            {detail && (
               <motion.div
                 key="pp-detail-bg"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setDetailOpen(false)}
+                onClick={() => setDetail(null)}
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
               >
                 <motion.div
@@ -144,124 +175,161 @@ export default function LoyaltyStats() {
                   onClick={(e) => e.stopPropagation()}
                   className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl border border-hero-blue/30 bg-hero-deep p-5 shadow-2xl"
                 >
-                  <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
-                    ⚡ Your Power Pass
-                  </h3>
-
-                  {/* Hero cards — mug strip per venue */}
-                  <p className="mt-4 text-xs uppercase tracking-wider text-slate-500">
-                    Hero cards
-                  </p>
-                  <div className="mt-2 space-y-3">
-                    {stats.venues.map((v) => (
-                      <div
-                        key={v.slug}
-                        className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3"
-                      >
-                        <div className="flex items-baseline justify-between">
-                          <Link
-                            to={`/loyalty/${v.slug}`}
-                            className="text-sm font-medium text-slate-200 hover:text-white"
-                          >
-                            {v.name}
-                          </Link>
-                          <span className="font-mono text-xs text-slate-400">
-                            {Math.min(v.current, v.required)}/{v.required}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1 text-lg leading-none">
-                          {Array.from({ length: v.required }, (_, i) => (
-                            <span
-                              key={i}
-                              className={
-                                i < Math.min(v.current, v.required)
-                                  ? ''
-                                  : 'opacity-20 grayscale'
-                              }
+                  {/* ---------- ☕ STAMPS ---------- */}
+                  {detail === 'stamps' && (
+                    <>
+                      <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
+                        ☕ Your stamps — {stats.totalStamps} lifetime
+                      </h3>
+                      <div className="mt-4 space-y-4">
+                        {stats.venues
+                          .filter((v) => v.totalStamps > 0)
+                          .map((v) => (
+                            <div
+                              key={v.slug}
+                              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4"
                             >
-                              ☕
-                            </span>
+                              <div className="flex items-baseline justify-between">
+                                <Link
+                                  to={`/loyalty/${v.slug}`}
+                                  className="text-sm font-medium text-slate-200 hover:text-white"
+                                >
+                                  {v.name}
+                                </Link>
+                                <span className="font-mono text-xs text-hero-cyan">
+                                  {v.totalStamps} stamps
+                                </span>
+                              </div>
+                              {/* All lifetime stamps, wrapping in rows of 10 */}
+                              <div className="mt-3 grid grid-cols-10 gap-1 text-base leading-none">
+                                {Array.from({ length: v.totalStamps }, (_, i) => (
+                                  <span key={i}>☕</span>
+                                ))}
+                              </div>
+                              <p className="mt-2 text-[11px] text-slate-500">
+                                Current card: {Math.min(v.current, v.required)}/
+                                {v.required}
+                              </p>
+                            </div>
                           ))}
-                        </div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Rewards claimed */}
-                  <p className="mt-5 text-xs uppercase tracking-wider text-slate-500">
-                    Rewards claimed
-                  </p>
-                  {stats.cardsCompleted === 0 ? (
-                    <p className="mt-2 text-sm text-slate-500">
-                      None yet — fill a card to claim your first free reward.
-                    </p>
-                  ) : (
-                    <div className="mt-2 space-y-2">
-                      {stats.venues
-                        .filter((v) => v.cardsCompleted > 0)
-                        .map((v) => (
-                          <div
-                            key={v.slug}
-                            className="flex items-center justify-between rounded-xl border border-solana-green/20 bg-solana-green/5 px-3 py-2 text-sm"
-                          >
-                            <span className="text-slate-200">{v.name}</span>
-                            <span className="text-solana-green">
-                              {'🎁'.repeat(Math.min(v.cardsCompleted, 8))}
-                              {v.cardsCompleted > 8 ? ` ×${v.cardsCompleted}` : ''}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
+                    </>
                   )}
 
-                  {/* Trophy gallery */}
-                  <p className="mt-5 text-xs uppercase tracking-wider text-slate-500">
-                    Super Victor Trophies
-                  </p>
-                  {stats.trophies.length === 0 ? (
-                    <p className="mt-2 text-sm text-slate-500">
-                      No trophies yet — each completed card mints one into your
-                      collection.
-                    </p>
-                  ) : (
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {stats.trophies.map((t) => (
-                        <a
-                          key={t.assetId}
-                          href={explorerUrl(t.assetId)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group rounded-xl border border-hero-gold/40 bg-hero-gold/5 p-3 text-center transition hover:border-hero-gold hover:bg-hero-gold/10"
-                        >
-                          <div className="relative mx-auto aspect-square w-20">
+                  {/* ---------- 🎁 REWARDS ---------- */}
+                  {detail === 'rewards' && (
+                    <>
+                      <h3 className="text-center font-display text-lg font-semibold text-solana-green">
+                        🎁 Rewards claimed — {stats.cardsCompleted}
+                      </h3>
+                      {stats.cardsCompleted === 0 ? (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          None yet — fill a card to claim your first free reward.
+                        </p>
+                      ) : (
+                        <div className="mt-4 space-y-3">
+                          {stats.venues
+                            .filter((v) => v.cardsCompleted > 0)
+                            .map((v) => (
+                              <div
+                                key={v.slug}
+                                className="rounded-xl border border-solana-green/20 bg-solana-green/5 p-4"
+                              >
+                                <div className="flex items-baseline justify-between">
+                                  <span className="text-sm font-medium text-slate-200">
+                                    {v.name}
+                                  </span>
+                                  <span className="font-mono text-xs text-solana-green">
+                                    ×{v.cardsCompleted}
+                                  </span>
+                                </div>
+                                <div className="mt-2 text-xl leading-none">
+                                  {'🎁'.repeat(Math.min(v.cardsCompleted, 10))}
+                                </div>
+                                <p className="mt-2 text-[11px] text-slate-400">
+                                  Reward: {v.rewardLabel ?? 'Free reward'} · each one
+                                  took {v.required} stamps
+                                </p>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ---------- 🏆 TROPHIES ---------- */}
+                  {detail === 'trophies' && (
+                    <>
+                      <h3 className="text-center font-display text-lg font-semibold text-hero-gold">
+                        🏆 SuperVictor Trophies — {stats.trophiesMinted}
+                      </h3>
+                      {stats.trophies.length === 0 ? (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          No trophies yet — each completed card mints one into your
+                          collection, on-chain.
+                        </p>
+                      ) : (
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          {stats.trophies.map((t) => (
                             <div
-                              aria-hidden
-                              className="absolute inset-0 rounded-full bg-hero-gold/20 blur-md"
-                            />
-                            <img
-                              src="/super-victor.png"
-                              alt={`Super Victor Trophy — ${t.venueName} #${t.edition}`}
-                              className="relative h-full w-full object-contain"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                            <span className="absolute -bottom-1 -right-1 text-lg">🏆</span>
-                          </div>
-                          <p className="mt-2 text-xs font-semibold text-hero-gold">
-                            {t.venueName} #{t.edition}
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            {formatDate(t.redeemedAt)} · Explorer ↗
-                          </p>
-                        </a>
-                      ))}
-                    </div>
+                              key={t.assetId}
+                              className="rounded-xl border border-hero-gold/40 bg-hero-gold/5 p-3 text-center"
+                            >
+                              <div className="relative mx-auto aspect-square w-20">
+                                <div
+                                  aria-hidden
+                                  className="absolute inset-0 rounded-full bg-hero-gold/20 blur-md"
+                                />
+                                <img
+                                  src="/super-victor.png"
+                                  alt={`SuperVictor Trophy — ${t.venueName} #${t.edition}`}
+                                  className="relative h-full w-full object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display =
+                                      'none';
+                                  }}
+                                />
+                                <span className="absolute -bottom-1 -right-1 text-lg">
+                                  🏆
+                                </span>
+                              </div>
+                              <p className="mt-2 text-xs font-semibold text-hero-gold">
+                                {t.venueName} #{t.edition}
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-slate-500">
+                                {formatDate(t.redeemedAt)}
+                              </p>
+                              <div className="mt-2 flex justify-center gap-2 text-[10px]">
+                                {t.mintTx && (
+                                  <a
+                                    href={txUrl(t.mintTx)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-hero-gold transition hover:bg-hero-gold/10"
+                                    title={`Mint transaction ${shortHash(t.mintTx)}`}
+                                  >
+                                    Tx {shortHash(t.mintTx)} ↗
+                                  </a>
+                                )}
+                                <a
+                                  href={assetUrl(t.assetId)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="rounded-full border border-hero-cyan/40 px-2 py-0.5 text-hero-cyan transition hover:bg-hero-cyan/10"
+                                >
+                                  Asset ↗
+                                </a>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <button
                     type="button"
-                    onClick={() => setDetailOpen(false)}
+                    onClick={() => setDetail(null)}
                     className="mt-5 w-full rounded-full bg-hero-gold px-4 py-2 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
                   >
                     Close

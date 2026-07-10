@@ -176,7 +176,7 @@ export default function Business() {
       setNotice({
         kind: 'ok',
         text: r.trophy
-          ? '🎉 Reward redeemed + Super Victor Trophy minted to the customer! Hand it over.'
+          ? '🎉 Reward redeemed + SuperVictor Trophy minted to the customer! Hand it over.'
           : `🎉 Reward redeemed — hand it over! ${r.trophySkipped ?? ''}`,
       });
     } catch (err) {

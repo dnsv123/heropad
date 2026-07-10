@@ -8,7 +8,7 @@ import { usePrivy } from '@privy-io/react-auth';
 // Desktop order: text-left, large character on the right.
 //
 // CTA strategy:
-//   - Primary "Claim your hero" → gold (matches EUIPO Super Victor logo).
+//   - Primary "Claim your hero" → gold (matches EUIPO SuperVictor logo).
 //   - Secondary login → outlined purple (Solana signal).
 //
 // Animations (framer-motion, already installed):
@@ -48,7 +48,7 @@ export default function Hero() {
             {/* The actual mascot. Floating animation gives "alive" feel. */}
             <motion.img
               src="/super-victor.png"
-              alt="Super Victor — the official HeroPad mascot"
+              alt="SuperVictor — the official HeroPad mascot"
               className="absolute inset-0 h-full w-full object-contain p-3 md:p-5"
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}

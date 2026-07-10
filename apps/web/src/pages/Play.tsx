@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom';
 const FEATURES = [
   {
     title: 'Hero Skins',
-    body: 'Each Super Victor cNFT minted via HeroPad becomes a wearable skin in V-DASH. Equip your collection, switch outfits between runs, show your Genesis edition.',
+    body: 'Each SuperVictor cNFT minted via HeroPad becomes a wearable skin in V-DASH. Equip your collection, switch outfits between runs, show your Genesis edition.',
     image: '/super-victor-fly-1.png',
     accent: 'text-hero-cyan',
     border: 'border-hero-cyan/30',
@@ -112,7 +112,7 @@ export default function Play() {
               Your hero. Your gear. Your run.
             </h2>
             <p className="mt-3 text-slate-400">
-              V-DASH is a fast-paced action runner where Super Victor and his
+              V-DASH is a fast-paced action runner where SuperVictor and his
               allies battle through dimensions of the SuperVictor Universe.
               Existing players already have a roster of heroes, skins, and pets.
             </p>
