@@ -40,6 +40,17 @@ interface ApiErr {
   message: string;
 }
 
+interface VenueAnalytics {
+  uniqueCustomers: number;
+  totalStamps: number;
+  stampsLast30: number;
+  rewardsClaimed: number;
+  repeatCustomers: number;
+  trophiesMinted: number;
+  daily: Array<{ day: string; stamps: number; customers: number }>;
+  progress: { early: number; mid: number; almost: number; full: number };
+}
+
 export default function Business() {
   const [params] = useSearchParams();
   const slug = params.get('venue') ?? VENUE_SLUG_DEFAULT;
@@ -54,6 +65,8 @@ export default function Business() {
   const [customer, setCustomer] = useState<CustomerInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
 
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
@@ -141,6 +154,24 @@ export default function Business() {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function toggleStats() {
+    const next = !statsOpen;
+    setStatsOpen(next);
+    if (next && !analytics) {
+      try {
+        const token = await getAccessToken();
+        const r = await getJson<{ ok: true } & VenueAnalytics>(
+          `/api/loyalty/merchant/${slug}/stats`,
+          token ?? undefined
+        );
+        setAnalytics(r);
+      } catch (err) {
+        setNotice({ kind: 'err', text: (err as ApiErr).message });
+        setStatsOpen(false);
+      }
     }
   }
 
@@ -356,6 +387,108 @@ export default function Business() {
                   {notice.text}
                 </p>
               )}
+
+              {/* ---- Venue stats (pilot merchant dashboard, PII-free) ---- */}
+              <div className="mt-6 border-t border-hero-blue/15 pt-4">
+                <button
+                  type="button"
+                  onClick={() => void toggleStats()}
+                  className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                >
+                  {statsOpen ? 'Hide venue stats' : '📊 Venue stats'}
+                </button>
+
+                <AnimatePresence>
+                  {statsOpen && analytics && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {[
+                          { v: analytics.uniqueCustomers, l: 'Unique customers' },
+                          { v: analytics.stampsLast30, l: 'Stamps · 30 days' },
+                          { v: analytics.rewardsClaimed, l: 'Rewards given' },
+                          {
+                            v:
+                              analytics.uniqueCustomers > 0
+                                ? `${Math.round(
+                                    (analytics.repeatCustomers /
+                                      analytics.uniqueCustomers) *
+                                      100
+                                  )}%`
+                                : '—',
+                            l: 'Repeat rate',
+                          },
+                        ].map((t) => (
+                          <div
+                            key={t.l}
+                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+                          >
+                            <p className="font-display text-xl font-bold text-hero-cyan">
+                              {t.v}
+                            </p>
+                            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
+                              {t.l}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Daily activity — CSS bars, most recent 14 active days */}
+                      {analytics.daily.length > 0 && (
+                        <div className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
+                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                            Daily stamps
+                          </p>
+                          <div className="mt-2 flex h-20 items-end gap-1">
+                            {analytics.daily.map((d) => {
+                              const max = Math.max(
+                                ...analytics.daily.map((x) => x.stamps)
+                              );
+                              return (
+                                <div
+                                  key={d.day}
+                                  title={`${d.day}: ${d.stamps} stamps, ${d.customers} customers`}
+                                  className="flex-1 rounded-t bg-gradient-to-t from-hero-blue to-hero-cyan"
+                                  style={{
+                                    height: `${Math.max(8, (d.stamps / max) * 100)}%`,
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Progress buckets — "how close are customers to a reward" */}
+                      <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                        {[
+                          { v: analytics.progress.early, l: 'Starting' },
+                          { v: analytics.progress.mid, l: 'Halfway' },
+                          { v: analytics.progress.almost, l: 'Almost! 🔥' },
+                          { v: analytics.progress.full, l: 'Card full' },
+                        ].map((b) => (
+                          <div
+                            key={b.l}
+                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-2"
+                          >
+                            <p className="font-display text-lg font-bold text-hero-gold">
+                              {b.v}
+                            </p>
+                            <p className="text-[10px] text-slate-500">{b.l}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-center text-[10px] text-slate-600">
+                        Counts only — no personal data is ever shown or stored here.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </>
           )}
         </div>

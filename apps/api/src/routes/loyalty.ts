@@ -20,6 +20,7 @@ import {
   findValidRedeemCode,
   markRedeemCodeUsed,
   getUserLoyaltyStats,
+  getVenueAnalytics,
   type VenueRow,
 } from '../lib/loyalty-db.js';
 
@@ -252,6 +253,27 @@ loyaltyRouter.post(
 );
 
 // --- Merchant (authenticated + owner) -----------------------------------------
+
+// GET /api/loyalty/merchant/:slug/stats — the pilot merchant dashboard.
+// Owner-only, PII-free: counts and trends, never emails or customer codes.
+loyaltyRouter.get(
+  '/merchant/:slug/stats',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const analytics = await getVenueAnalytics(
+        owned.venue.id,
+        owned.venue.stamps_required
+      );
+      return res.status(200).json({ ok: true, ...analytics });
+    } catch (err) {
+      return serverError(res, 'merchant-stats', err);
+    }
+  }
+);
 
 // GET /api/loyalty/merchant/:slug/customer/:code — look up a customer by their
 // personal code before granting. Returns progress only — never email/PII.
