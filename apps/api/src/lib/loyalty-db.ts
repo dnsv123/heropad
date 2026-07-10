@@ -343,6 +343,119 @@ export async function markRedeemCodeUsed(id: string): Promise<void> {
   if (error) throw new Error(`[Supabase] markRedeemCodeUsed: ${error.message}`);
 }
 
+// --- Merchant analytics (per venue) ----------------------------------------------
+
+export interface VenueAnalytics {
+  uniqueCustomers: number;
+  totalStamps: number;
+  stampsLast30: number;
+  rewardsClaimed: number;
+  /** Customers who came on 2+ distinct days — the loyalty proof number. */
+  repeatCustomers: number;
+  trophiesMinted: number;
+  /** Daily activity, oldest→newest, up to the last 14 active days. */
+  daily: Array<{ day: string; stamps: number; customers: number }>;
+  /** How many customers sit in each progress bucket right now. */
+  progress: { early: number; mid: number; almost: number; full: number };
+}
+
+/**
+ * The pilot merchant dashboard numbers. Computed in JS from two queries —
+ * trivial at validation scale, replaced by SQL aggregates when volume grows.
+ * PII-free by construction: only counts, never emails or codes.
+ */
+export async function getVenueAnalytics(
+  venueId: string,
+  required: number
+): Promise<VenueAnalytics> {
+  const supa = getSupabaseAdmin();
+
+  const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
+    await Promise.all([
+      supa
+        .from('stamps')
+        .select('user_identity_id, stamp_day, created_at')
+        .eq('venue_id', venueId),
+      supa
+        .from('rewards_redeemed')
+        .select('user_identity_id, stamps_consumed, trophy_asset_id')
+        .eq('venue_id', venueId),
+    ]);
+  if (sErr) throw new Error(`[Supabase] analytics stamps: ${sErr.message}`);
+  if (rErr) throw new Error(`[Supabase] analytics rewards: ${rErr.message}`);
+
+  const stamps = (stampRows ?? []) as Array<{
+    user_identity_id: string;
+    stamp_day: string;
+    created_at: string;
+  }>;
+  const rewards = (rewardRows ?? []) as Array<{
+    user_identity_id: string;
+    stamps_consumed: number;
+    trophy_asset_id: string | null;
+  }>;
+
+  const daysByCustomer = new Map<string, Set<string>>();
+  const stampsByCustomer = new Map<string, number>();
+  const byDay = new Map<string, { stamps: number; customers: Set<string> }>();
+  const cutoff30 = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  let stampsLast30 = 0;
+
+  for (const s of stamps) {
+    if (!daysByCustomer.has(s.user_identity_id)) {
+      daysByCustomer.set(s.user_identity_id, new Set());
+    }
+    daysByCustomer.get(s.user_identity_id)!.add(s.stamp_day);
+    stampsByCustomer.set(
+      s.user_identity_id,
+      (stampsByCustomer.get(s.user_identity_id) ?? 0) + 1
+    );
+    if (!byDay.has(s.stamp_day)) {
+      byDay.set(s.stamp_day, { stamps: 0, customers: new Set() });
+    }
+    const d = byDay.get(s.stamp_day)!;
+    d.stamps += 1;
+    d.customers.add(s.user_identity_id);
+    if (new Date(s.created_at).getTime() > cutoff30) stampsLast30 += 1;
+  }
+
+  const consumedByCustomer = new Map<string, number>();
+  let trophiesMinted = 0;
+  for (const r of rewards) {
+    consumedByCustomer.set(
+      r.user_identity_id,
+      (consumedByCustomer.get(r.user_identity_id) ?? 0) + Number(r.stamps_consumed ?? 0)
+    );
+    if (r.trophy_asset_id) trophiesMinted += 1;
+  }
+
+  const progress = { early: 0, mid: 0, almost: 0, full: 0 };
+  for (const [customer, total] of stampsByCustomer) {
+    const current = Math.max(0, total - (consumedByCustomer.get(customer) ?? 0));
+    if (current <= 0) continue;
+    if (current >= required) progress.full += 1;
+    else if (current >= required * 0.7) progress.almost += 1;
+    else if (current >= required * 0.4) progress.mid += 1;
+    else progress.early += 1;
+  }
+
+  const daily = [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-14)
+    .map(([day, d]) => ({ day, stamps: d.stamps, customers: d.customers.size }));
+
+  return {
+    uniqueCustomers: daysByCustomer.size,
+    totalStamps: stamps.length,
+    stampsLast30,
+    rewardsClaimed: rewards.length,
+    repeatCustomers: [...daysByCustomer.values()].filter((set) => set.size >= 2).length,
+    trophiesMinted,
+    daily,
+    progress,
+  };
+}
+
 // --- Cross-venue stats (Profile) ------------------------------------------------
 
 export interface UserLoyaltyStats {
