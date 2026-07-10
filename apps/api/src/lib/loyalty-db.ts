@@ -350,6 +350,13 @@ export interface UserLoyaltyStats {
   cardsCompleted: number;
   /** Trophy cNFTs actually minted on-chain (subset of cardsCompleted). */
   trophiesMinted: number;
+  /** Detail per minted trophy — powers the Profile trophy gallery. */
+  trophies: Array<{
+    venueName: string;
+    edition: number;
+    assetId: string;
+    redeemedAt: string;
+  }>;
   venues: Array<{
     slug: string;
     name: string;
@@ -372,8 +379,9 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
       supa
         .from('rewards_redeemed')
-        .select('venue_id, stamps_consumed, trophy_asset_id')
-        .eq('user_identity_id', identityId),
+        .select('venue_id, stamps_consumed, trophy_asset_id, redeemed_at')
+        .eq('user_identity_id', identityId)
+        .order('redeemed_at', { ascending: true }),
     ]);
   if (sErr) throw new Error(`[Supabase] stats stamps: ${sErr.message}`);
   if (rErr) throw new Error(`[Supabase] stats rewards: ${rErr.message}`);
@@ -386,13 +394,30 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
   const consumedByVenue = new Map<string, number>();
   const cardsByVenue = new Map<string, number>();
   let trophiesMinted = 0;
+  const rawTrophies: Array<{
+    venueId: string;
+    edition: number;
+    assetId: string;
+    redeemedAt: string;
+  }> = [];
   for (const row of rewardRows ?? []) {
     const r = row as {
       venue_id: string;
       stamps_consumed: number;
       trophy_asset_id: string | null;
+      redeemed_at: string;
     };
-    if (r.trophy_asset_id) trophiesMinted += 1;
+    // Rows arrive oldest-first, so this running count IS the edition number.
+    const editionAtVenue = (cardsByVenue.get(r.venue_id) ?? 0) + 1;
+    if (r.trophy_asset_id) {
+      trophiesMinted += 1;
+      rawTrophies.push({
+        venueId: r.venue_id,
+        edition: editionAtVenue,
+        assetId: r.trophy_asset_id,
+        redeemedAt: r.redeemed_at,
+      });
+    }
     consumedByVenue.set(
       r.venue_id,
       (consumedByVenue.get(r.venue_id) ?? 0) + Number(r.stamps_consumed ?? 0)
@@ -419,10 +444,19 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     cardsCompleted: cardsByVenue.get(v.id) ?? 0,
   }));
 
+  const venueNameById = new Map(venueRows.map((v) => [v.id, v.name]));
+  const trophies = rawTrophies.map((t) => ({
+    venueName: venueNameById.get(t.venueId) ?? 'Partner venue',
+    edition: t.edition,
+    assetId: t.assetId,
+    redeemedAt: t.redeemedAt,
+  }));
+
   return {
     totalStamps: [...stampsByVenue.values()].reduce((a, b) => a + b, 0),
     cardsCompleted: [...cardsByVenue.values()].reduce((a, b) => a + b, 0),
     trophiesMinted,
+    trophies,
     venues,
   };
 }

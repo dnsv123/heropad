@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
+import { creditBits } from '../lib/supabase-admin.js';
 import {
   getVenueBySlug,
   claimVenueOwnership,
@@ -428,6 +429,7 @@ loyaltyRouter.post(
       // 3. Mint the trophy — best-effort, never blocks the redemption.
       let trophy: { assetId: string; txSignature: string } | null = null;
       let trophySkipped: string | null = null;
+      let bitsAwarded = 0;
       const customer = await getIdentityById(rc.user_identity_id);
       const wallet = customer?.solana_wallet ?? null;
 
@@ -450,6 +452,21 @@ loyaltyRouter.post(
             // eslint-disable-next-line no-console
             console.error('[loyalty.redeem] trophy attach failed:', attachErr);
           }
+          // BITS reward for the completed card — same ledger the claim flow
+          // uses, so it rolls up into the Profile balance and, later, into
+          // Hall of Heroes via the identity link. Best-effort.
+          try {
+            const TROPHY_BITS = Number(process.env.TROPHY_BITS_REWARD ?? 250);
+            await creditBits(wallet, TROPHY_BITS, 'loyalty_trophy', {
+              venue: owned.venue.slug,
+              assetId: minted.assetId,
+              edition,
+            });
+            bitsAwarded = TROPHY_BITS;
+          } catch (bitsErr) {
+            // eslint-disable-next-line no-console
+            console.error('[loyalty.redeem] BITS credit failed:', bitsErr);
+          }
         } catch (mintErr) {
           trophySkipped = 'Trophy mint failed — will be granted retroactively.';
           // eslint-disable-next-line no-console
@@ -465,6 +482,7 @@ loyaltyRouter.post(
         cardsCompleted: after.cardsCompleted,
         trophy,
         trophySkipped,
+        bitsAwarded,
       });
     } catch (err) {
       return serverError(res, 'redeem', err);
