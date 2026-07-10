@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
-import Collectibles from './Collectibles';
-
 // Profile card showing the user's identity, all linked Solana wallets, and
 // account-management actions.
 //
@@ -22,7 +20,7 @@ import Collectibles from './Collectibles';
 //   - Embedded wallets only — external wallets manage their own keys.
 
 export default function ProfileWallet() {
-  const { user, linkEmail, linkGoogle, linkWallet } = usePrivy();
+  const { user } = usePrivy();
   const {
     wallets,
     ready: walletsReady,
@@ -126,35 +124,8 @@ export default function ProfileWallet() {
 
   return (
     <div className="space-y-6 rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
-      {/* Identity row — avatar + email */}
-      <div className="flex items-start gap-4">
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-hero-cyan/30 bg-gradient-to-br from-hero-blue/30 to-hero-deep md:h-16 md:w-16">
-          <img
-            src="/super-victor-pfp.png"
-            alt=""
-            aria-hidden
-            className="absolute inset-0 h-full w-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs uppercase tracking-wider text-slate-500">Account</p>
-          <p className="mt-1 truncate text-sm text-slate-200">
-            {user?.email?.address ?? user?.google?.email ?? '—'}
-          </p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Joined{' '}
-            {user?.createdAt
-              ? new Date(user.createdAt).toLocaleDateString()
-              : '—'}
-          </p>
-        </div>
-      </div>
-
       {/* Wallets — render each one with copy + export. */}
-      <div className="space-y-3 border-t border-hero-blue/15 pt-5">
+      <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <p className="text-xs uppercase tracking-wider text-slate-500">
             Solana wallets
@@ -232,49 +203,6 @@ export default function ProfileWallet() {
         </div>
       </div>
 
-      {/* Linked accounts / link buttons */}
-      <div className="space-y-3 border-t border-hero-blue/15 pt-5">
-        <p className="text-xs uppercase tracking-wider text-slate-500">
-          Linked methods
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {!user?.email && (
-            <button
-              type="button"
-              onClick={linkEmail}
-              className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-2 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
-            >
-              + Link email
-            </button>
-          )}
-          {!user?.google && (
-            <button
-              type="button"
-              onClick={linkGoogle}
-              className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-2 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
-            >
-              + Link Google
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={linkWallet}
-            className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-2 text-xs text-slate-200 transition hover:border-solana-purple hover:text-white"
-          >
-            + Link external wallet
-          </button>
-        </div>
-        <p className="text-[11px] text-slate-500">
-          Linking more methods means recovery via any of them and use of
-          HeroPad on any device. External wallets stack — they don't replace
-          your embedded wallet.
-        </p>
-      </div>
-
-      {/* Collectibles widget — fetches BITS + cNFT-uri din Helius DAS. */}
-      <div className="border-t border-hero-blue/15 pt-5">
-        <Collectibles walletAddress={wallets[0].address} />
-      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 // Footer — corporate identification + legal line + small social links.
-// Uses the SVU corporate logo (different from the EUIPO Super Victor mark used
+// Uses the SVU corporate logo (different from the EUIPO SuperVictor mark used
 // elsewhere) to position HeroPad as part of the SuperVictor Universe portfolio.
 export default function Footer() {
   const year = new Date().getFullYear();

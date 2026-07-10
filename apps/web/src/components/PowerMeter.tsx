@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // PowerMeter — the "energy bar that fills up" loyalty visual.
 // ---------------------------------------------------------------------------
-// NOT a punch-card simulation: it's Super Victor charging up. Each stamp adds a
+// NOT a punch-card simulation: it's SuperVictor charging up. Each stamp adds a
 // segment of energy; the hero's aura brightens as the meter fills; at full power
 // it bursts and invites the reward claim. Pure presentational component — it
 // takes `current` / `required` and renders. No data fetching, no business logic.
@@ -13,7 +13,7 @@ interface PowerMeterProps {
   current: number;
   /** Stamps needed for the reward (e.g. 10). */
   required: number;
-  /** Optional hero artwork (defaults to the flying Super Victor). */
+  /** Optional hero artwork (defaults to the flying SuperVictor). */
   heroSrc?: string;
   /** Just-added a stamp this render — drives the "charge pop" flash. */
   justCharged?: boolean;
@@ -29,7 +29,7 @@ export default function PowerMeter({
   const pct = required > 0 ? (clamped / required) * 100 : 0;
   const isFull = clamped >= required && required > 0;
 
-  // Level art: coffee-themed Super Victor poses, one per progress level.
+  // Level art: coffee-themed SuperVictor poses, one per progress level.
   // Files live at public/loyalty/levels/level-1.png … level-10.png. Progress is
   // mapped proportionally so venues with required != 10 still work. If a level
   // image is missing we fall back to the default hero — nothing breaks.
@@ -79,7 +79,7 @@ export default function PowerMeter({
         />
         <motion.img
           src={imgSrc}
-          alt="Super Victor charging up — tap to see all levels"
+          alt="SuperVictor charging up — tap to see all levels"
           role="button"
           tabIndex={0}
           onClick={() => setGalleryOpen(true)}
@@ -199,7 +199,7 @@ export default function PowerMeter({
               className="w-full max-w-md rounded-2xl border border-hero-blue/30 bg-hero-deep p-5 shadow-2xl"
             >
               <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
-                Super Victor power levels
+                SuperVictor power levels
               </h3>
               <p className="mt-1 text-center text-xs text-slate-500">
                 Every stamp charges him up — you are at level {level}.

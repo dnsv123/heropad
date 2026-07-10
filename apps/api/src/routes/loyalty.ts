@@ -456,7 +456,7 @@ loyaltyRouter.post(
           // uses, so it rolls up into the Profile balance and, later, into
           // Hall of Heroes via the identity link. Best-effort.
           try {
-            const TROPHY_BITS = Number(process.env.TROPHY_BITS_REWARD ?? 250);
+            const TROPHY_BITS = Number(process.env.TROPHY_BITS_REWARD ?? 1000);
             await creditBits(wallet, TROPHY_BITS, 'loyalty_trophy', {
               venue: owned.venue.slug,
               assetId: minted.assetId,

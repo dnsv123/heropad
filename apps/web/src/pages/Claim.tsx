@@ -32,7 +32,7 @@ export default function Claim() {
           />
           <motion.img
             src="/super-victor-fly-1.png"
-            alt="Super Victor — ready to claim"
+            alt="SuperVictor — ready to claim"
             className="relative w-full object-contain drop-shadow-[0_15px_50px_rgba(93,211,255,0.4)]"
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}

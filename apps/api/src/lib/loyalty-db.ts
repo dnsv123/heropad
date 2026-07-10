@@ -355,6 +355,8 @@ export interface UserLoyaltyStats {
     venueName: string;
     edition: number;
     assetId: string;
+    /** Solana mint transaction signature (Explorer-linkable proof). */
+    mintTx: string | null;
     redeemedAt: string;
   }>;
   venues: Array<{
@@ -362,7 +364,11 @@ export interface UserLoyaltyStats {
     name: string;
     current: number;
     required: number;
+    /** Lifetime stamps earned at this venue (incl. consumed ones). */
+    totalStamps: number;
     cardsCompleted: number;
+    /** The venue's reward, from branding (e.g. "A free coffee"). */
+    rewardLabel: string | null;
   }>;
 }
 
@@ -379,7 +385,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
       supa
         .from('rewards_redeemed')
-        .select('venue_id, stamps_consumed, trophy_asset_id, redeemed_at')
+        .select('venue_id, stamps_consumed, trophy_asset_id, milestone_mint_tx, redeemed_at')
         .eq('user_identity_id', identityId)
         .order('redeemed_at', { ascending: true }),
     ]);
@@ -398,6 +404,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     venueId: string;
     edition: number;
     assetId: string;
+    mintTx: string | null;
     redeemedAt: string;
   }> = [];
   for (const row of rewardRows ?? []) {
@@ -405,6 +412,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       venue_id: string;
       stamps_consumed: number;
       trophy_asset_id: string | null;
+      milestone_mint_tx: string | null;
       redeemed_at: string;
     };
     // Rows arrive oldest-first, so this running count IS the edition number.
@@ -415,6 +423,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
         venueId: r.venue_id,
         edition: editionAtVenue,
         assetId: r.trophy_asset_id,
+        mintTx: r.milestone_mint_tx,
         redeemedAt: r.redeemed_at,
       });
     }
@@ -426,11 +435,17 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
   }
 
   const venueIds = [...new Set([...stampsByVenue.keys(), ...cardsByVenue.keys()])];
-  let venueRows: Array<{ id: string; slug: string; name: string; stamps_required: number }> = [];
+  let venueRows: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    stamps_required: number;
+    branding: Record<string, unknown> | null;
+  }> = [];
   if (venueIds.length > 0) {
     const { data, error } = await supa
       .from('venues')
-      .select('id, slug, name, stamps_required')
+      .select('id, slug, name, stamps_required, branding')
       .in('id', venueIds);
     if (error) throw new Error(`[Supabase] stats venues: ${error.message}`);
     venueRows = (data ?? []) as typeof venueRows;
@@ -441,7 +456,10 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     name: v.name,
     current: Math.max(0, (stampsByVenue.get(v.id) ?? 0) - (consumedByVenue.get(v.id) ?? 0)),
     required: v.stamps_required,
+    totalStamps: stampsByVenue.get(v.id) ?? 0,
     cardsCompleted: cardsByVenue.get(v.id) ?? 0,
+    rewardLabel:
+      typeof v.branding?.reward === 'string' ? (v.branding.reward as string) : null,
   }));
 
   const venueNameById = new Map(venueRows.map((v) => [v.id, v.name]));
@@ -449,6 +467,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     venueName: venueNameById.get(t.venueId) ?? 'Partner venue',
     edition: t.edition,
     assetId: t.assetId,
+    mintTx: t.mintTx,
     redeemedAt: t.redeemedAt,
   }));
 

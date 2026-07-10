@@ -8,7 +8,7 @@ const SECTIONS = [
   {
     title: '1. Who we are',
     body: `HeroPad is a service operated by SVU Journey SRL (SuperVictor Universe), with
-    registered office in Romania. The Super Victor character and V-mark are EUIPO-registered
+    registered office in Romania. The SuperVictor character and V-mark are EUIPO-registered
     trademarks (filing 019287298). For privacy questions: privacy@supervictornft.com.`,
   },
   {
