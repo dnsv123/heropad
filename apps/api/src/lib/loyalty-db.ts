@@ -348,6 +348,8 @@ export async function markRedeemCodeUsed(id: string): Promise<void> {
 export interface UserLoyaltyStats {
   totalStamps: number;
   cardsCompleted: number;
+  /** Trophy cNFTs actually minted on-chain (subset of cardsCompleted). */
+  trophiesMinted: number;
   venues: Array<{
     slug: string;
     name: string;
@@ -370,7 +372,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
       supa
         .from('rewards_redeemed')
-        .select('venue_id, stamps_consumed')
+        .select('venue_id, stamps_consumed, trophy_asset_id')
         .eq('user_identity_id', identityId),
     ]);
   if (sErr) throw new Error(`[Supabase] stats stamps: ${sErr.message}`);
@@ -383,8 +385,14 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
   }
   const consumedByVenue = new Map<string, number>();
   const cardsByVenue = new Map<string, number>();
+  let trophiesMinted = 0;
   for (const row of rewardRows ?? []) {
-    const r = row as { venue_id: string; stamps_consumed: number };
+    const r = row as {
+      venue_id: string;
+      stamps_consumed: number;
+      trophy_asset_id: string | null;
+    };
+    if (r.trophy_asset_id) trophiesMinted += 1;
     consumedByVenue.set(
       r.venue_id,
       (consumedByVenue.get(r.venue_id) ?? 0) + Number(r.stamps_consumed ?? 0)
@@ -414,6 +422,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
   return {
     totalStamps: [...stampsByVenue.values()].reduce((a, b) => a + b, 0),
     cardsCompleted: [...cardsByVenue.values()].reduce((a, b) => a + b, 0),
+    trophiesMinted,
     venues,
   };
 }
