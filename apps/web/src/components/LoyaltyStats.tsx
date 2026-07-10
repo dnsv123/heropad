@@ -13,6 +13,7 @@ interface StatsResponse {
   ok: true;
   totalStamps: number;
   cardsCompleted: number;
+  trophiesMinted: number;
   venues: Array<{
     slug: string;
     name: string;
@@ -71,21 +72,29 @@ export default function LoyaltyStats() {
         </p>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4 text-center">
-              <p className="font-display text-3xl font-bold text-hero-cyan">
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center">
+              <p className="font-display text-2xl font-bold text-hero-cyan">
                 {stats.totalStamps}
               </p>
-              <p className="mt-1 text-xs uppercase tracking-wider text-slate-500">
-                ☕ Stamps lifetime
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                ☕ Stamps
               </p>
             </div>
-            <div className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4 text-center">
-              <p className="font-display text-3xl font-bold text-hero-gold">
+            <div className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center">
+              <p className="font-display text-2xl font-bold text-solana-green">
                 {stats.cardsCompleted}
               </p>
-              <p className="mt-1 text-xs uppercase tracking-wider text-slate-500">
-                🎫 Cards completed
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                🎁 Rewards claimed
+              </p>
+            </div>
+            <div className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center">
+              <p className="font-display text-2xl font-bold text-hero-gold">
+                {stats.trophiesMinted}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
+                🏆 Trophies minted
               </p>
             </div>
           </div>
@@ -102,7 +111,12 @@ export default function LoyaltyStats() {
                 <span className="font-mono text-slate-400">
                   {Math.min(v.current, v.required)}/{v.required}
                   {v.cardsCompleted > 0 && (
-                    <span className="ml-2 text-hero-gold">🏆×{v.cardsCompleted}</span>
+                    <span
+                      className="ml-2 text-solana-green"
+                      title="Rewards claimed at this venue"
+                    >
+                      🎁×{v.cardsCompleted}
+                    </span>
                   )}
                 </span>
               </li>
