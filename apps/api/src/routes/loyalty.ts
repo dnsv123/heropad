@@ -53,7 +53,11 @@ loyaltyRouter.use(
   })
 );
 
-const MAX_STAMPS_PER_DAY = 10;
+// Safety net, NOT a customer limit: a legit customer never hits it, but it
+// bounds the damage a compromised/abusive merchant session can do in a day.
+// Override via env while testing (LOYALTY_DAILY_CAP=100); becomes a per-venue
+// merchant setting in the dashboard phase.
+const MAX_STAMPS_PER_DAY = Number(process.env.LOYALTY_DAILY_CAP ?? 10);
 
 const SLUG_RE = /^[a-z0-9-]{2,60}$/;
 const CODE_RE = /^[A-Z2-9]{6}$/i;
