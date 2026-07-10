@@ -49,7 +49,12 @@ export default function LoyaltyStats() {
 
   return (
     <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
-      <h2 className="font-display text-lg font-semibold text-white">My Hero Cards</h2>
+      <h2 className="font-display text-lg font-semibold text-white">⚡ Power Pass</h2>
+      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+        Your hero cards at partner venues. Every purchase charges Super Victor —
+        a full card earns a free reward <em>and</em> a SuperVictor Trophy minted
+        into your collection.
+      </p>
 
       {error ? (
         <p className="mt-3 text-sm text-slate-500">Could not load loyalty stats.</p>
@@ -57,7 +62,8 @@ export default function LoyaltyStats() {
         <p className="mt-3 text-sm text-slate-500">Loading…</p>
       ) : stats.totalStamps === 0 ? (
         <p className="mt-3 text-sm text-slate-400">
-          No stamps yet. Scan the QR at a partner café to start collecting —{' '}
+          No hero cards yet. Scan the Power Pass QR at a partner café and your
+          first card starts automatically —{' '}
           <Link to="/loyalty/cafe-victor" className="text-hero-cyan underline">
             try Café Victor
           </Link>
