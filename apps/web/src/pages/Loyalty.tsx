@@ -215,6 +215,11 @@ export default function Loyalty() {
               >
                 {redeemBusy ? 'Generating…' : 'Claim reward — get my code'}
               </button>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                ⏱ Tap this <strong>at the counter</strong> — the code works for{' '}
+                <strong>5 minutes only</strong> and the barista redeems it on the
+                spot. (Generated it too early? Just tap again for a fresh one.)
+              </p>
             </div>
           )}
 
@@ -231,8 +236,19 @@ export default function Loyalty() {
                 {redeemCode.code}
               </p>
               <p className="mt-2 text-xs text-slate-400">
-                One-time use · expires in {Math.floor(redeemSecondsLeft / 60)}:
-                {String(redeemSecondsLeft % 60).padStart(2, '0')}
+                One-time use · expires in{' '}
+                <span
+                  className={
+                    redeemSecondsLeft <= 60 ? 'font-semibold text-red-300' : 'text-slate-300'
+                  }
+                >
+                  {Math.floor(redeemSecondsLeft / 60)}:
+                  {String(redeemSecondsLeft % 60).padStart(2, '0')}
+                </span>
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Show it to the barista right now. Expired? Tap “Claim reward” again —
+                you lose nothing.
               </p>
             </motion.div>
           )}
