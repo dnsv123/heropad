@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Claim from './pages/Claim';
 import Profile from './pages/Profile';
 import Play from './pages/Play';
+import Loyalty from './pages/Loyalty';
+import Business from './pages/Business';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
@@ -25,6 +27,9 @@ export default function App() {
           <Route path="/claim" element={<Claim />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/v-dash" element={<Play />} />
+          <Route path="/loyalty/:slug" element={<Loyalty />} />
+          <Route path="/loyalty" element={<Loyalty />} />
+          <Route path="/business" element={<Business />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           {/* Catch-all: send unknown paths back to the landing page. */}

@@ -14,6 +14,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 
 import { claimRouter } from './routes/claim.js';
+import { loyaltyRouter } from './routes/loyalty.js';
 import { mintRouter } from './routes/mint.js';
 import { userRouter } from './routes/user.js';
 
@@ -68,6 +69,7 @@ app.get('/healthz', (_req, res) => {
 
 // Routes.
 app.use('/api/claim', claimRouter);
+app.use('/api/loyalty', loyaltyRouter);
 app.use('/api/mint', mintRouter);
 app.use('/api/user', userRouter);
 
