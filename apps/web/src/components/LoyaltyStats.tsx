@@ -49,7 +49,7 @@ export default function LoyaltyStats() {
 
   return (
     <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
-      <h2 className="font-display text-lg font-semibold text-white">Loyalty</h2>
+      <h2 className="font-display text-lg font-semibold text-white">My Hero Cards</h2>
 
       {error ? (
         <p className="mt-3 text-sm text-slate-500">Could not load loyalty stats.</p>
