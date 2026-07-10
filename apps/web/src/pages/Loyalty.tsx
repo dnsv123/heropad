@@ -165,7 +165,7 @@ export default function Loyalty() {
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
         {/* Venue header */}
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">Loyalty</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">⚡ Power Pass</p>
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
             {venue?.name ?? '…'}
           </h1>
