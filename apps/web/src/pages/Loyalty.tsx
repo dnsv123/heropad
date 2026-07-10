@@ -188,7 +188,7 @@ export default function Loyalty() {
                 🎉 Reward redeemed — enjoy!
               </p>
               <p className="mt-1 text-sm text-slate-300">
-                Your card restarted, and a <strong>SuperVictor Trophy</strong> was
+                Your card restarted, and a <strong>Super Victor Trophy</strong> was
                 minted to your collection —{' '}
                 <a href="/profile" className="text-hero-cyan underline">
                   see it in your Profile

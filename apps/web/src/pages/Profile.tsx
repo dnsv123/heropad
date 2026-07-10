@@ -31,8 +31,12 @@ export default function Profile() {
           </div>
         ) : (
           <>
-            <ProfileWallet />
+            {/* Power Pass first — it's the daily-value widget; the wallet and
+                collectibles (where trophies land) follow below. */}
             <LoyaltyStats />
+            <div className="mt-8">
+              <ProfileWallet />
+            </div>
           </>
         )}
       </div>
