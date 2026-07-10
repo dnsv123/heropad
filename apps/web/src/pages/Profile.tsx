@@ -1,6 +1,7 @@
 import { usePrivy } from '@privy-io/react-auth';
 
 import ProfileWallet from '../components/ProfileWallet';
+import LoyaltyStats from '../components/LoyaltyStats';
 
 // /profile is auth-gated. Unauthenticated visitors see a CTA that triggers
 // Privy login; once logged in they see ProfileWallet. We avoid `<Navigate />`
@@ -29,7 +30,10 @@ export default function Profile() {
             </button>
           </div>
         ) : (
-          <ProfileWallet />
+          <>
+            <ProfileWallet />
+            <LoyaltyStats />
+          </>
         )}
       </div>
     </section>

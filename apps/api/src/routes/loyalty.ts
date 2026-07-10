@@ -3,15 +3,22 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import { mintCnftToWallet } from '../lib/metaplex.js';
 import {
   getVenueBySlug,
   claimVenueOwnership,
   ensureIdentity,
   findIdentityByCode,
+  getIdentityById,
   getVenueProgress,
   countStampsToday,
   grantStamps,
   redeemReward,
+  setRewardTrophy,
+  createRedeemCode,
+  findValidRedeemCode,
+  markRedeemCodeUsed,
+  getUserLoyaltyStats,
   type VenueRow,
 } from '../lib/loyalty-db.js';
 
@@ -127,6 +134,19 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
 
 // --- Customer (authenticated) --------------------------------------------------
 
+// GET /api/loyalty/me/stats — cross-venue loyalty footprint for the Profile
+// page. MUST be registered before /me/:slug or "stats" is captured as a slug.
+loyaltyRouter.get('/me/stats', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    const stats = await getUserLoyaltyStats(identity.id);
+    return res.status(200).json({ ok: true, ...stats });
+  } catch (err) {
+    return serverError(res, 'me-stats', err);
+  }
+});
+
 // GET /api/loyalty/me/:slug — my code + my progress at this venue.
 // The client page polls this; it's the single source of truth for the meter.
 loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) => {
@@ -156,6 +176,37 @@ loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) 
     return serverError(res, 'me', err);
   }
 });
+
+// POST /api/loyalty/me/:slug/redeem-code — the customer, on their OWN phone,
+// generates a one-time code (5-min TTL) proving they are present. The barista
+// types THIS code to redeem — the permanent loyalty code can no longer consume
+// a card, closing the "merchant redeems while customer is absent" hole.
+loyaltyRouter.post(
+  '/me/:slug/redeem-code',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const venue = await loadActiveVenue(req.params.slug, res);
+      if (!venue) return;
+
+      const identity = await ensureIdentity(privyId);
+      const progress = await getVenueProgress(identity.id, venue.id);
+      if (progress.current < venue.stamps_required) {
+        return res.status(409).json({
+          ok: false,
+          error: 'not_enough_stamps',
+          message: `You have ${progress.current}/${venue.stamps_required} stamps.`,
+        });
+      }
+
+      const rc = await createRedeemCode(identity.id, venue.id);
+      return res.status(200).json({ ok: true, code: rc.code, expiresAt: rc.expires_at });
+    } catch (err) {
+      return serverError(res, 'redeem-code', err);
+    }
+  }
+);
 
 // POST /api/loyalty/venue/:slug/claim-ownership — validation-phase merchant
 // bootstrap: the FIRST logged-in user to claim an unowned venue becomes its
@@ -304,11 +355,25 @@ loyaltyRouter.post(
 );
 
 const RedeemBody = z.object({
-  code: z.string().regex(CODE_RE, 'Customer code must be 6 letters/digits'),
+  redeemCode: z.string().regex(CODE_RE, 'Redeem code must be 6 letters/digits'),
 });
 
-// POST /api/loyalty/merchant/:slug/redeem — barista consumes a full card and
-// hands over the reward. Extra stamps beyond `required` carry to the next card.
+/**
+ * Trophy metadata for the collectible cNFT minted at redemption. Off-chain
+ * JSON is a static file served by the web app; the on-chain name carries the
+ * venue + edition so each trophy is individually identifiable.
+ */
+function trophyUri(): string {
+  return (
+    process.env.TROPHY_METADATA_URI ?? 'https://heropad.vercel.app/cnft/trophy.json'
+  );
+}
+
+// POST /api/loyalty/merchant/:slug/redeem — barista types the customer's
+// ONE-TIME redeem code (generated seconds ago on the customer's phone → proof
+// of presence), the card is consumed, and a SuperVictor Trophy cNFT is minted
+// to the customer's wallet via the existing Bubblegum pipeline. The mint is
+// best-effort: a devnet/RPC hiccup must never block handing over the coffee.
 loyaltyRouter.post(
   '/merchant/:slug/redeem',
   requireAuth,
@@ -327,16 +392,19 @@ loyaltyRouter.post(
         });
       }
 
-      const customer = await findIdentityByCode(parsed.data.code);
-      if (!customer) {
+      // 1. Resolve the one-time code (unused + unexpired + this venue).
+      const rc = await findValidRedeemCode(parsed.data.redeemCode, owned.venue.id);
+      if (!rc) {
         return res.status(404).json({
           ok: false,
-          error: 'unknown_code',
-          message: 'No customer with this code.',
+          error: 'invalid_redeem_code',
+          message:
+            'Code not valid (wrong, expired, or already used). Ask the customer to tap "Claim reward" again.',
         });
       }
 
-      const progress = await getVenueProgress(customer.id, owned.venue.id);
+      // 2. Safety re-check of the balance, then consume code + stamps.
+      const progress = await getVenueProgress(rc.user_identity_id, owned.venue.id);
       if (progress.current < owned.venue.stamps_required) {
         return res.status(409).json({
           ok: false,
@@ -344,20 +412,55 @@ loyaltyRouter.post(
           message: `Customer has ${progress.current}/${owned.venue.stamps_required} stamps.`,
         });
       }
-
-      await redeemReward({
-        identityId: customer.id,
+      await markRedeemCodeUsed(rc.id);
+      const rewardId = await redeemReward({
+        identityId: rc.user_identity_id,
         venueId: owned.venue.id,
         stampsConsumed: owned.venue.stamps_required,
       });
 
-      const after = await getVenueProgress(customer.id, owned.venue.id);
+      const after = await getVenueProgress(rc.user_identity_id, owned.venue.id);
+
+      // 3. Mint the trophy — best-effort, never blocks the redemption.
+      let trophy: { assetId: string; txSignature: string } | null = null;
+      let trophySkipped: string | null = null;
+      const customer = await getIdentityById(rc.user_identity_id);
+      const wallet = customer?.solana_wallet ?? null;
+
+      if (!wallet) {
+        trophySkipped =
+          'Customer wallet not linked yet — trophy will be mintable once they revisit their loyalty page.';
+      } else {
+        try {
+          const edition = after.cardsCompleted;
+          const minted = await mintCnftToWallet({
+            recipient: wallet,
+            name: `SV Trophy — ${owned.venue.name} #${edition}`.slice(0, 32),
+            symbol: 'SVTROPHY',
+            uri: trophyUri(),
+          });
+          trophy = { assetId: minted.assetId, txSignature: minted.signature };
+          try {
+            await setRewardTrophy(rewardId, minted.assetId, minted.signature);
+          } catch (attachErr) {
+            // eslint-disable-next-line no-console
+            console.error('[loyalty.redeem] trophy attach failed:', attachErr);
+          }
+        } catch (mintErr) {
+          trophySkipped = 'Trophy mint failed — will be granted retroactively.';
+          // eslint-disable-next-line no-console
+          console.error('[loyalty.redeem] trophy mint failed:', (mintErr as Error).message);
+        }
+      }
+
       return res.status(200).json({
         ok: true,
         redeemed: true,
         stamps: after.current,
         required: owned.venue.stamps_required,
         cardsCompleted: after.cardsCompleted,
+        trophy,
+        trophySkipped,
       });
     } catch (err) {
       return serverError(res, 'redeem', err);

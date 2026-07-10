@@ -143,6 +143,16 @@ export async function ensureIdentity(
   throw new Error('[Supabase] ensureIdentity: could not allocate a loyalty code');
 }
 
+export async function getIdentityById(id: string): Promise<IdentityRow | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .select('id, privy_id, loyalty_code, solana_wallet')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] getIdentityById: ${error.message}`);
+  return (data as IdentityRow) ?? null;
+}
+
 export async function findIdentityByCode(code: string): Promise<IdentityRow | null> {
   const normalized = code.trim().toUpperCase();
   const { data, error } = await getSupabaseAdmin()
@@ -224,17 +234,186 @@ export async function grantStamps(input: {
   if (error) throw new Error(`[Supabase] grantStamps: ${error.message}`);
 }
 
+/** Inserts the redemption row and returns its id (used to attach the trophy). */
 export async function redeemReward(input: {
   identityId: string;
   venueId: string;
   stampsConsumed: number;
   rewardType?: string;
-}): Promise<void> {
-  const { error } = await getSupabaseAdmin().from('rewards_redeemed').insert({
-    user_identity_id: input.identityId,
-    venue_id: input.venueId,
-    reward_type: input.rewardType ?? 'free_item',
-    stamps_consumed: input.stampsConsumed,
-  });
+}): Promise<string> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('rewards_redeemed')
+    .insert({
+      user_identity_id: input.identityId,
+      venue_id: input.venueId,
+      reward_type: input.rewardType ?? 'free_item',
+      stamps_consumed: input.stampsConsumed,
+    })
+    .select('id')
+    .single();
   if (error) throw new Error(`[Supabase] redeemReward: ${error.message}`);
+  return (data as { id: string }).id;
+}
+
+/** Attaches the minted trophy cNFT to a redemption row. Best-effort caller. */
+export async function setRewardTrophy(
+  rewardId: string,
+  assetId: string,
+  txSignature: string
+): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from('rewards_redeemed')
+    .update({ trophy_asset_id: assetId, milestone_mint_tx: txSignature })
+    .eq('id', rewardId);
+  if (error) throw new Error(`[Supabase] setRewardTrophy: ${error.message}`);
+}
+
+// --- One-time redeem codes (migration 005) -------------------------------------
+
+const REDEEM_TTL_MS = 5 * 60 * 1000;
+
+export interface RedeemCodeRow {
+  id: string;
+  user_identity_id: string;
+  venue_id: string;
+  code: string;
+  expires_at: string;
+}
+
+/**
+ * Issues a fresh one-time redeem code for a user at a venue (5-minute TTL).
+ * Any previous unused codes for the same user+venue are deleted first so only
+ * one code is live at a time. Retries on the rare active-code collision.
+ */
+export async function createRedeemCode(
+  identityId: string,
+  venueId: string
+): Promise<RedeemCodeRow> {
+  const supa = getSupabaseAdmin();
+
+  const { error: delErr } = await supa
+    .from('redeem_codes')
+    .delete()
+    .eq('user_identity_id', identityId)
+    .eq('venue_id', venueId)
+    .is('used_at', null);
+  if (delErr) throw new Error(`[Supabase] createRedeemCode cleanup: ${delErr.message}`);
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data, error } = await supa
+      .from('redeem_codes')
+      .insert({
+        user_identity_id: identityId,
+        venue_id: venueId,
+        code: randomLoyaltyCode(),
+        expires_at: new Date(Date.now() + REDEEM_TTL_MS).toISOString(),
+      })
+      .select('id, user_identity_id, venue_id, code, expires_at')
+      .single();
+    if (!error) return data as RedeemCodeRow;
+    if (error.code !== '23505') {
+      throw new Error(`[Supabase] createRedeemCode: ${error.message}`);
+    }
+  }
+  throw new Error('[Supabase] createRedeemCode: could not allocate a code');
+}
+
+/** Finds a live (unused, unexpired) redeem code for this venue, or null. */
+export async function findValidRedeemCode(
+  code: string,
+  venueId: string
+): Promise<RedeemCodeRow | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('redeem_codes')
+    .select('id, user_identity_id, venue_id, code, expires_at')
+    .eq('code', code.trim().toUpperCase())
+    .eq('venue_id', venueId)
+    .is('used_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] findValidRedeemCode: ${error.message}`);
+  return (data as RedeemCodeRow) ?? null;
+}
+
+export async function markRedeemCodeUsed(id: string): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from('redeem_codes')
+    .update({ used_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(`[Supabase] markRedeemCodeUsed: ${error.message}`);
+}
+
+// --- Cross-venue stats (Profile) ------------------------------------------------
+
+export interface UserLoyaltyStats {
+  totalStamps: number;
+  cardsCompleted: number;
+  venues: Array<{
+    slug: string;
+    name: string;
+    current: number;
+    required: number;
+    cardsCompleted: number;
+  }>;
+}
+
+/**
+ * Aggregates a user's loyalty footprint across all venues. Row volumes are
+ * tiny at validation scale, so we fetch and reduce in JS instead of SQL
+ * aggregates (Supabase JS has no GROUP BY).
+ */
+export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyaltyStats> {
+  const supa = getSupabaseAdmin();
+
+  const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
+    await Promise.all([
+      supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
+      supa
+        .from('rewards_redeemed')
+        .select('venue_id, stamps_consumed')
+        .eq('user_identity_id', identityId),
+    ]);
+  if (sErr) throw new Error(`[Supabase] stats stamps: ${sErr.message}`);
+  if (rErr) throw new Error(`[Supabase] stats rewards: ${rErr.message}`);
+
+  const stampsByVenue = new Map<string, number>();
+  for (const row of stampRows ?? []) {
+    const v = (row as { venue_id: string }).venue_id;
+    stampsByVenue.set(v, (stampsByVenue.get(v) ?? 0) + 1);
+  }
+  const consumedByVenue = new Map<string, number>();
+  const cardsByVenue = new Map<string, number>();
+  for (const row of rewardRows ?? []) {
+    const r = row as { venue_id: string; stamps_consumed: number };
+    consumedByVenue.set(
+      r.venue_id,
+      (consumedByVenue.get(r.venue_id) ?? 0) + Number(r.stamps_consumed ?? 0)
+    );
+    cardsByVenue.set(r.venue_id, (cardsByVenue.get(r.venue_id) ?? 0) + 1);
+  }
+
+  const venueIds = [...new Set([...stampsByVenue.keys(), ...cardsByVenue.keys()])];
+  let venueRows: Array<{ id: string; slug: string; name: string; stamps_required: number }> = [];
+  if (venueIds.length > 0) {
+    const { data, error } = await supa
+      .from('venues')
+      .select('id, slug, name, stamps_required')
+      .in('id', venueIds);
+    if (error) throw new Error(`[Supabase] stats venues: ${error.message}`);
+    venueRows = (data ?? []) as typeof venueRows;
+  }
+
+  const venues = venueRows.map((v) => ({
+    slug: v.slug,
+    name: v.name,
+    current: Math.max(0, (stampsByVenue.get(v.id) ?? 0) - (consumedByVenue.get(v.id) ?? 0)),
+    required: v.stamps_required,
+    cardsCompleted: cardsByVenue.get(v.id) ?? 0,
+  }));
+
+  return {
+    totalStamps: [...stampsByVenue.values()].reduce((a, b) => a + b, 0),
+    cardsCompleted: [...cardsByVenue.values()].reduce((a, b) => a + b, 0),
+    venues,
+  };
 }
