@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
+import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import PowerMeter from '../components/PowerMeter';
-import { getJson } from '../services/apiClient';
+import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
 
 // Loyalty page — customer view, wired to the REAL backend.
@@ -34,9 +35,15 @@ interface MeResponse {
   canRedeem: boolean;
 }
 
+interface RedeemCodeState {
+  code: string;
+  expiresAt: string;
+}
+
 export default function Loyalty() {
   const { slug = 'cafe-victor' } = useParams();
   const { ready, authenticated, login, getAccessToken } = usePrivy();
+  const { wallets } = useSolanaWallets();
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [venueError, setVenueError] = useState<string | null>(null);
@@ -44,6 +51,9 @@ export default function Loyalty() {
   const [meError, setMeError] = useState<string | null>(null);
   const [justCharged, setJustCharged] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
+  const [redeemCode, setRedeemCode] = useState<RedeemCodeState | null>(null);
+  const [redeemBusy, setRedeemBusy] = useState(false);
+  const [redeemSecondsLeft, setRedeemSecondsLeft] = useState(0);
 
   // Previous values so polling can detect "something changed" and animate.
   const prevStamps = useRef<number | null>(null);
@@ -68,11 +78,15 @@ export default function Loyalty() {
   }, [slug]);
 
   // Authenticated progress — polled. The server is the single source of truth.
+  // We pass the Solana wallet so the backend links it to the identity — that's
+  // what makes the trophy cNFT mintable straight into this user's wallet.
+  const walletAddress = wallets[0]?.address ?? null;
   const fetchMe = useCallback(async () => {
     try {
       const token = await getAccessToken();
       if (!token) return;
-      const r = await getJson<MeResponse>(`/api/loyalty/me/${slug}`, token);
+      const qs = walletAddress ? `?wallet=${encodeURIComponent(walletAddress)}` : '';
+      const r = await getJson<MeResponse>(`/api/loyalty/me/${slug}${qs}`, token);
       setMeError(null);
 
       // Detect changes for feedback BEFORE committing new state.
@@ -83,8 +97,9 @@ export default function Loyalty() {
       }
       if (prevCards.current !== null && r.cardsCompleted > prevCards.current) {
         setCelebrating(true);
+        setRedeemCode(null); // the card was redeemed — the one-time code is spent
         hapticTap(40);
-        window.setTimeout(() => setCelebrating(false), 6000);
+        window.setTimeout(() => setCelebrating(false), 8000);
       }
       prevStamps.current = r.stamps;
       prevCards.current = r.cardsCompleted;
@@ -92,7 +107,41 @@ export default function Loyalty() {
     } catch (err) {
       setMeError((err as Error).message);
     }
-  }, [slug, getAccessToken]);
+  }, [slug, getAccessToken, walletAddress]);
+
+  // Countdown for the active one-time redeem code (5-minute TTL).
+  useEffect(() => {
+    if (!redeemCode) return;
+    const tick = () => {
+      const left = Math.max(
+        0,
+        Math.floor((new Date(redeemCode.expiresAt).getTime() - Date.now()) / 1000)
+      );
+      setRedeemSecondsLeft(left);
+      if (left <= 0) setRedeemCode(null);
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [redeemCode]);
+
+  async function requestRedeemCode() {
+    setRedeemBusy(true);
+    try {
+      const token = await getAccessToken();
+      const r = await postJson<Record<string, never>, { ok: true } & RedeemCodeState>(
+        `/api/loyalty/me/${slug}/redeem-code`,
+        {},
+        token ?? undefined
+      );
+      hapticTap(20);
+      setRedeemCode({ code: r.code, expiresAt: r.expiresAt });
+    } catch (err) {
+      setMeError((err as Error).message);
+    } finally {
+      setRedeemBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!ready || !authenticated) return;
@@ -139,7 +188,12 @@ export default function Loyalty() {
                 🎉 Reward redeemed — enjoy!
               </p>
               <p className="mt-1 text-sm text-slate-300">
-                Your card restarted. Extra stamps carry over automatically.
+                Your card restarted, and a <strong>SuperVictor Trophy</strong> was
+                minted to your collection —{' '}
+                <a href="/profile" className="text-hero-cyan underline">
+                  see it in your Profile
+                </a>
+                . Extra stamps carry over automatically.
               </p>
             </motion.div>
           )}
@@ -148,11 +202,39 @@ export default function Loyalty() {
         <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
           <PowerMeter current={Math.min(stamps, required)} required={required} justCharged={justCharged} />
 
-          {/* Full-card call to action — redeem happens at the counter. */}
-          {me?.canRedeem && (
-            <p className="mt-5 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-3 text-center text-sm text-hero-gold">
-              ⚡ Full power! Show your code below — the barista redeems your reward.
-            </p>
+          {/* Full card → the customer generates a ONE-TIME redeem code on their
+              own phone (proof of presence); the barista types that to redeem. */}
+          {me?.canRedeem && !redeemCode && (
+            <div className="mt-5 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4 text-center">
+              <p className="text-sm text-hero-gold">⚡ Full power — your reward is ready!</p>
+              <button
+                type="button"
+                disabled={redeemBusy}
+                onClick={() => void requestRedeemCode()}
+                className="mt-3 rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+              >
+                {redeemBusy ? 'Generating…' : 'Claim reward — get my code'}
+              </button>
+            </div>
+          )}
+
+          {me?.canRedeem && redeemCode && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-5 rounded-xl border border-hero-gold/60 bg-hero-gold/10 p-4 text-center"
+            >
+              <p className="text-xs uppercase tracking-wider text-hero-gold">
+                Reward code — tell it to the barista
+              </p>
+              <p className="mt-2 font-mono text-4xl font-bold tracking-[0.35em] text-hero-gold">
+                {redeemCode.code}
+              </p>
+              <p className="mt-2 text-xs text-slate-400">
+                One-time use · expires in {Math.floor(redeemSecondsLeft / 60)}:
+                {String(redeemSecondsLeft % 60).padStart(2, '0')}
+              </p>
+            </motion.div>
           )}
 
           <div className="mt-6 border-t border-hero-blue/15 pt-6">

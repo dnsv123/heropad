@@ -50,6 +50,7 @@ export default function Business() {
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
 
   const [codeInput, setCodeInput] = useState('');
+  const [redeemInput, setRedeemInput] = useState('');
   const [customer, setCustomer] = useState<CustomerInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -145,18 +146,39 @@ export default function Business() {
 
   async function redeem() {
     if (!customer) return;
+    const rc = redeemInput.trim().toUpperCase();
+    if (!CODE_RE.test(rc)) {
+      setNotice({ kind: 'err', text: 'Ask the customer for their 6-character reward code.' });
+      return;
+    }
     setBusy(true);
     setNotice(null);
     try {
       const token = await getAccessToken();
-      const r = await postJson<{ code: string }, { ok: true; stamps: number; cardsCompleted: number }>(
-        `/api/loyalty/merchant/${slug}/redeem`,
-        { code: customer.code },
-        token ?? undefined
-      );
+      const r = await postJson<
+        { redeemCode: string },
+        {
+          ok: true;
+          stamps: number;
+          cardsCompleted: number;
+          trophy: { assetId: string } | null;
+          trophySkipped: string | null;
+        }
+      >(`/api/loyalty/merchant/${slug}/redeem`, { redeemCode: rc }, token ?? undefined);
       hapticTap(30);
-      setCustomer({ ...customer, stamps: r.stamps, canRedeem: false, cardsCompleted: r.cardsCompleted });
-      setNotice({ kind: 'ok', text: '🎉 Reward redeemed — hand it over! Card restarted.' });
+      setRedeemInput('');
+      setCustomer({
+        ...customer,
+        stamps: r.stamps,
+        canRedeem: r.stamps >= customer.required,
+        cardsCompleted: r.cardsCompleted,
+      });
+      setNotice({
+        kind: 'ok',
+        text: r.trophy
+          ? '🎉 Reward redeemed + SuperVictor Trophy minted to the customer! Hand it over.'
+          : `🎉 Reward redeemed — hand it over! ${r.trophySkipped ?? ''}`,
+      });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
@@ -270,30 +292,51 @@ export default function Business() {
                       </p>
                     </div>
 
-                    {customer.canRedeem ? (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void redeem()}
-                        className="mt-4 w-full rounded-full bg-hero-gold px-6 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
-                      >
-                        ⚡ Redeem reward (consume {customer.required})
-                      </button>
-                    ) : (
-                      <div className="mt-4">
-                        <p className="mb-2 text-xs text-slate-500">Coffees bought:</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[1, 2, 3].map((n) => (
-                            <button
-                              key={n}
-                              type="button"
-                              disabled={busy}
-                              onClick={() => void grant(n)}
-                              className="rounded-full border border-hero-cyan/40 py-2.5 font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
-                            >
-                              +{n}
-                            </button>
-                          ))}
+                    <div className="mt-4">
+                      <p className="mb-2 text-xs text-slate-500">Coffees bought:</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[1, 2, 3].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void grant(n)}
+                            className="rounded-full border border-hero-cyan/40 py-2.5 font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
+                          >
+                            +{n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {customer.canRedeem && (
+                      <div className="mt-4 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-3">
+                        <p className="text-xs text-hero-gold">
+                          ⚡ Card full! Ask the customer to tap{' '}
+                          <strong>“Claim reward”</strong> on their phone and tell you
+                          the 6-character reward code:
+                        </p>
+                        <div className="mt-2 flex items-stretch gap-2">
+                          <input
+                            type="text"
+                            inputMode="text"
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            spellCheck={false}
+                            maxLength={6}
+                            value={redeemInput}
+                            onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                            placeholder="REWARD"
+                            className="flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2 text-center font-mono text-xl tracking-[0.25em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            disabled={busy || !CODE_RE.test(redeemInput)}
+                            onClick={() => void redeem()}
+                            className="shrink-0 rounded-full bg-hero-gold px-4 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
+                          >
+                            Redeem
+                          </button>
                         </div>
                       </div>
                     )}
