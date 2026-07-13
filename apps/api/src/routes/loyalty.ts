@@ -14,6 +14,7 @@ import {
   getVenueProgress,
   countStampsToday,
   grantStamps,
+  revokeLatestStampToday,
   redeemReward,
   setRewardTrophy,
   createRedeemCode,
@@ -377,6 +378,58 @@ loyaltyRouter.post(
       });
     } catch (err) {
       return serverError(res, 'grant', err);
+    }
+  }
+);
+
+const RevokeBody = z.object({
+  code: z.string().regex(CODE_RE, 'Customer code must be 6 letters/digits'),
+});
+
+// POST /api/loyalty/merchant/:slug/revoke — barista correction: remove the
+// customer's most recent stamp from today (mis-tapped +2 instead of +1).
+loyaltyRouter.post(
+  '/merchant/:slug/revoke',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      const parsed = RevokeBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'invalid_body',
+          message: parsed.error.issues.map((i) => i.message).join('; '),
+        });
+      }
+      const customer = await findIdentityByCode(parsed.data.code);
+      if (!customer) {
+        return res.status(404).json({
+          ok: false,
+          error: 'unknown_code',
+          message: 'No customer with this code.',
+        });
+      }
+      const removed = await revokeLatestStampToday(customer.id, owned.venue.id);
+      if (!removed) {
+        return res.status(409).json({
+          ok: false,
+          error: 'nothing_to_revoke',
+          message: 'No stamps from today to remove for this customer.',
+        });
+      }
+      const progress = await getVenueProgress(customer.id, owned.venue.id);
+      return res.status(200).json({
+        ok: true,
+        stamps: progress.current,
+        required: owned.venue.stamps_required,
+        canRedeem: progress.current >= owned.venue.stamps_required,
+      });
+    } catch (err) {
+      return serverError(res, 'revoke', err);
     }
   }
 );
