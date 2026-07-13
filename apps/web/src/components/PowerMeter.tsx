@@ -35,9 +35,9 @@ export default function PowerMeter({
   // image is missing we fall back to the default hero — nothing breaks.
   const level =
     required > 0 ? Math.max(1, Math.min(10, Math.ceil((clamped / required) * 10) || 1)) : 1;
-  const [imgSrc, setImgSrc] = useState(`/loyalty/levels/level-${level}.png`);
+  const [imgSrc, setImgSrc] = useState(`/loyalty/levels/level-${level}.webp`);
   useEffect(() => {
-    setImgSrc(`/loyalty/levels/level-${level}.png`);
+    setImgSrc(`/loyalty/levels/level-${level}.webp`);
   }, [level]);
 
   // Level gallery — tap the hero to browse all 10 states. Levels above the
@@ -218,7 +218,7 @@ export default function PowerMeter({
                       }`}
                     >
                       <img
-                        src={`/loyalty/levels/level-${lv}.png`}
+                        src={`/loyalty/levels/level-${lv}.webp`}
                         alt={`Level ${lv}`}
                         loading="lazy"
                         className={`h-full w-full object-contain ${
