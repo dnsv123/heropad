@@ -235,6 +235,38 @@ export async function grantStamps(input: {
 }
 
 /** Inserts the redemption row and returns its id (used to attach the trophy). */
+/**
+ * Correction: removes the customer's most recent stamp from TODAY at this
+ * venue (barista tapped +2 instead of +1). Limited to today so an old,
+ * legitimately earned history can't be eroded. Returns false when there's
+ * nothing from today to remove. Full soft-delete audit arrives with the
+ * merchant dashboard phase; for the pilot the API log is the trail.
+ */
+export async function revokeLatestStampToday(
+  identityId: string,
+  venueId: string
+): Promise<boolean> {
+  const supa = getSupabaseAdmin();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supa
+    .from('stamps')
+    .select('id')
+    .eq('user_identity_id', identityId)
+    .eq('venue_id', venueId)
+    .eq('stamp_day', today)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) throw new Error(`[Supabase] revokeLatestStamp find: ${error.message}`);
+  if (!data || data.length === 0) return false;
+
+  const { error: delErr } = await supa
+    .from('stamps')
+    .delete()
+    .eq('id', (data[0] as { id: string }).id);
+  if (delErr) throw new Error(`[Supabase] revokeLatestStamp delete: ${delErr.message}`);
+  return true;
+}
+
 export async function redeemReward(input: {
   identityId: string;
   venueId: string;

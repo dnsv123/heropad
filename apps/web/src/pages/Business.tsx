@@ -157,6 +157,26 @@ export default function Business() {
     }
   }
 
+  async function revokeOne() {
+    if (!customer) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      const r = await postJson<
+        { code: string },
+        { ok: true; stamps: number; canRedeem: boolean }
+      >(`/api/loyalty/merchant/${slug}/revoke`, { code: customer.code }, token ?? undefined);
+      hapticTap(10);
+      setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
+      setNotice({ kind: 'ok', text: `Corrected: −1 stamp → now ${r.stamps}/${customer.required}` });
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as ApiErr).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function toggleStats() {
     const next = !statsOpen;
     setStatsOpen(next);
@@ -325,7 +345,7 @@ export default function Business() {
 
                     <div className="mt-4">
                       <p className="mb-2 text-xs text-slate-500">Coffees bought:</p>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
                         {[1, 2, 3].map((n) => (
                           <button
                             key={n}
@@ -337,7 +357,19 @@ export default function Business() {
                             +{n}
                           </button>
                         ))}
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void revokeOne()}
+                          title="Correction: remove the last stamp from today"
+                          className="rounded-full border border-red-400/40 py-2.5 font-semibold text-red-300 transition hover:border-red-400 hover:bg-red-400/10 disabled:opacity-40"
+                        >
+                          −1
+                        </button>
                       </div>
+                      <p className="mt-1.5 text-[10px] text-slate-600">
+                        −1 = correction (removes the last stamp from today)
+                      </p>
                     </div>
 
                     {customer.canRedeem && (
