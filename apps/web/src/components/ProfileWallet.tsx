@@ -94,6 +94,51 @@ export default function ProfileWallet() {
   // ---- Empty / loading states --------------------------------------------
 
   if (!walletsReady) {
+    // Browser wallet extensions (MetaMask etc.) can stall the Solana hook's
+    // initialization indefinitely. The wallet still EXISTS — its address is in
+    // user.linkedAccounts — so after a short grace period we show a read-only
+    // view instead of an eternal spinner. Export needs the full hook, so that
+    // action waits for a page where init succeeds.
+    const linkedAddr = (
+      user?.linkedAccounts?.find(
+        (a) => a.type === 'wallet' && (a as { chainType?: string }).chainType === 'solana'
+      ) as { address?: string } | undefined
+    )?.address;
+
+    if (linkedAddr) {
+      return (
+        <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
+          <div className="flex items-baseline justify-between">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Solana wallets</p>
+            <p className="text-xs text-slate-600">1 wallet</p>
+          </div>
+          <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="max-w-full break-all rounded bg-hero-deep/80 px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
+                {linkedAddr}
+              </code>
+              <span className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-hero-gold">
+                Embedded
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleCopy(linkedAddr)}
+                className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+              >
+                {copiedAddr === linkedAddr ? 'Copied!' : 'Copy address'}
+              </button>
+              <p className="text-[11px] text-slate-500">
+                Secured by your login · full controls (key export) load with the
+                wallet service — a browser extension may be delaying it.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-8">
         <p className="text-slate-400">Loading wallet…</p>
