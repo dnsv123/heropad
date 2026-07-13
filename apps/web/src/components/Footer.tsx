@@ -38,6 +38,22 @@ export default function Footer() {
             Terms
           </a>
           <a
+            href="https://supervictor.shop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-hero-gold transition"
+          >
+            Shop
+          </a>
+          <a
+            href="https://supervictornft.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-hero-cyan transition"
+          >
+            Hall of Heroes
+          </a>
+          <a
             href="https://github.com/dnsv123/heropad"
             target="_blank"
             rel="noopener noreferrer"
