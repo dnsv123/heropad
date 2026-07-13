@@ -43,7 +43,7 @@ interface RedeemCodeState {
 export default function Loyalty() {
   const { slug = 'cafe-victor' } = useParams();
   const { ready, authenticated, login, getAccessToken } = usePrivy();
-  const { wallets } = useSolanaWallets();
+  const { wallets, ready: walletsReady, createWallet } = useSolanaWallets();
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [venueError, setVenueError] = useState<string | null>(null);
@@ -58,6 +58,22 @@ export default function Loyalty() {
   // Previous values so polling can detect "something changed" and animate.
   const prevStamps = useRef<number | null>(null);
   const prevCards = useRef<number | null>(null);
+
+  // Self-heal: some browsers (notably incognito/private mode, which blocks
+  // third-party storage) prevent Privy from provisioning the embedded wallet
+  // at login. Without a wallet the trophy can't be minted, so we retry the
+  // creation once here. If it still fails, a hint below tells the user why.
+  const triedCreateWallet = useRef(false);
+  useEffect(() => {
+    if (!ready || !authenticated || !walletsReady) return;
+    if (wallets.length === 0 && !triedCreateWallet.current) {
+      triedCreateWallet.current = true;
+      void createWallet().catch(() => {
+        /* blocked (private mode) — the hint below explains it */
+      });
+    }
+  }, [ready, authenticated, walletsReady, wallets.length, createWallet]);
+  const walletMissing = ready && authenticated && walletsReady && wallets.length === 0;
 
   // Public venue card — works logged-out, so the page always shows the café.
   useEffect(() => {
@@ -284,6 +300,14 @@ export default function Loyalty() {
                   ☕ {me.totalStamps} stamps lifetime · 🎫 {me.cardsCompleted}{' '}
                   {me.cardsCompleted === 1 ? 'card' : 'cards'} completed
                 </p>
+                {walletMissing && (
+                  <p className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-200">
+                    ⚠ Your trophy vault couldn't be set up in this browser —
+                    private/incognito mode blocks it. Open this page once in a
+                    normal window: stamps stay safe, and trophies will mint
+                    automatically from then on.
+                  </p>
+                )}
               </div>
             ) : meError ? (
               <p className="text-center text-sm text-red-300">{meError}</p>
