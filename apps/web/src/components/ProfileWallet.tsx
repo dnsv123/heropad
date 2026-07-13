@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
@@ -44,6 +44,22 @@ export default function ProfileWallet() {
         (a as unknown as { chainType?: string }).chainType === 'solana'
     )
   );
+
+  // Self-heal: if the embedded wallet was never provisioned (login happened in
+  // a private/incognito window, or an older account predates auto-creation),
+  // retry once automatically. The manual "Create" button stays as fallback.
+  const triedAutoCreate = useRef(false);
+  useEffect(() => {
+    if (!walletsReady || wallets.length > 0 || hasLinkedSolanaWallet) return;
+    if (triedAutoCreate.current) return;
+    triedAutoCreate.current = true;
+    setCreating(true);
+    createWallet()
+      .catch(() => {
+        /* blocked — user still has the manual button */
+      })
+      .finally(() => setCreating(false));
+  }, [walletsReady, wallets.length, hasLinkedSolanaWallet, createWallet]);
 
   const handleCopy = async (address: string) => {
     await navigator.clipboard.writeText(address);
