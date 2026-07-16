@@ -375,6 +375,37 @@ export async function markRedeemCodeUsed(id: string): Promise<void> {
   if (error) throw new Error(`[Supabase] markRedeemCodeUsed: ${error.message}`);
 }
 
+/**
+ * Merchant self-service settings: reward threshold + reward label. Branding
+ * jsonb is merged, not replaced, so other keys (accent, tagline) survive.
+ */
+export async function updateVenueSettings(
+  venueId: string,
+  input: { stampsRequired?: number; rewardLabel?: string }
+): Promise<void> {
+  const supa = getSupabaseAdmin();
+  const patch: Record<string, unknown> = {};
+
+  if (input.stampsRequired !== undefined) {
+    patch.stamps_required = input.stampsRequired;
+  }
+  if (input.rewardLabel !== undefined) {
+    const { data, error } = await supa
+      .from('venues')
+      .select('branding')
+      .eq('id', venueId)
+      .single();
+    if (error) throw new Error(`[Supabase] settings read: ${error.message}`);
+    const branding = ((data as { branding: Record<string, unknown> | null }).branding ??
+      {}) as Record<string, unknown>;
+    patch.branding = { ...branding, reward: input.rewardLabel };
+  }
+  if (Object.keys(patch).length === 0) return;
+
+  const { error: updErr } = await supa.from('venues').update(patch).eq('id', venueId);
+  if (updErr) throw new Error(`[Supabase] settings update: ${updErr.message}`);
+}
+
 // --- Merchant analytics (per venue) ----------------------------------------------
 
 export interface VenueAnalytics {

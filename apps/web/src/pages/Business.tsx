@@ -67,6 +67,9 @@ export default function Business() {
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
   const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [setRequired, setSetRequired] = useState('');
+  const [setReward, setSetReward] = useState('');
 
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
@@ -170,6 +173,37 @@ export default function Business() {
       hapticTap(10);
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
       setNotice({ kind: 'ok', text: `Corrected: −1 stamp → now ${r.stamps}/${customer.required}` });
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as ApiErr).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveSettings() {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      const body: { stampsRequired?: number; rewardLabel?: string } = {};
+      const n = parseInt(setRequired, 10);
+      if (!Number.isNaN(n)) body.stampsRequired = n;
+      if (setReward.trim().length >= 2) body.rewardLabel = setReward.trim();
+      if (Object.keys(body).length === 0) {
+        setNotice({ kind: 'err', text: 'Nothing to save — fill in at least one field.' });
+        return;
+      }
+      const r = await postJson<
+        typeof body,
+        { ok: true; venue: { stampsRequired: number; rewardLabel: string | null } }
+      >(`/api/loyalty/merchant/${slug}/settings`, body, token ?? undefined);
+      hapticTap(15);
+      setVenue((v) => (v ? { ...v, stampsRequired: r.venue.stampsRequired } : v));
+      setCustomer(null);
+      setNotice({
+        kind: 'ok',
+        text: `Saved: reward at ${r.venue.stampsRequired} stamps — “${r.venue.rewardLabel ?? 'Free reward'}”. Applies instantly.`,
+      });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
@@ -420,8 +454,66 @@ export default function Business() {
                 </p>
               )}
 
-              {/* ---- Venue stats (pilot merchant dashboard, PII-free) ---- */}
+              {/* ---- Campaign settings (merchant self-service) ---- */}
               <div className="mt-6 border-t border-hero-blue/15 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(!settingsOpen)}
+                  className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-gold hover:text-white"
+                >
+                  {settingsOpen ? 'Hide campaign settings' : '⚙️ Campaign settings'}
+                </button>
+                <AnimatePresence>
+                  {settingsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="text-xs text-slate-500">
+                          Stamps needed for a reward (3–30)
+                          <input
+                            type="number"
+                            min={3}
+                            max={30}
+                            value={setRequired}
+                            onChange={(e) => setSetRequired(e.target.value)}
+                            placeholder={String(venue?.stampsRequired ?? 10)}
+                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          The reward (what the customer gets)
+                          <input
+                            type="text"
+                            maxLength={60}
+                            value={setReward}
+                            onChange={(e) => setSetReward(e.target.value)}
+                            placeholder="A free coffee"
+                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void saveSettings()}
+                        className="mt-3 w-full rounded-full bg-hero-gold px-4 py-2 text-sm font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+                      >
+                        Save settings
+                      </button>
+                      <p className="mt-1.5 text-center text-[10px] text-slate-600">
+                        Changes apply instantly on customers' phones. Existing stamps are kept.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* ---- Venue stats (pilot merchant dashboard, PII-free) ---- */}
+              <div className="mt-4">
                 <button
                   type="button"
                   onClick={() => void toggleStats()}
