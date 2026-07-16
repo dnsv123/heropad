@@ -22,6 +22,7 @@ import {
   markRedeemCodeUsed,
   getUserLoyaltyStats,
   getVenueAnalytics,
+  updateVenueSettings,
   type VenueRow,
 } from '../lib/loyalty-db.js';
 
@@ -254,6 +255,49 @@ loyaltyRouter.post(
 );
 
 // --- Merchant (authenticated + owner) -----------------------------------------
+
+const SettingsBody = z.object({
+  stampsRequired: z.number().int().min(3).max(30).optional(),
+  rewardLabel: z.string().trim().min(2).max(60).optional(),
+});
+
+// POST /api/loyalty/merchant/:slug/settings — merchant self-service campaign
+// settings: how many stamps a reward takes, and what the reward is. Applies
+// instantly to the customer page (meter, levels, redeem threshold).
+loyaltyRouter.post(
+  '/merchant/:slug/settings',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      const parsed = SettingsBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'invalid_body',
+          message: parsed.error.issues.map((i) => i.message).join('; '),
+        });
+      }
+      await updateVenueSettings(owned.venue.id, parsed.data);
+      const fresh = await getVenueBySlug(owned.venue.slug);
+      return res.status(200).json({
+        ok: true,
+        venue: {
+          slug: fresh?.slug,
+          name: fresh?.name,
+          stampsRequired: fresh?.stamps_required,
+          rewardLabel:
+            typeof fresh?.branding?.reward === 'string' ? fresh.branding.reward : null,
+        },
+      });
+    } catch (err) {
+      return serverError(res, 'settings', err);
+    }
+  }
+);
 
 // GET /api/loyalty/merchant/:slug/stats — the pilot merchant dashboard.
 // Owner-only, PII-free: counts and trends, never emails or customer codes.
