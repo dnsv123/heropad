@@ -32,11 +32,19 @@ interface VenueStat {
   rewardLabel: string | null;
 }
 
+interface RewardDetail {
+  venueName: string;
+  label: string;
+  stampsConsumed: number;
+  redeemedAt: string;
+}
+
 interface StatsResponse {
   ok: true;
   totalStamps: number;
   cardsCompleted: number;
   trophiesMinted: number;
+  rewardsDetail: RewardDetail[];
   trophies: TrophyDetail[];
   venues: VenueStat[];
 }
@@ -241,36 +249,29 @@ export default function LoyaltyStats() {
                       <h3 className="text-center font-display text-lg font-semibold text-solana-green">
                         🎁 Rewards claimed — {stats.cardsCompleted}
                       </h3>
-                      {stats.cardsCompleted === 0 ? (
+                      {stats.rewardsDetail.length === 0 ? (
                         <p className="mt-4 text-center text-sm text-slate-500">
                           None yet — fill a card to claim your first free reward.
                         </p>
                       ) : (
-                        <div className="mt-4 space-y-3">
-                          {stats.venues
-                            .filter((v) => v.cardsCompleted > 0)
-                            .map((v) => (
-                              <div
-                                key={v.slug}
-                                className="rounded-xl border border-solana-green/20 bg-solana-green/5 p-4"
-                              >
-                                <div className="flex items-baseline justify-between">
-                                  <span className="text-sm font-medium text-slate-200">
-                                    {v.name}
-                                  </span>
-                                  <span className="font-mono text-xs text-solana-green">
-                                    ×{v.cardsCompleted}
-                                  </span>
-                                </div>
-                                <div className="mt-2 text-xl leading-none">
-                                  {'🎁'.repeat(Math.min(v.cardsCompleted, 10))}
-                                </div>
-                                <p className="mt-2 text-[11px] text-slate-400">
-                                  Reward: {v.rewardLabel ?? 'Free reward'} · each one
-                                  took {v.required} stamps
+                        <div className="mt-4 space-y-2">
+                          {stats.rewardsDetail.map((r, i) => (
+                            <div
+                              key={`${r.redeemedAt}-${i}`}
+                              className="flex items-center gap-3 rounded-xl border border-solana-green/20 bg-solana-green/5 px-4 py-3"
+                            >
+                              <span className="text-xl">🎁</span>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-slate-200">
+                                  {r.label || 'Free reward'}
+                                </p>
+                                <p className="text-[11px] text-slate-400">
+                                  {r.venueName} · {formatDate(r.redeemedAt)} ·{' '}
+                                  {r.stampsConsumed} stamps
                                 </p>
                               </div>
-                            ))}
+                            </div>
+                          ))}
                         </div>
                       )}
                     </>

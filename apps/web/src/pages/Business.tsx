@@ -343,7 +343,7 @@ export default function Business() {
                     if (e.key === 'Enter' && codeValid) void lookupCustomer(normalizedCode);
                   }}
                   placeholder="K7M3PQ"
-                  className="flex-1 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-4 py-3 text-center font-mono text-2xl tracking-[0.3em] text-slate-100 placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan"
+                  className="min-w-0 flex-1 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-3 text-center font-mono text-xl tracking-[0.2em] text-slate-100 placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan sm:px-4 sm:text-2xl sm:tracking-[0.3em]"
                 />
                 <button
                   type="button"
@@ -424,7 +424,7 @@ export default function Business() {
                             value={redeemInput}
                             onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
                             placeholder="REWARD"
-                            className="flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2 text-center font-mono text-xl tracking-[0.25em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                            className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none sm:text-xl sm:tracking-[0.25em]"
                           />
                           <button
                             type="button"

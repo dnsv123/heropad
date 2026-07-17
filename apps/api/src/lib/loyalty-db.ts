@@ -526,6 +526,13 @@ export interface UserLoyaltyStats {
   cardsCompleted: number;
   /** Trophy cNFTs actually minted on-chain (subset of cardsCompleted). */
   trophiesMinted: number;
+  /** Every individual reward, newest first — powers the Profile rewards list. */
+  rewardsDetail: Array<{
+    venueName: string;
+    label: string;
+    stampsConsumed: number;
+    redeemedAt: string;
+  }>;
   /** Detail per minted trophy — powers the Profile trophy gallery. */
   trophies: Array<{
     venueName: string;
@@ -561,7 +568,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
       supa
         .from('rewards_redeemed')
-        .select('venue_id, stamps_consumed, trophy_asset_id, milestone_mint_tx, redeemed_at')
+        .select('venue_id, stamps_consumed, trophy_asset_id, milestone_mint_tx, redeemed_at, reward_type')
         .eq('user_identity_id', identityId)
         .order('redeemed_at', { ascending: true }),
     ]);
@@ -583,6 +590,12 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     mintTx: string | null;
     redeemedAt: string;
   }> = [];
+  const rawRewards: Array<{
+    venueId: string;
+    label: string;
+    stampsConsumed: number;
+    redeemedAt: string;
+  }> = [];
   for (const row of rewardRows ?? []) {
     const r = row as {
       venue_id: string;
@@ -590,7 +603,15 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       trophy_asset_id: string | null;
       milestone_mint_tx: string | null;
       redeemed_at: string;
+      reward_type: string | null;
     };
+    rawRewards.push({
+      venueId: r.venue_id,
+      // 'free_item' is the pre-snapshot legacy default — not a real label.
+      label: r.reward_type && r.reward_type !== 'free_item' ? r.reward_type : '',
+      stampsConsumed: Number(r.stamps_consumed ?? 0),
+      redeemedAt: r.redeemed_at,
+    });
     // Rows arrive oldest-first, so this running count IS the edition number.
     const editionAtVenue = (cardsByVenue.get(r.venue_id) ?? 0) + 1;
     if (r.trophy_asset_id) {
@@ -646,11 +667,20 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     mintTx: t.mintTx,
     redeemedAt: t.redeemedAt,
   }));
+  const rewardsDetail = rawRewards
+    .map((r) => ({
+      venueName: venueNameById.get(r.venueId) ?? 'Partner venue',
+      label: r.label,
+      stampsConsumed: r.stampsConsumed,
+      redeemedAt: r.redeemedAt,
+    }))
+    .reverse(); // rows arrive oldest-first → newest first for display
 
   return {
     totalStamps: [...stampsByVenue.values()].reduce((a, b) => a + b, 0),
     cardsCompleted: [...cardsByVenue.values()].reduce((a, b) => a + b, 0),
     trophiesMinted,
+    rewardsDetail,
     trophies,
     venues,
   };

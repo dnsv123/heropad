@@ -72,9 +72,8 @@ export default function Header() {
           <NavLink to="/" end className={navLinkClass}>
             {t('nav.home')}
           </NavLink>
-          <NavLink to="/claim" className={navLinkClass}>
-            {t('nav.claim')}
-          </NavLink>
+          {/* "Claim" intentionally hidden from nav until physical QR/NFC
+              products ship — the page stays live via /claim + Ecosystem card. */}
           <NavLink to="/v-dash" className={navLinkClass}>
             {t('nav.vdash')}
           </NavLink>
@@ -153,9 +152,6 @@ export default function Header() {
           <div className="flex flex-col gap-3 text-sm">
             <NavLink to="/" end className={navLinkClass} onClick={() => setMobileOpen(false)}>
               {t('nav.home')}
-            </NavLink>
-            <NavLink to="/claim" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              {t('nav.claim')}
             </NavLink>
             <NavLink to="/v-dash" className={navLinkClass} onClick={() => setMobileOpen(false)}>
               {t('nav.vdash')}
