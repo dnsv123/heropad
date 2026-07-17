@@ -36,7 +36,7 @@ const app = express();
 // Default for dev: localhost:5173 (Vite) + the Vercel project.
 const allowedOrigins = (
   process.env.CORS_ALLOWED_ORIGINS ??
-  'http://localhost:5173,https://heropad.vercel.app,https://www.heropad.vercel.app'
+  'http://localhost:5173,https://heropad.vercel.app,https://www.heropad.vercel.app,https://heropad.supervictoruniverse.com'
 )
   .split(',')
   .map((s) => s.trim())
