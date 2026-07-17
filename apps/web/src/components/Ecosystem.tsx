@@ -5,8 +5,6 @@ import { useT } from '../i18n';
 
 // Landing → ecosystem: HeroPad is one door into the SuperVictor Universe.
 // External links open in new tabs; internal ones use the router.
-// TODO: swap the Comic Book link for the exact Amazon URL when Valentin
-// provides it (points to the shop meanwhile).
 export default function Ecosystem() {
   const { t } = useT();
 
@@ -35,7 +33,7 @@ export default function Ecosystem() {
       icon: '📖',
       title: t('eco.comic.t'),
       text: t('eco.comic.d'),
-      href: 'https://supervictor.shop',
+      href: 'https://www.amazon.com/dp/B0CW62SY47',
       external: true,
     },
     {
