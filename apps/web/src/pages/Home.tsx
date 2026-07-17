@@ -2,12 +2,13 @@ import { motion } from 'framer-motion';
 
 import Hero from '../components/Hero';
 import HowItWorks from '../components/HowItWorks';
-import WhySolana from '../components/WhySolana';
+import ForBusinesses from '../components/ForBusinesses';
+import Ecosystem from '../components/Ecosystem';
 
-// Single-scroll landing narrative.
-// "Floating Victor" is a small flying-pose mascot positioned between the
-// "How it works" and "Why Solana" sections — adds personality without
-// stealing focus. Hidden on small screens to keep the mobile flow clean.
+// Landing narrative, Power-Pass-first:
+//   Hero (the promise) → How it works (customer journey) → For businesses
+//   (the sales section the gold CTA scrolls to) → Ecosystem (SuperVictor
+//   universe doors: Hall of Heroes, Shop, Comic, V-DASH, Claim).
 export default function Home() {
   return (
     <div className="relative">
@@ -19,23 +20,18 @@ export default function Home() {
         src="/super-victor-fly-1.png"
         alt=""
         aria-hidden
-        className="pointer-events-none absolute right-4 top-[68%] hidden h-32 w-auto opacity-90 drop-shadow-[0_10px_40px_rgba(93,211,255,0.3)] lg:block xl:right-12 xl:h-40"
+        className="pointer-events-none absolute right-4 top-[62%] hidden h-32 w-auto opacity-90 drop-shadow-[0_10px_40px_rgba(93,211,255,0.3)] lg:block xl:right-12 xl:h-40"
         initial={{ opacity: 0, x: 30 }}
         whileInView={{ opacity: 0.95, x: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        animate={{ y: [0, -14, 0] }}
-        style={{
-          // The keyframe Y animation should run continuously, but framer-motion
-          // can't compose two `animate` props. We use the `style` for a CSS
-          // float fallback when the entrance has finished.
-        }}
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = 'none';
         }}
       />
 
-      <WhySolana />
+      <ForBusinesses />
+      <Ecosystem />
     </div>
   );
 }

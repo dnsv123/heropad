@@ -1,37 +1,30 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
 
-// Landing-page hero. Two-column on desktop, stacked on mobile.
-// Mobile order: small character on top → text → CTAs (so the mascot is
-// always above the fold).
-// Desktop order: text-left, large character on the right.
+import { useT } from '../i18n';
+
+// Landing hero — Power Pass first (the product we sell today), the SuperVictor
+// universe as the wrapper. Two-column on desktop, stacked on mobile; mascot
+// floats with a rotating glow ring. Copy is fully bilingual via i18n.
 //
 // CTA strategy:
-//   - Primary "Claim your hero" → gold (matches EUIPO SuperVictor logo).
-//   - Secondary login → outlined purple (Solana signal).
-//
-// Animations (framer-motion, already installed):
-//   - Stagger reveal of text + buttons on mount.
-//   - Character image: gentle Y-axis float loop (3s, easeInOut).
-//   - Glow rings rotating slowly behind character for depth.
+//   - Primary gold: "For businesses" → scrolls to the #business section.
+//   - Secondary outline: claim flow (the original phygital audience).
 export default function Hero() {
-  const { ready, authenticated, login } = usePrivy();
+  const { t } = useT();
 
   return (
     <section className="relative overflow-hidden">
-      {/* Soft glow behind the whole hero, CSS-only. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
 
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-12 md:flex-row md:gap-12 md:py-24">
-        {/* Character art — on mobile this is FIRST (order-first), on desktop it's SECOND (md:order-last). */}
+        {/* Character art — first on mobile, right side on desktop. */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
           className="relative order-first w-full max-w-[220px] flex-shrink-0 md:order-last md:max-w-sm md:flex-1"
         >
-          {/* Rotating glow ring behind character. */}
           <motion.div
             aria-hidden
             className="absolute inset-0 rounded-3xl"
@@ -43,9 +36,7 @@ export default function Hero() {
             animate={{ rotate: 360 }}
             transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
           />
-
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-hero-blue/30 bg-gradient-to-br from-hero-deep via-hero-blue/20 to-hero-deep">
-            {/* The actual mascot. Floating animation gives "alive" feel. */}
             <motion.img
               src="/super-victor.png"
               alt="SuperVictor — the official HeroPad mascot"
@@ -56,7 +47,6 @@ export default function Hero() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            {/* Static thin ring on top of the gradient. */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-hero-cyan/20"
@@ -72,7 +62,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
           >
-            Phygital × Solana
+            {t('hero.eyebrow')}
           </motion.p>
 
           <motion.h1
@@ -83,7 +73,8 @@ export default function Hero() {
           >
             <span className="bg-gradient-to-r from-hero-gold via-hero-gold-bright to-hero-cyan bg-clip-text text-transparent">
               HeroPad
-            </span>
+            </span>{' '}
+            <span className="text-white">⚡ Power&nbsp;Pass</span>
           </motion.h1>
 
           <motion.p
@@ -92,8 +83,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mx-auto mt-3 max-w-xl text-base text-slate-300 md:mx-0 md:mt-4 md:text-lg"
           >
-            Where physical heroes become digital superpowers. Scan a figurine,
-            card, or pack — claim a Solana cNFT, unlock V-DASH.
+            {t('hero.subtitle')}
           </motion.p>
 
           <motion.div
@@ -102,34 +92,23 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:justify-start"
           >
-            <Link
-              to="/claim"
+            <a
+              href="#business"
               className="group relative overflow-hidden rounded-full bg-hero-gold px-6 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
             >
-              <span className="relative z-10">Claim your hero</span>
-              {/* Shimmer sweep on hover. */}
+              <span className="relative z-10">{t('hero.cta.business')}</span>
               <span
                 aria-hidden
                 className="absolute inset-y-0 -left-12 w-12 -skew-x-12 bg-white/40 transition-all duration-700 ease-out group-hover:left-[110%]"
               />
-            </Link>
+            </a>
 
-            {!ready ? null : authenticated ? (
-              <Link
-                to="/profile"
-                className="rounded-full border border-hero-cyan/40 px-6 py-3 font-medium text-slate-200 transition hover:border-hero-cyan hover:text-white"
-              >
-                View profile
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={login}
-                className="rounded-full border border-solana-purple/60 px-6 py-3 font-medium text-slate-200 transition hover:border-solana-purple hover:text-white"
-              >
-                Login
-              </button>
-            )}
+            <Link
+              to="/claim"
+              className="rounded-full border border-hero-cyan/40 px-6 py-3 font-medium text-slate-200 transition hover:border-hero-cyan hover:text-white"
+            >
+              {t('eco.claim.t')}
+            </Link>
           </motion.div>
 
           <motion.p
@@ -138,16 +117,14 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="mt-6 text-xs text-slate-500 md:mt-8"
           >
-            A{' '}
             <a
               href="https://supervictornft.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hero-cyan transition hover:text-hero-gold"
             >
-              SuperVictor Universe
-            </a>{' '}
-            project.
+              {t('hero.project')}
+            </a>
           </motion.p>
         </div>
       </div>

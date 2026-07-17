@@ -7,6 +7,7 @@ import { useSolanaWallets } from '@privy-io/react-auth/solana';
 import PowerMeter from '../components/PowerMeter';
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
+import { useT } from '../i18n';
 
 // Loyalty page — customer view, wired to the REAL backend.
 // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ export default function Loyalty() {
   const { slug = 'cafe-victor' } = useParams();
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { wallets, ready: walletsReady, createWallet } = useSolanaWallets();
+  const { t } = useT();
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [venueError, setVenueError] = useState<string | null>(null);
@@ -181,7 +183,7 @@ export default function Loyalty() {
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
         {/* Venue header */}
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">⚡ Power Pass</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">{t('loy.eyebrow')}</p>
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
             {venue?.name ?? '…'}
           </h1>
@@ -201,15 +203,14 @@ export default function Loyalty() {
               className="mt-6 rounded-2xl border border-solana-green/40 bg-solana-green/10 p-5 text-center"
             >
               <p className="font-display text-xl font-semibold text-solana-green">
-                🎉 Reward redeemed — enjoy!
+                {t('loy.celebrate.title')}
               </p>
               <p className="mt-1 text-sm text-slate-300">
-                Your card restarted, and a <strong>SuperVictor Trophy</strong> was
-                minted to your collection —{' '}
+                {t('loy.celebrate.body')}{' '}
                 <a href="/profile" className="text-hero-cyan underline">
-                  see it in your Profile
+                  {t('loy.celebrate.link')}
                 </a>
-                . Extra stamps carry over automatically.
+                {t('loy.celebrate.tail')}
               </p>
             </motion.div>
           )}
@@ -222,20 +223,16 @@ export default function Loyalty() {
               own phone (proof of presence); the barista types that to redeem. */}
           {me?.canRedeem && !redeemCode && (
             <div className="mt-5 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4 text-center">
-              <p className="text-sm text-hero-gold">⚡ Full power — your reward is ready!</p>
+              <p className="text-sm text-hero-gold">{t('loy.full.title')}</p>
               <button
                 type="button"
                 disabled={redeemBusy}
                 onClick={() => void requestRedeemCode()}
                 className="mt-3 rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
               >
-                {redeemBusy ? 'Generating…' : 'Claim reward — get my code'}
+                {redeemBusy ? t('loy.full.generating') : t('loy.full.btn')}
               </button>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">
-                ⏱ Tap this <strong>at the counter</strong> — the code works for{' '}
-                <strong>5 minutes only</strong> and the barista redeems it on the
-                spot. (Generated it too early? Just tap again for a fresh one.)
-              </p>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">{t('loy.full.note')}</p>
             </div>
           )}
 
@@ -246,13 +243,13 @@ export default function Loyalty() {
               className="mt-5 rounded-xl border border-hero-gold/60 bg-hero-gold/10 p-4 text-center"
             >
               <p className="text-xs uppercase tracking-wider text-hero-gold">
-                Reward code — tell it to the barista
+                {t('loy.code.label')}
               </p>
               <p className="mt-2 font-mono text-4xl font-bold tracking-[0.35em] text-hero-gold">
                 {redeemCode.code}
               </p>
               <p className="mt-2 text-xs text-slate-400">
-                One-time use · expires in{' '}
+                {t('loy.code.expires')}{' '}
                 <span
                   className={
                     redeemSecondsLeft <= 60 ? 'font-semibold text-red-300' : 'text-slate-300'
@@ -262,31 +259,26 @@ export default function Loyalty() {
                   {String(redeemSecondsLeft % 60).padStart(2, '0')}
                 </span>
               </p>
-              <p className="mt-1 text-[11px] text-slate-500">
-                Show it to the barista right now. Expired? Tap “Claim reward” again —
-                you lose nothing.
-              </p>
+              <p className="mt-1 text-[11px] text-slate-500">{t('loy.code.show')}</p>
             </motion.div>
           )}
 
           <div className="mt-6 border-t border-hero-blue/15 pt-6">
             {!ready ? null : !authenticated ? (
               <div className="text-center">
-                <p className="mb-3 text-xs text-slate-500">
-                  Login once to start collecting — takes ~10 seconds.
-                </p>
+                <p className="mb-3 text-xs text-slate-500">{t('loy.login.hint')}</p>
                 <button
                   type="button"
                   onClick={login}
                   className="rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep"
                 >
-                  Login to collect stamps
+                  {t('loy.login.btn')}
                 </button>
               </div>
             ) : me ? (
               <div className="text-center">
                 <p className="text-xs uppercase tracking-wider text-slate-500">
-                  Your code — show it at the counter
+                  {t('loy.yourcode')}
                 </p>
                 <motion.p
                   key={me.code}
@@ -297,28 +289,29 @@ export default function Loyalty() {
                   {me.code}
                 </motion.p>
                 <p className="mt-3 text-xs text-slate-500">
-                  ☕ {me.totalStamps} stamps lifetime · 🎫 {me.cardsCompleted}{' '}
-                  {me.cardsCompleted === 1 ? 'card' : 'cards'} completed
+                  {t('loy.stats', {
+                    total: me.totalStamps,
+                    cards: me.cardsCompleted,
+                    cardsWord:
+                      me.cardsCompleted === 1 ? t('loy.card.one') : t('loy.card.many'),
+                  })}
                 </p>
                 {walletMissing && (
                   <p className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-200">
-                    ⚠ Your trophy vault couldn't be set up in this browser —
-                    private/incognito mode blocks it. Open this page once in a
-                    normal window: stamps stay safe, and trophies will mint
-                    automatically from then on.
+                    {t('loy.wallet.missing')}
                   </p>
                 )}
               </div>
             ) : meError ? (
               <p className="text-center text-sm text-red-300">{meError}</p>
             ) : (
-              <p className="text-center text-sm text-slate-500">Loading your card…</p>
+              <p className="text-center text-sm text-slate-500">{t('loy.loading')}</p>
             )}
           </div>
         </div>
 
         <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-600">
-          Stamps are granted by the café at purchase and appear here live.
+          {t('loy.footnote')}
         </p>
       </div>
     </section>

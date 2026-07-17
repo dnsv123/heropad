@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useT } from '../i18n';
+
 // PowerMeter — the "energy bar that fills up" loyalty visual.
 // ---------------------------------------------------------------------------
 // NOT a punch-card simulation: it's SuperVictor charging up. Each stamp adds a
@@ -25,6 +27,7 @@ export default function PowerMeter({
   heroSrc = '/super-victor-fly-1.png',
   justCharged = false,
 }: PowerMeterProps) {
+  const { t } = useT();
   const clamped = Math.min(Math.max(current, 0), required);
   const pct = required > 0 ? (clamped / required) * 100 : 0;
   const isFull = clamped >= required && required > 0;
@@ -79,7 +82,7 @@ export default function PowerMeter({
         />
         <motion.img
           src={imgSrc}
-          alt="SuperVictor charging up — tap to see all levels"
+          alt={t('meter.alt')}
           role="button"
           tabIndex={0}
           onClick={() => setGalleryOpen(true)}
@@ -164,10 +167,12 @@ export default function PowerMeter({
       {/* ---- Status line ---- */}
       <div className="mt-3 text-center text-sm">
         {isFull ? (
-          <span className="font-semibold text-hero-gold">⚡ Full power — reward unlocked!</span>
+          <span className="font-semibold text-hero-gold">{t('meter.full')}</span>
         ) : (
           <span className="text-slate-400">
-            {required - clamped} more {required - clamped === 1 ? 'stamp' : 'stamps'} to your reward
+            {required - clamped === 1
+              ? t('meter.more.one')
+              : t('meter.more.many', { n: required - clamped })}
           </span>
         )}
       </div>
@@ -176,7 +181,7 @@ export default function PowerMeter({
         onClick={() => setGalleryOpen(true)}
         className="mx-auto mt-2 block text-xs text-slate-500 underline decoration-dotted transition hover:text-hero-cyan"
       >
-        See all power levels
+        {t('meter.seelevels')}
       </button>
 
       {/* ---- Level gallery modal ---- */}
@@ -199,10 +204,10 @@ export default function PowerMeter({
               className="w-full max-w-md rounded-2xl border border-hero-blue/30 bg-hero-deep p-5 shadow-2xl"
             >
               <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
-                SuperVictor power levels
+                {t('meter.gallery.title')}
               </h3>
               <p className="mt-1 text-center text-xs text-slate-500">
-                Every stamp charges him up — you are at level {level}.
+                {t('meter.gallery.sub', { n: level })}
               </p>
 
               <div className="mt-4 grid grid-cols-5 gap-2">
@@ -246,7 +251,7 @@ export default function PowerMeter({
                 onClick={() => setGalleryOpen(false)}
                 className="mt-5 w-full rounded-full bg-hero-gold px-4 py-2 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
               >
-                Keep charging ⚡
+                {t('meter.gallery.close')}
               </button>
             </motion.div>
           </motion.div>

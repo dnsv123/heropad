@@ -1,88 +1,44 @@
 import { motion } from 'framer-motion';
 
-// 3-step explainer. Each step uses a brand colour and reveals on scroll
-// with a staggered delay, so the section feels alive rather than static.
-const STEPS = [
-  {
-    n: '01',
-    title: 'Scan',
-    accent: 'text-hero-cyan',
-    border: 'border-hero-cyan/30 hover:border-hero-cyan',
-    glow: 'hover:shadow-[0_0_30px_-10px_rgba(93,211,255,0.5)]',
-    body: 'Tap your NFC figurine, scan the QR card, or point your camera at the pack. Each item carries a unique signed code.',
-  },
-  {
-    n: '02',
-    title: 'Claim',
-    accent: 'text-hero-gold',
-    border: 'border-hero-gold/30 hover:border-hero-gold',
-    glow: 'hover:shadow-hero-gold',
-    body: 'Sign in with email, Google, or Phantom. We mint a Solana cNFT to your wallet — gas-light, near-instant, yours forever.',
-  },
-  {
-    n: '03',
-    title: 'Play',
-    accent: 'text-solana-purple',
-    border: 'border-solana-purple/30 hover:border-solana-purple',
-    glow: 'hover:shadow-hero-purple',
-    body: 'Your collectibles unlock V-DASH characters, BITS rewards, and seasonal events. The figurine is the key.',
-  },
-];
+import { useT } from '../i18n';
 
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12 } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-};
-
+// Landing → "How Power Pass works": the customer journey in 4 steps.
+// Bilingual via i18n; cards reveal on scroll.
 export default function HowItWorks() {
-  return (
-    <section className="px-6 py-16 md:py-20">
-      <div className="mx-auto max-w-6xl">
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5 }}
-          className="font-display text-3xl font-semibold md:text-4xl"
-        >
-          How it works
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-2 max-w-2xl text-slate-400"
-        >
-          One scan turns a SuperVictor toy into a verifiable on-chain
-          collectible — and a key that unlocks gameplay.
-        </motion.p>
+  const { t } = useT();
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: '-80px' }}
-          className="mt-10 grid gap-4 md:grid-cols-3"
-        >
-          {STEPS.map((s) => (
-            <motion.div
-              key={s.n}
-              variants={cardVariants}
-              whileHover={{ y: -4 }}
-              className={`rounded-2xl border ${s.border} ${s.glow} bg-hero-deep/40 p-6 backdrop-blur transition-all duration-300`}
-            >
-              <p className={`font-mono text-xs ${s.accent}`}>{s.n}</p>
-              <h3 className="mt-2 font-display text-xl font-semibold">{s.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{s.body}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+  const steps = [
+    { icon: '📱', title: t('how.s1.t'), text: t('how.s1.d') },
+    { icon: '⚡', title: t('how.s2.t'), text: t('how.s2.d') },
+    { icon: '🎁', title: t('how.s3.t'), text: t('how.s3.d') },
+    { icon: '🏆', title: t('how.s4.t'), text: t('how.s4.d') },
+  ];
+
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+      <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
+        {t('how.title')}
+      </h2>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map((s, i) => (
+          <motion.div
+            key={s.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.45, delay: i * 0.08 }}
+            className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5 transition hover:border-hero-cyan/40"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{s.icon}</span>
+              <span className="font-display text-sm font-bold uppercase tracking-wider text-hero-cyan">
+                {i + 1}. {s.title}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">{s.text}</p>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

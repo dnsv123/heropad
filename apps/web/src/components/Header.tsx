@@ -3,6 +3,8 @@ import { Link, NavLink } from 'react-router-dom';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
+import { useT } from '../i18n';
+
 // Single source of truth for the top navigation + auth button.
 // Layout strategy:
 //   - Desktop (md+): inline nav links + login button to the right of the wordmark.
@@ -18,6 +20,19 @@ export default function Header() {
   const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { lang, setLang, t } = useT();
+
+  // One-tap language toggle: shows the language you would SWITCH TO.
+  const langToggle = (
+    <button
+      type="button"
+      onClick={() => setLang(lang === 'ro' ? 'en' : 'ro')}
+      aria-label={lang === 'ro' ? 'Switch to English' : 'Schimbă în română'}
+      className="rounded-full border border-hero-blue/40 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300 transition hover:border-hero-cyan hover:text-hero-cyan"
+    >
+      {lang === 'ro' ? 'EN' : 'RO'}
+    </button>
+  );
 
   // Pick the first Solana wallet (embedded if user signed in with email/Google,
   // external if they connected Phantom/Solflare). Both share the same shape.
@@ -55,19 +70,20 @@ export default function Header() {
         {/* Desktop nav (hidden on mobile). */}
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <NavLink to="/" end className={navLinkClass}>
-            Home
+            {t('nav.home')}
           </NavLink>
           <NavLink to="/claim" className={navLinkClass}>
-            Claim
+            {t('nav.claim')}
           </NavLink>
           <NavLink to="/v-dash" className={navLinkClass}>
-            V-DASH
+            {t('nav.vdash')}
           </NavLink>
           {authenticated && (
             <NavLink to="/profile" className={navLinkClass}>
-              Profile
+              {t('nav.profile')}
             </NavLink>
           )}
+          {langToggle}
 
           {!authenticated ? (
             <button
@@ -76,7 +92,7 @@ export default function Header() {
               disabled={!ready}
               className="rounded-full bg-solana-purple px-5 py-2 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
             >
-              {ready ? 'Login' : 'Loading…'}
+              {ready ? t('nav.login') : t('nav.loading')}
             </button>
           ) : (
             <div className="flex items-center gap-3">
@@ -88,7 +104,7 @@ export default function Header() {
                 onClick={logout}
                 className="text-xs text-slate-400 transition hover:text-white"
               >
-                Logout
+                {t('nav.logout')}
               </button>
             </div>
           )}
@@ -96,6 +112,7 @@ export default function Header() {
 
         {/* Mobile controls: compact login + hamburger. */}
         <div className="flex items-center gap-2 md:hidden">
+          {langToggle}
           {!authenticated ? (
             <button
               type="button"
@@ -103,7 +120,7 @@ export default function Header() {
               disabled={!ready}
               className="rounded-full bg-solana-purple px-4 py-1.5 text-sm font-medium text-white shadow-hero-purple disabled:opacity-50"
             >
-              {ready ? 'Login' : '…'}
+              {ready ? t('nav.login') : '…'}
             </button>
           ) : (
             <span className="rounded-full border border-hero-cyan/40 px-2.5 py-1 font-mono text-[11px] text-hero-cyan">
@@ -135,17 +152,17 @@ export default function Header() {
         <nav className="border-t border-hero-blue/20 bg-hero-deep px-4 py-3 md:hidden">
           <div className="flex flex-col gap-3 text-sm">
             <NavLink to="/" end className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              Home
+              {t('nav.home')}
             </NavLink>
             <NavLink to="/claim" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              Claim
+              {t('nav.claim')}
             </NavLink>
             <NavLink to="/v-dash" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              V-DASH
+              {t('nav.vdash')}
             </NavLink>
             {authenticated && (
               <NavLink to="/profile" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-                Profile
+                {t('nav.profile')}
               </NavLink>
             )}
             {authenticated && (
@@ -157,7 +174,7 @@ export default function Header() {
                 }}
                 className="self-start text-xs text-slate-400 hover:text-white"
               >
-                Logout
+                {t('nav.logout')}
               </button>
             )}
           </div>
