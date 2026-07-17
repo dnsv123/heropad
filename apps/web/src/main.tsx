@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { PrivyProvider } from '@privy-io/react-auth';
 
 import App from './App';
+import { I18nProvider } from './i18n';
 import { PRIVY_APP_ID, privyConfig } from './lib/privy';
 import './styles/index.css';
 
@@ -20,9 +21,11 @@ if (!PRIVY_APP_ID) {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <PrivyProvider appId={PRIVY_APP_ID ?? ''} config={privyConfig}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <I18nProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </I18nProvider>
     </PrivyProvider>
   </React.StrictMode>
 );
