@@ -537,10 +537,17 @@ loyaltyRouter.post(
         });
       }
       await markRedeemCodeUsed(rc.id);
+      // Snapshot the CURRENT reward label into the row — if the venue later
+      // changes its reward, history keeps showing what was actually given.
+      const rewardLabel =
+        typeof owned.venue.branding?.reward === 'string'
+          ? (owned.venue.branding.reward as string)
+          : undefined;
       const rewardId = await redeemReward({
         identityId: rc.user_identity_id,
         venueId: owned.venue.id,
         stampsConsumed: owned.venue.stamps_required,
+        rewardType: rewardLabel,
       });
 
       const after = await getVenueProgress(rc.user_identity_id, owned.venue.id);
