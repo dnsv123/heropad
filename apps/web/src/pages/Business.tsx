@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
+import { useT } from '../i18n';
 
 // Business page — the barista / merchant device.
 // ---------------------------------------------------------------------------
@@ -55,6 +56,7 @@ export default function Business() {
   const [params] = useSearchParams();
   const slug = params.get('venue') ?? VENUE_SLUG_DEFAULT;
   const { ready, authenticated, login, logout, getAccessToken } = usePrivy();
+  const { t } = useT();
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [claiming, setClaiming] = useState(false);
@@ -151,7 +153,7 @@ export default function Business() {
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
       setNotice({
         kind: 'ok',
-        text: `+${count} ${count === 1 ? 'stamp' : 'stamps'} → now ${r.stamps}/${r.required}`,
+        text: t('b.n.granted', { n: count, s: r.stamps, r: r.required }),
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -172,7 +174,10 @@ export default function Business() {
       >(`/api/loyalty/merchant/${slug}/revoke`, { code: customer.code }, token ?? undefined);
       hapticTap(10);
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
-      setNotice({ kind: 'ok', text: `Corrected: −1 stamp → now ${r.stamps}/${customer.required}` });
+      setNotice({
+        kind: 'ok',
+        text: t('b.n.corrected', { s: r.stamps, r: customer.required }),
+      });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
@@ -190,7 +195,7 @@ export default function Business() {
       if (!Number.isNaN(n)) body.stampsRequired = n;
       if (setReward.trim().length >= 2) body.rewardLabel = setReward.trim();
       if (Object.keys(body).length === 0) {
-        setNotice({ kind: 'err', text: 'Nothing to save — fill in at least one field.' });
+        setNotice({ kind: 'err', text: t('b.n.nothing') });
         return;
       }
       const r = await postJson<
@@ -202,7 +207,10 @@ export default function Business() {
       setCustomer(null);
       setNotice({
         kind: 'ok',
-        text: `Saved: reward at ${r.venue.stampsRequired} stamps — “${r.venue.rewardLabel ?? 'Free reward'}”. Applies instantly.`,
+        text: t('b.n.saved', {
+          n: r.venue.stampsRequired,
+          label: r.venue.rewardLabel ?? t('pp.reward.generic'),
+        }),
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -233,7 +241,7 @@ export default function Business() {
     if (!customer) return;
     const rc = redeemInput.trim().toUpperCase();
     if (!CODE_RE.test(rc)) {
-      setNotice({ kind: 'err', text: 'Ask the customer for their 6-character reward code.' });
+      setNotice({ kind: 'err', text: t('b.n.askcode') });
       return;
     }
     setBusy(true);
@@ -261,8 +269,8 @@ export default function Business() {
       setNotice({
         kind: 'ok',
         text: r.trophy
-          ? '🎉 Reward redeemed + SuperVictor Trophy minted to the customer! Hand it over.'
-          : `🎉 Reward redeemed — hand it over! ${r.trophySkipped ?? ''}`,
+          ? t('b.n.redeemed.trophy')
+          : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`,
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -281,49 +289,47 @@ export default function Business() {
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
             {venue?.name ?? '…'}
           </h1>
-          <p className="mt-1 text-sm text-slate-400">Merchant counter · grant &amp; redeem stamps</p>
+          <p className="mt-1 text-sm text-slate-400">{t('b.sub')}</p>
         </div>
 
         <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
           {!ready ? null : !authenticated ? (
             <div className="text-center">
               <p className="mb-3 text-sm text-slate-400">
-                Log in with the merchant account for {venue?.name ?? 'this venue'}.
+                {t('b.login.hint', { name: venue?.name ?? '…' })}
               </p>
               <button
                 type="button"
                 onClick={login}
                 className="rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep"
               >
-                Merchant login
+                {t('b.login.btn')}
               </button>
             </div>
           ) : isOwner === false && venue && !venue.hasOwner ? (
             <div className="text-center">
-              <p className="mb-3 text-sm text-slate-400">
-                This venue has no merchant yet. Claim it with this account (validation setup).
-              </p>
+              <p className="mb-3 text-sm text-slate-400">{t('b.claim.hint')}</p>
               <button
                 type="button"
                 onClick={handleClaimOwnership}
                 disabled={claiming}
                 className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
               >
-                {claiming ? 'Claiming…' : 'Become merchant of this venue'}
+                {claiming ? t('b.claim.busy') : t('b.claim.btn')}
               </button>
             </div>
           ) : isOwner === false ? (
             <div className="text-center text-sm text-red-300">
-              This account is not the merchant of {venue?.name ?? 'this venue'}.
+              {t('b.notmerchant', { name: venue?.name ?? '…' })}
               <button type="button" onClick={logout} className="ml-2 underline">
-                Switch account
+                {t('b.switch')}
               </button>
             </div>
           ) : (
             <>
               {/* Customer code entry */}
               <label htmlFor="code" className="text-xs uppercase tracking-wider text-slate-500">
-                Customer code (6 characters)
+                {t('b.code.label')}
               </label>
               <div className="mt-2 flex items-stretch gap-2">
                 <input
@@ -351,7 +357,7 @@ export default function Business() {
                   onClick={() => void lookupCustomer(normalizedCode)}
                   className="shrink-0 rounded-lg bg-hero-blue px-4 font-medium text-white transition hover:bg-hero-blue-bright disabled:opacity-40"
                 >
-                  Find
+                  {t('b.find')}
                 </button>
               </div>
 
@@ -378,7 +384,7 @@ export default function Business() {
                     </div>
 
                     <div className="mt-4">
-                      <p className="mb-2 text-xs text-slate-500">Coffees bought:</p>
+                      <p className="mb-2 text-xs text-slate-500">{t('b.coffees')}</p>
                       <div className="grid grid-cols-4 gap-2">
                         {[1, 2, 3].map((n) => (
                           <button
@@ -401,18 +407,12 @@ export default function Business() {
                           −1
                         </button>
                       </div>
-                      <p className="mt-1.5 text-[10px] text-slate-600">
-                        −1 = correction (removes the last stamp from today)
-                      </p>
+                      <p className="mt-1.5 text-[10px] text-slate-600">{t('b.minus.note')}</p>
                     </div>
 
                     {customer.canRedeem && (
                       <div className="mt-4 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-3">
-                        <p className="text-xs text-hero-gold">
-                          ⚡ Card full! Ask the customer to tap{' '}
-                          <strong>“Claim reward”</strong> on their phone and tell you
-                          the 6-character reward code:
-                        </p>
+                        <p className="text-xs text-hero-gold">{t('b.cardfull')}</p>
                         <div className="mt-2 flex items-stretch gap-2">
                           <input
                             type="text"
@@ -432,7 +432,7 @@ export default function Business() {
                             onClick={() => void redeem()}
                             className="shrink-0 rounded-full bg-hero-gold px-4 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
                           >
-                            Redeem
+                            {t('b.redeem')}
                           </button>
                         </div>
                       </div>
@@ -461,7 +461,7 @@ export default function Business() {
                   onClick={() => setSettingsOpen(!settingsOpen)}
                   className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-gold hover:text-white"
                 >
-                  {settingsOpen ? 'Hide campaign settings' : '⚙️ Campaign settings'}
+                  {settingsOpen ? t('b.settings.hide') : t('b.settings')}
                 </button>
                 <AnimatePresence>
                   {settingsOpen && (
@@ -473,7 +473,7 @@ export default function Business() {
                     >
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <label className="text-xs text-slate-500">
-                          Stamps needed for a reward (3–30)
+                          {t('b.set.required')}
                           <input
                             type="number"
                             min={3}
@@ -485,7 +485,7 @@ export default function Business() {
                           />
                         </label>
                         <label className="text-xs text-slate-500">
-                          The reward (what the customer gets)
+                          {t('b.set.reward')}
                           <input
                             type="text"
                             maxLength={60}
@@ -502,10 +502,10 @@ export default function Business() {
                         onClick={() => void saveSettings()}
                         className="mt-3 w-full rounded-full bg-hero-gold px-4 py-2 text-sm font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
                       >
-                        Save settings
+                        {t('b.set.save')}
                       </button>
                       <p className="mt-1.5 text-center text-[10px] text-slate-600">
-                        Changes apply instantly on customers' phones. Existing stamps are kept.
+                        {t('b.set.note')}
                       </p>
                     </motion.div>
                   )}
@@ -519,7 +519,7 @@ export default function Business() {
                   onClick={() => void toggleStats()}
                   className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
                 >
-                  {statsOpen ? 'Hide venue stats' : '📊 Venue stats'}
+                  {statsOpen ? t('b.stats.hide') : t('b.stats')}
                 </button>
 
                 <AnimatePresence>
@@ -532,9 +532,9 @@ export default function Business() {
                     >
                       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {[
-                          { v: analytics.uniqueCustomers, l: 'Unique customers' },
-                          { v: analytics.stampsLast30, l: 'Stamps · 30 days' },
-                          { v: analytics.rewardsClaimed, l: 'Rewards given' },
+                          { v: analytics.uniqueCustomers, l: t('b.stats.unique') },
+                          { v: analytics.stampsLast30, l: t('b.stats.30') },
+                          { v: analytics.rewardsClaimed, l: t('b.stats.rewards') },
                           {
                             v:
                               analytics.uniqueCustomers > 0
@@ -544,7 +544,7 @@ export default function Business() {
                                       100
                                   )}%`
                                 : '—',
-                            l: 'Repeat rate',
+                            l: t('b.stats.repeat'),
                           },
                         ].map((t) => (
                           <div
@@ -565,7 +565,7 @@ export default function Business() {
                       {analytics.daily.length > 0 && (
                         <div className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
                           <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                            Daily stamps
+                            {t('b.stats.daily')}
                           </p>
                           <div className="mt-2 flex h-20 items-end gap-1">
                             {analytics.daily.map((d) => {
@@ -590,10 +590,10 @@ export default function Business() {
                       {/* Progress buckets — "how close are customers to a reward" */}
                       <div className="mt-3 grid grid-cols-4 gap-2 text-center">
                         {[
-                          { v: analytics.progress.early, l: 'Starting' },
-                          { v: analytics.progress.mid, l: 'Halfway' },
-                          { v: analytics.progress.almost, l: 'Almost! 🔥' },
-                          { v: analytics.progress.full, l: 'Card full' },
+                          { v: analytics.progress.early, l: t('b.stats.starting') },
+                          { v: analytics.progress.mid, l: t('b.stats.halfway') },
+                          { v: analytics.progress.almost, l: t('b.stats.almost') },
+                          { v: analytics.progress.full, l: t('b.stats.full') },
                         ].map((b) => (
                           <div
                             key={b.l}
@@ -607,7 +607,7 @@ export default function Business() {
                         ))}
                       </div>
                       <p className="mt-2 text-center text-[10px] text-slate-600">
-                        Counts only — no personal data is ever shown or stored here.
+                        {t('b.stats.pii')}
                       </p>
                     </motion.div>
                   )}
@@ -618,7 +618,7 @@ export default function Business() {
         </div>
 
         <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-600">
-          Merchant-only. Every grant is attributed to your account for audit.
+          {t('b.footer')}
         </p>
       </div>
     </section>

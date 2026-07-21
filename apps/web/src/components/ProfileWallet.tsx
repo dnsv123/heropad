@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
+import { useT } from '../i18n';
+
 // Profile card showing the user's identity, all linked Solana wallets, and
 // account-management actions.
 //
@@ -21,6 +23,7 @@ import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 export default function ProfileWallet() {
   const { user } = usePrivy();
+  const { t } = useT();
   const {
     wallets,
     ready: walletsReady,
@@ -109,7 +112,7 @@ export default function ProfileWallet() {
       return (
         <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
           <div className="flex items-baseline justify-between">
-            <p className="text-xs uppercase tracking-wider text-slate-500">Solana wallets</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500">{t('w.section')}</p>
             <p className="text-xs text-slate-600">1 wallet</p>
           </div>
           <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4">
@@ -127,7 +130,7 @@ export default function ProfileWallet() {
                 onClick={() => handleCopy(linkedAddr)}
                 className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
               >
-                {copiedAddr === linkedAddr ? 'Copied!' : 'Copy address'}
+                {copiedAddr === linkedAddr ? t('w.copied') : t('w.copy')}
               </button>
               <p className="text-[11px] text-slate-500">
                 Secured by your login · full controls (key export) load with the
@@ -141,7 +144,7 @@ export default function ProfileWallet() {
 
     return (
       <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-8">
-        <p className="text-slate-400">Loading wallet…</p>
+        <p className="text-slate-400">{t('w.loading')}</p>
       </div>
     );
   }
@@ -162,17 +165,14 @@ export default function ProfileWallet() {
 
     return (
       <div className="space-y-4 rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-6 text-center md:p-8">
-        <p className="text-slate-300">
-          You don't have a Solana wallet yet. Create one in a click — Privy
-          secures it with your login, no seed phrase to write down.
-        </p>
+        <p className="text-slate-300">{t('w.create.hint')}</p>
         <button
           type="button"
           onClick={handleCreateWallet}
           disabled={creating}
           className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {creating ? 'Creating…' : 'Create my Solana wallet'}
+          {creating ? t('w.create.busy') : t('w.create.btn')}
         </button>
         {createError && (
           <p className="text-xs text-red-400">{createError}</p>
@@ -189,7 +189,7 @@ export default function ProfileWallet() {
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <p className="text-xs uppercase tracking-wider text-slate-500">
-            Solana wallets
+            {t('w.section')}
           </p>
           <p className="text-xs text-slate-600">
             {wallets.length} {wallets.length === 1 ? 'wallet' : 'wallets'}
@@ -225,7 +225,7 @@ export default function ProfileWallet() {
                   onClick={() => handleCopy(addr)}
                   className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
                 >
-                  {copiedAddr === addr ? 'Copied!' : 'Copy address'}
+                  {copiedAddr === addr ? t('w.copied') : t('w.copy')}
                 </button>
                 {isEmbedded && (
                   <button
@@ -234,13 +234,13 @@ export default function ProfileWallet() {
                     disabled={exportingAddr === addr}
                     className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-50"
                   >
-                    {exportingAddr === addr ? 'Opening…' : 'Export key'}
+                    {exportingAddr === addr ? t('w.exporting') : t('w.export')}
                   </button>
                 )}
                 <p className="ml-auto self-center text-[11px] text-slate-500">
                   {isEmbedded
-                    ? 'Secured by your login'
-                    : 'You hold the keys'}
+                    ? t('w.secured')
+                    : t('w.youhold')}
                 </p>
               </div>
             </div>

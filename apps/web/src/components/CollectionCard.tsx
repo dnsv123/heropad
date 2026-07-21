@@ -2,6 +2,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import Collectibles from './Collectibles';
+import { useT } from '../i18n';
 
 // Profile → Your collection. Wraps the existing Collectibles widget (BITS +
 // cNFT grid from Helius) under its own heading — trophies land here
@@ -15,6 +16,7 @@ import Collectibles from './Collectibles';
 export default function CollectionCard() {
   const { user } = usePrivy();
   const { wallets } = useSolanaWallets();
+  const { t } = useT();
 
   const linked = user?.linkedAccounts?.find(
     (a) => a.type === 'wallet' && (a as { chainType?: string }).chainType === 'solana'
@@ -25,10 +27,8 @@ export default function CollectionCard() {
 
   return (
     <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
-      <h2 className="font-display text-lg font-semibold text-white">Your collection</h2>
-      <p className="mt-1 text-xs text-slate-500">
-        cNFTs owned by your wallet — claimed heroes and SuperVictor Trophies.
-      </p>
+      <h2 className="font-display text-lg font-semibold text-white">{t('col.title')}</h2>
+      <p className="mt-1 text-xs text-slate-500">{t('col.sub')}</p>
       <div className="mt-4">
         <Collectibles walletAddress={walletAddress} />
       </div>

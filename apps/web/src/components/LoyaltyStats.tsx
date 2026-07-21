@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson } from '../services/apiClient';
+import { useT } from '../i18n';
 
 // Profile → Power Pass widget. Three stat tiles; EACH opens its own specific
 // detail sheet:
@@ -74,6 +75,7 @@ function formatDate(iso: string): string {
 
 export default function LoyaltyStats() {
   const { ready, authenticated, getAccessToken } = usePrivy();
+  const { t } = useT();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<DetailKind>(null);
@@ -101,22 +103,17 @@ export default function LoyaltyStats() {
   return (
     <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
       <h2 className="font-display text-lg font-semibold text-white">⚡ Power Pass</h2>
-      <p className="mt-1 text-xs leading-relaxed text-slate-500">
-        Your hero cards at partner venues. Every purchase charges SuperVictor —
-        a full card earns a free reward, a <strong>SuperVictor Trophy</strong>{' '}
-        minted into your collection, and BITS.
-      </p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('pp.explainer')}</p>
 
       {error ? (
-        <p className="mt-3 text-sm text-slate-500">Could not load your Power Pass.</p>
+        <p className="mt-3 text-sm text-slate-500">{t('pp.error')}</p>
       ) : !stats ? (
-        <p className="mt-3 text-sm text-slate-500">Loading…</p>
+        <p className="mt-3 text-sm text-slate-500">{t('pp.loading')}</p>
       ) : stats.totalStamps === 0 ? (
         <p className="mt-3 text-sm text-slate-400">
-          No hero cards yet. Scan the Power Pass QR at a partner café and your
-          first card starts automatically —{' '}
+          {t('pp.empty.pre')}{' '}
           <Link to="/loyalty/cafe-victor" className="text-hero-cyan underline">
-            try Café Victor
+            {t('pp.empty.link')}
           </Link>
           .
         </p>
@@ -132,7 +129,7 @@ export default function LoyaltyStats() {
                 {stats.totalStamps}
               </p>
               <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                ☕ Stamps
+                {t('pp.tile.stamps')}
               </p>
             </button>
             <button
@@ -144,7 +141,7 @@ export default function LoyaltyStats() {
                 {stats.cardsCompleted}
               </p>
               <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                🎁 Rewards claimed
+                {t('pp.tile.rewards')}
               </p>
             </button>
             <button
@@ -156,13 +153,11 @@ export default function LoyaltyStats() {
                 {stats.trophiesMinted}
               </p>
               <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                🏆 Trophies minted
+                {t('pp.tile.trophies')}
               </p>
             </button>
           </div>
-          <p className="mt-2 text-center text-[11px] text-slate-600">
-            Tap any card for details ↑
-          </p>
+          <p className="mt-2 text-center text-[11px] text-slate-600">{t('pp.taphint')}</p>
 
           {/* Quick links: jump straight to each venue's loyalty page. */}
           {stats.venues.length > 0 && (
@@ -206,7 +201,7 @@ export default function LoyaltyStats() {
                   {detail === 'stamps' && (
                     <>
                       <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
-                        ☕ Your stamps — {stats.totalStamps} lifetime
+                        {t('pp.sheet.stamps', { n: stats.totalStamps })}
                       </h3>
                       <div className="mt-4 space-y-4">
                         {stats.venues
@@ -224,7 +219,7 @@ export default function LoyaltyStats() {
                                   {v.name}
                                 </Link>
                                 <span className="font-mono text-xs text-hero-cyan">
-                                  {v.totalStamps} stamps
+                                  {t('pp.stamps.n', { n: v.totalStamps })}
                                 </span>
                               </div>
                               {/* All lifetime stamps, wrapping in rows of 10 */}
@@ -234,8 +229,10 @@ export default function LoyaltyStats() {
                                 ))}
                               </div>
                               <p className="mt-2 text-[11px] text-slate-500">
-                                Current card: {Math.min(v.current, v.required)}/
-                                {v.required}
+                                {t('pp.current', {
+                                  s: Math.min(v.current, v.required),
+                                  r: v.required,
+                                })}
                               </p>
                             </div>
                           ))}
@@ -247,11 +244,11 @@ export default function LoyaltyStats() {
                   {detail === 'rewards' && (
                     <>
                       <h3 className="text-center font-display text-lg font-semibold text-solana-green">
-                        🎁 Rewards claimed — {stats.cardsCompleted}
+                        {t('pp.sheet.rewards', { n: stats.cardsCompleted })}
                       </h3>
                       {stats.rewardsDetail.length === 0 ? (
                         <p className="mt-4 text-center text-sm text-slate-500">
-                          None yet — fill a card to claim your first free reward.
+                          {t('pp.rewards.empty')}
                         </p>
                       ) : (
                         <div className="mt-4 space-y-2">
@@ -263,11 +260,11 @@ export default function LoyaltyStats() {
                               <span className="text-xl">🎁</span>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-medium text-slate-200">
-                                  {r.label || 'Free reward'}
+                                  {r.label || t('pp.reward.generic')}
                                 </p>
                                 <p className="text-[11px] text-slate-400">
                                   {r.venueName} · {formatDate(r.redeemedAt)} ·{' '}
-                                  {r.stampsConsumed} stamps
+                                  {r.stampsConsumed} {t('pp.stampsword')}
                                 </p>
                               </div>
                             </div>
@@ -281,12 +278,11 @@ export default function LoyaltyStats() {
                   {detail === 'trophies' && (
                     <>
                       <h3 className="text-center font-display text-lg font-semibold text-hero-gold">
-                        🏆 SuperVictor Trophies — {stats.trophiesMinted}
+                        {t('pp.sheet.trophies', { n: stats.trophiesMinted })}
                       </h3>
                       {stats.trophies.length === 0 ? (
                         <p className="mt-4 text-center text-sm text-slate-500">
-                          No trophies yet — each completed card mints one into your
-                          collection, on-chain.
+                          {t('pp.trophies.empty')}
                         </p>
                       ) : (
                         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -352,7 +348,7 @@ export default function LoyaltyStats() {
                     onClick={() => setDetail(null)}
                     className="mt-5 w-full rounded-full bg-hero-gold px-4 py-2 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
                   >
-                    Close
+                    {t('pp.close')}
                   </button>
                 </motion.div>
               </motion.div>
