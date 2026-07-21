@@ -1,11 +1,14 @@
 import { usePrivy } from '@privy-io/react-auth';
 
+import { useT } from '../i18n';
+
 // Profile → Account card. Avatar (SuperVictor pfp for now — a custom photo
 // slot later), email, joined date, and the linked-methods actions. Sits at
 // the very top of the Profile page.
 
 export default function AccountCard() {
   const { user, linkEmail, linkGoogle, linkWallet } = usePrivy();
+  const { t } = useT();
 
   return (
     <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
@@ -26,12 +29,12 @@ export default function AccountCard() {
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs uppercase tracking-wider text-slate-500">Account</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500">{t('acct.label')}</p>
           <p className="mt-1 truncate font-medium text-slate-100">
             {user?.email?.address ?? user?.google?.email ?? '—'}
           </p>
           <p className="mt-0.5 text-xs text-slate-500">
-            Joined{' '}
+            {t('acct.joined')}{' '}
             {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
           </p>
         </div>
@@ -44,7 +47,7 @@ export default function AccountCard() {
             onClick={linkEmail}
             className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
           >
-            + Link email
+            {t('acct.link.email')}
           </button>
         )}
         {!user?.google && (
@@ -53,7 +56,7 @@ export default function AccountCard() {
             onClick={linkGoogle}
             className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
           >
-            + Link Google
+            {t('acct.link.google')}
           </button>
         )}
         <button
@@ -61,7 +64,7 @@ export default function AccountCard() {
           onClick={linkWallet}
           className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-solana-purple hover:text-white"
         >
-          + Link external wallet
+          {t('acct.link.wallet')}
         </button>
       </div>
     </div>
