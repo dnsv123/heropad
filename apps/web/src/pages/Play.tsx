@@ -13,33 +13,25 @@ import { Link } from 'react-router-dom';
 const FEATURES = [
   {
     title: 'Hero Skins',
-    body: 'Each SuperVictor cNFT minted via HeroPad becomes a wearable skin in V-DASH. Equip your collection, switch outfits between runs, show your Genesis edition.',
+    body: 'The heroes you collect through HeroPad become wearable skins in V-DASH. Equip your collection and switch outfits between runs.',
     image: '/super-victor-fly-1.png',
     accent: 'text-hero-cyan',
     border: 'border-hero-cyan/30',
   },
   {
-    title: 'Hero Gear (Chapter 2)',
-    body: 'Helmets, armor, gloves, weapons, amulets, pets — all tradeable Solana cNFTs. Combine 3 badge fragments to forge a Season Emblem. Stat bonuses in PvE.',
+    title: 'Hero Gear',
+    body: 'Helmets, armor, pets and more — collectible gear for your hero. In the works; more news when it’s ready.',
     image: '/super-victor-boxing.png',
     accent: 'text-hero-gold',
     border: 'border-hero-gold/30',
   },
   {
     title: 'BITS Rewards',
-    body: 'Play V-DASH, earn BITS. Spend BITS to upgrade gear, claim limited drops, enter seasonal tournaments. Cross-product economy across the SuperVictor Universe.',
+    body: 'Earn BITS across the SuperVictor Universe — loyalty trophies included — and spend them on drops, upgrades and seasonal events.',
     image: '/diamond-hands.png',
     accent: 'text-solana-purple',
     border: 'border-solana-purple/30',
   },
-];
-
-const ROADMAP = [
-  { label: '✅ Live now',          body: 'V-DASH playable on MultiversX · HeroPad cNFT mint on Solana devnet' },
-  { label: 'Q3 2026',              body: 'HeroPad mainnet launch · marketplace integration' },
-  { label: 'Q3 – Q4 2026',         body: 'V-DASH Chapter 2 — Hall of Heroes integration · cross-chain skins MultiversX + Solana' },
-  { label: 'Q4 2026 – Q1 2027',    body: 'First 100 NFC figurines shipped · early-adopter drops via Shopify' },
-  { label: '2027',                 body: 'V-DASH season passes · figurine partnerships · Solana-native game mode' },
 ];
 
 export default function Play() {
@@ -64,8 +56,9 @@ export default function Play() {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300 md:mx-0">
-            The flagship game of SuperVictor Universe. Live on MultiversX since
-            2024 — coming to Solana with HeroPad cNFT integration in Chapter 2.
+            The flagship game of the SuperVictor Universe — live and playable
+            today. Your HeroPad heroes and loyalty trophies will plug right
+            into it.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start">
@@ -77,9 +70,6 @@ export default function Play() {
             >
               Play V-DASH ↗
             </a>
-            <span className="rounded-full border border-solana-purple/40 bg-solana-purple/5 px-4 py-3 text-sm text-solana-purple">
-              Chapter 2 on Solana — 2026
-            </span>
           </div>
         </motion.div>
 
@@ -120,9 +110,9 @@ export default function Play() {
               <span className="font-medium text-hero-cyan">
                 With HeroPad,
               </span>{' '}
-              every physical figurine, scan card, or product pack you collect
-              in the real world becomes an in-game asset on Solana — providing
-              skins, BITS multipliers, and seasonal drops in V-DASH.
+              the heroes and trophies you collect in the real world — figurines,
+              cards, café loyalty — become part of your V-DASH identity: skins,
+              BITS and seasonal drops.
             </p>
           </div>
         </motion.div>
@@ -171,37 +161,6 @@ export default function Play() {
           ))}
         </motion.div>
 
-        {/* Roadmap timeline */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="mt-16 rounded-3xl border border-hero-blue/20 bg-hero-deep/40 p-6 md:p-10"
-        >
-          <h2 className="font-display text-2xl font-semibold md:text-3xl">
-            Roadmap
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            HeroPad is step one. The wider SuperVictor Universe scales out from
-            here.
-          </p>
-
-          <ol className="mt-8 space-y-5">
-            {ROADMAP.map((item) => (
-              <li
-                key={item.label}
-                className="flex flex-col gap-1 border-l-2 border-hero-blue/30 pl-5 md:flex-row md:items-baseline md:gap-6"
-              >
-                <span className="shrink-0 font-mono text-xs uppercase tracking-wider text-hero-cyan">
-                  {item.label}
-                </span>
-                <span className="text-sm text-slate-300">{item.body}</span>
-              </li>
-            ))}
-          </ol>
-        </motion.div>
-
         {/* Closing CTA */}
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-slate-400">
@@ -211,7 +170,7 @@ export default function Play() {
             to="/claim"
             className="rounded-full bg-hero-gold px-8 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
           >
-            Claim your first cNFT →
+            Start your collection →
           </Link>
         </div>
       </div>
