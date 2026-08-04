@@ -100,6 +100,18 @@ function parseHappyHour(branding: Record<string, unknown> | null): HappyHour | n
   };
 }
 
+/** Hosts a "Leave us a Google review" link is allowed to point at. */
+const GOOGLE_REVIEW_HOSTS = [
+  'g.page',
+  'goo.gl',
+  'maps.app.goo.gl',
+  'maps.google.com',
+  'www.google.com',
+  'google.com',
+  'search.google.com',
+  'business.google.com',
+];
+
 /** Multiplier if happy hour is active RIGHT NOW in Romania, else null. */
 function happyHourMultNow(branding: Record<string, unknown> | null): number | null {
   const hh = parseHappyHour(branding);
@@ -116,9 +128,15 @@ function happyHourMultNow(branding: Record<string, unknown> | null): number | nu
     minute: '2-digit',
     hour12: false,
   });
-  // "HH:MM" strings compare correctly lexicographically.
-  if (hh.days.includes(day) && hh.start <= time && time < hh.end) return hh.mult;
-  return null;
+  // "HH:MM" strings compare correctly lexicographically. Windows that cross
+  // midnight (21:00–01:00) wrap, otherwise a bar-hours happy hour would save
+  // successfully and then silently never fire.
+  if (!hh.days.includes(day)) return null;
+  const inWindow =
+    hh.start <= hh.end
+      ? hh.start <= time && time < hh.end
+      : time >= hh.start || time < hh.end;
+  return inWindow ? hh.mult : null;
 }
 
 const SLUG_RE = /^[a-z0-9-]{2,60}$/;
@@ -373,7 +391,17 @@ const SettingsBody = z.object({
         .max(300)
         // Rendered as an <a href> on the customer page — https only, so a
         // compromised merchant account can't inject javascript:/data: links.
-        .refine((u) => u.startsWith('https://'), 'Must be an https:// link'),
+        .refine((u) => u.startsWith('https://'), 'Must be an https:// link')
+        // The button says "Leave us a Google review", so it must actually go
+        // to Google. Without this, a merchant could point our trusted CTA at
+        // a credential-harvesting page at the customer's happiest moment.
+        .refine((u) => {
+          try {
+            return GOOGLE_REVIEW_HOSTS.includes(new URL(u).hostname.toLowerCase());
+          } catch {
+            return false;
+          }
+        }, 'Must be a Google review link (g.page, maps.app.goo.gl, google.com…)'),
       z.literal(''),
     ])
     .optional(),

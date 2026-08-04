@@ -44,8 +44,30 @@ interface RedeemCodeState {
   expiresAt: string;
 }
 
+/**
+ * Defense in depth for merchant-controlled links: the API validates on write,
+ * but `venues.branding` also has non-API writers (seeds, manual Supabase
+ * edits). React only WARNS on a `javascript:` href — it still renders it — so
+ * we re-check the scheme here before turning anything into a clickable link.
+ */
+function safeHttpsUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Venue slug from the URL, constrained to the shape the API accepts. */
+function safeSlug(value: string): string {
+  return /^[a-z0-9-]{2,60}$/.test(value) ? value : 'cafe-victor';
+}
+
 export default function Loyalty() {
-  const { slug = 'cafe-victor' } = useParams();
+  const { slug: rawSlug = 'cafe-victor' } = useParams();
+  const slug = safeSlug(rawSlug);
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { wallets, ready: walletsReady, createWallet } = useSolanaWallets();
   const { t } = useT();
@@ -199,7 +221,7 @@ export default function Loyalty() {
             <div className="mt-3 flex justify-center gap-2">
               {venue?.gpsLat != null && venue?.gpsLng != null && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${venue.gpsLat},${venue.gpsLng}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${Number(venue.gpsLat)},${Number(venue.gpsLng)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
@@ -248,9 +270,9 @@ export default function Loyalty() {
               </p>
               {/* Review invite — shown to EVERYONE at the happiest moment (free
                   reward in hand). No filtering: Google forbids review-gating. */}
-              {typeof venue?.branding?.reviewUrl === 'string' && (
+              {safeHttpsUrl(venue?.branding?.reviewUrl) && (
                 <a
-                  href={venue.branding.reviewUrl as string}
+                  href={safeHttpsUrl(venue?.branding?.reviewUrl) as string}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-hero-deep shadow transition hover:bg-hero-gold-bright"
