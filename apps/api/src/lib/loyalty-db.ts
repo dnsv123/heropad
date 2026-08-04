@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 import { getSupabaseAdmin } from './supabase-admin.js';
 
 // Loyalty data layer (schema 003 + 004).
@@ -85,10 +87,17 @@ export async function claimVenueOwnership(
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 6;
 
+/**
+ * Cryptographically secure code generator. MUST NOT use Math.random(): V8's
+ * PRNG state is recoverable from a handful of observed outputs, and a merchant
+ * legitimately sees many codes — that would let them predict a customer's next
+ * redeem code and consume a card without the customer present, defeating the
+ * whole proof-of-presence design.
+ */
 function randomLoyaltyCode(): string {
   let out = '';
   for (let i = 0; i < CODE_LENGTH; i++) {
-    out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+    out += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   }
   return out;
 }
@@ -380,12 +389,21 @@ export async function findValidRedeemCode(
   return (data as RedeemCodeRow) ?? null;
 }
 
-export async function markRedeemCodeUsed(id: string): Promise<void> {
-  const { error } = await getSupabaseAdmin()
+/**
+ * Atomically consumes a redeem code. Returns false if it was already used —
+ * the `.is('used_at', null)` guard makes this the single serialization point
+ * for redemption, so N concurrent requests with the same code can never each
+ * mint a trophy and credit BITS.
+ */
+export async function markRedeemCodeUsed(id: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
     .from('redeem_codes')
     .update({ used_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .is('used_at', null)
+    .select('id');
   if (error) throw new Error(`[Supabase] markRedeemCodeUsed: ${error.message}`);
+  return (data?.length ?? 0) > 0;
 }
 
 /**

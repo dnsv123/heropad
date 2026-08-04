@@ -2,7 +2,11 @@ import { Router, type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
-import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import {
+  requireAuth,
+  getUserSolanaWallets,
+  type AuthedRequest,
+} from '../middleware/auth.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
 import { creditBits } from '../lib/supabase-admin.js';
 import {
@@ -61,7 +65,12 @@ loyaltyRouter.use(
 // bounds the damage a compromised/abusive merchant session can do in a day.
 // Override via env while testing (LOYALTY_DAILY_CAP=100); becomes a per-venue
 // merchant setting in the dashboard phase.
-const MAX_STAMPS_PER_DAY = Number(process.env.LOYALTY_DAILY_CAP ?? 10);
+// Fails CLOSED: a malformed env value falls back to the safe default instead
+// of turning into NaN, which would silently disable the cap entirely.
+const MAX_STAMPS_PER_DAY = (() => {
+  const parsed = Number(process.env.LOYALTY_DAILY_CAP);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+})();
 
 // --- Happy Hour (Romania local time) -----------------------------------------
 
@@ -182,7 +191,9 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
         name: venue.name,
         stampsRequired: venue.stamps_required,
         branding: venue.branding,
-        hasOwner: Boolean(venue.owner_identity_id),
+        // `hasOwner` is intentionally NOT exposed publicly — it would tell an
+        // attacker exactly which venues are claimable. /business discovers it
+        // through the authenticated merchant probe instead.
         gpsLat: venue.gps_lat,
         gpsLng: venue.gps_lng,
         happyHour: hhMult ? { active: true, mult: hhMult } : null,
@@ -216,11 +227,29 @@ loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) 
     const venue = await loadActiveVenue(req.params.slug, res);
     if (!venue) return;
 
-    const wallet =
-      typeof req.query.wallet === 'string' && req.query.wallet.length >= 32
+    // Wallet binding is one-time and VERIFIED: the client may hint which
+    // address to link, but we only accept it after Privy confirms it belongs
+    // to this account — otherwise trophies and BITS could be aimed at a
+    // stranger's wallet. Already-bound identities skip the lookup entirely,
+    // so the 4s progress polling costs nothing extra.
+    const hinted =
+      typeof req.query.wallet === 'string' &&
+      /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(req.query.wallet)
         ? req.query.wallet
         : null;
-    const identity = await ensureIdentity(privyId, wallet);
+
+    let identity = await ensureIdentity(privyId);
+    if (hinted && !identity.solana_wallet) {
+      try {
+        const owned = await getUserSolanaWallets(privyId);
+        if (owned.includes(hinted)) {
+          identity = await ensureIdentity(privyId, hinted);
+        }
+      } catch (lookupErr) {
+        // eslint-disable-next-line no-console
+        console.warn('[loyalty.me] wallet verification skipped:', (lookupErr as Error).message);
+      }
+    }
     const progress = await getVenueProgress(identity.id, venue.id);
 
     return res.status(200).json({
@@ -284,6 +313,29 @@ loyaltyRouter.post(
       const identity = await ensureIdentity(privyId);
       if (venue.owner_identity_id === identity.id) {
         return res.status(200).json({ ok: true, alreadyOwner: true });
+      }
+
+      // Self-claim is a merchant-takeover primitive: whoever claims a venue can
+      // grant stamps and mint trophies. It stays OFF unless explicitly enabled
+      // for a supervised setup session (ALLOW_VENUE_SELF_CLAIM=true), and can
+      // be narrowed to specific accounts via VENUE_CLAIM_ALLOWLIST (Privy DIDs).
+      if (process.env.ALLOW_VENUE_SELF_CLAIM !== 'true') {
+        return res.status(403).json({
+          ok: false,
+          error: 'claim_disabled',
+          message: 'Venue setup is done by HeroPad. Please contact support.',
+        });
+      }
+      const allowlist = (process.env.VENUE_CLAIM_ALLOWLIST ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (allowlist.length > 0 && !allowlist.includes(privyId)) {
+        return res.status(403).json({
+          ok: false,
+          error: 'claim_disabled',
+          message: 'This account is not allowed to claim venues.',
+        });
       }
       if (venue.owner_identity_id) {
         return res.status(409).json({
@@ -472,18 +524,31 @@ loyaltyRouter.post(
           message: 'No customer with this code.',
         });
       }
+      // A merchant granting stamps to their own customer account is a free
+      // trophy/BITS farm — block it on both grant and redeem.
+      if (customer.id === owned.merchantIdentityId) {
+        return res.status(403).json({
+          ok: false,
+          error: 'self_grant',
+          message: 'You cannot grant stamps to your own account.',
+        });
+      }
 
       // Happy hour: purchases during the configured window earn multiplied
       // stamps. The multiplier is decided SERVER-side so it can't be spoofed.
       const hhMult = happyHourMultNow(owned.venue.branding);
       const effectiveCount = parsed.data.count * (hhMult ?? 1);
 
+      // The cap bounds how many PURCHASES a day can be recorded, so it scales
+      // with an active multiplier — otherwise a 3× happy hour would reject
+      // every 4+ item purchase outright.
+      const dailyCap = MAX_STAMPS_PER_DAY * (hhMult ?? 1);
       const today = await countStampsToday(customer.id, owned.venue.id);
-      if (today + effectiveCount > MAX_STAMPS_PER_DAY) {
+      if (today + effectiveCount > dailyCap) {
         return res.status(429).json({
           ok: false,
           error: 'daily_cap',
-          message: `Daily cap reached (${MAX_STAMPS_PER_DAY} stamps/day per customer).`,
+          message: `Daily cap reached (${dailyCap} stamps/day per customer).`,
         });
       }
 
@@ -611,6 +676,14 @@ loyaltyRouter.post(
         });
       }
 
+      if (rc.user_identity_id === owned.merchantIdentityId) {
+        return res.status(403).json({
+          ok: false,
+          error: 'self_redeem',
+          message: 'You cannot redeem a reward for your own account.',
+        });
+      }
+
       // 2. Safety re-check of the balance, then consume code + stamps.
       const progress = await getVenueProgress(rc.user_identity_id, owned.venue.id);
       if (progress.current < owned.venue.stamps_required) {
@@ -620,7 +693,16 @@ loyaltyRouter.post(
           message: `Customer has ${progress.current}/${owned.venue.stamps_required} stamps.`,
         });
       }
-      await markRedeemCodeUsed(rc.id);
+      // Consume the code FIRST — this is the atomic gate. If another request
+      // beat us to it, stop here: no reward row, no trophy, no BITS.
+      const consumed = await markRedeemCodeUsed(rc.id);
+      if (!consumed) {
+        return res.status(409).json({
+          ok: false,
+          error: 'code_already_used',
+          message: 'This reward code was just used. Ask for a fresh one.',
+        });
+      }
       // Snapshot the CURRENT reward label into the row — if the venue later
       // changes its reward, history keeps showing what was actually given.
       const rewardLabel =

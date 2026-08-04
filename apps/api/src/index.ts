@@ -32,6 +32,11 @@ import { userRouter } from './routes/user.js';
 
 const app = express();
 
+// Railway/Vercel put a reverse proxy in front of us. Without this, req.ip is
+// the load balancer for EVERY visitor, so express-rate-limit would meter all
+// users (and all attackers) in one shared bucket.
+app.set('trust proxy', 1);
+
 // CORS — allowlist driven by env, comma-separated.
 // Default for dev: localhost:5173 (Vite) + the Vercel project.
 const allowedOrigins = (
