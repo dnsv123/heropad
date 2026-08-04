@@ -203,6 +203,9 @@ const en = {
   'b.set.hh.hint': 'Pick at least one day + interval, then Save. Clear the days to disable.',
   'b.days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
   'b.n.saved.gen': 'Settings saved — applied instantly on customers’ phones.',
+  'b.setupcode.ph': 'SETUP CODE',
+  'b.setupcode.hint':
+    'Enter the 8-character setup code you received from HeroPad to link this venue to your account.',
 } as const;
 
 const ro: Record<TranslationKey, string> = {
@@ -379,6 +382,9 @@ const ro: Record<TranslationKey, string> = {
   'b.set.hh.hint': 'Alege cel puțin o zi + intervalul, apoi Salvează. Golește zilele ca să dezactivezi.',
   'b.days': 'Du,Lu,Ma,Mi,Jo,Vi,Sâ',
   'b.n.saved.gen': 'Setări salvate — se aplică instant pe telefoanele clienților.',
+  'b.setupcode.ph': 'COD SETUP',
+  'b.setupcode.hint':
+    'Introdu codul de setup de 8 caractere primit de la HeroPad ca să legi localul de contul tău.',
 };
 
 export type TranslationKey = keyof typeof en;

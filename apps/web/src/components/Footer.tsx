@@ -26,7 +26,7 @@ export default function Footer() {
             >
               SuperVictor Universe
             </a>
-            . HeroPad runs on Solana devnet during the hackathon.
+            . Fidelizare digitală pentru localuri.
           </span>
         </div>
 
@@ -69,7 +69,7 @@ export default function Footer() {
           >
             X
           </a>
-          <span className="text-slate-600">v0.1 · devnet</span>
+          <span className="text-slate-600">v1.0</span>
         </div>
       </div>
     </footer>

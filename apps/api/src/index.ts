@@ -13,6 +13,7 @@ import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 
+import { adminRouter } from './routes/admin.js';
 import { claimRouter } from './routes/claim.js';
 import { loyaltyRouter } from './routes/loyalty.js';
 import { mintRouter } from './routes/mint.js';
@@ -75,6 +76,7 @@ app.get('/healthz', (_req, res) => {
 });
 
 // Routes.
+app.use('/api/admin', adminRouter);
 app.use('/api/claim', claimRouter);
 app.use('/api/loyalty', loyaltyRouter);
 app.use('/api/mint', mintRouter);
