@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import QRCode from 'qrcode';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
@@ -81,6 +82,9 @@ export default function Loyalty() {
   const [redeemCode, setRedeemCode] = useState<RedeemCodeState | null>(null);
   const [redeemBusy, setRedeemBusy] = useState(false);
   const [redeemSecondsLeft, setRedeemSecondsLeft] = useState(0);
+  // QR of the personal code, so the counter can scan instead of typing.
+  const [codeQr, setCodeQr] = useState<string | null>(null);
+  const [redeemQr, setRedeemQr] = useState<string | null>(null);
 
   // Previous values so polling can detect "something changed" and animate.
   const prevStamps = useRef<number | null>(null);
@@ -151,6 +155,32 @@ export default function Loyalty() {
       setMeError((err as Error).message);
     }
   }, [slug, getAccessToken, walletAddress]);
+
+  // Render the codes as QR locally (never sent to a third-party generator).
+  // Prefix disambiguates the two kinds when the counter scans them.
+  useEffect(() => {
+    if (!me?.code) {
+      setCodeQr(null);
+      return;
+    }
+    void QRCode.toDataURL(`HPC:${me.code}`, {
+      width: 320,
+      margin: 1,
+      color: { dark: '#0A1B3A', light: '#FFFFFF' },
+    }).then(setCodeQr, () => setCodeQr(null));
+  }, [me?.code]);
+
+  useEffect(() => {
+    if (!redeemCode?.code) {
+      setRedeemQr(null);
+      return;
+    }
+    void QRCode.toDataURL(`HPR:${redeemCode.code}`, {
+      width: 320,
+      margin: 1,
+      color: { dark: '#0A1B3A', light: '#FFFFFF' },
+    }).then(setRedeemQr, () => setRedeemQr(null));
+  }, [redeemCode?.code]);
 
   // Countdown for the active one-time redeem code (5-minute TTL).
   useEffect(() => {
@@ -313,6 +343,13 @@ export default function Loyalty() {
               <p className="text-xs uppercase tracking-wider text-hero-gold">
                 {t('loy.code.label')}
               </p>
+              {redeemQr && (
+                <img
+                  src={redeemQr}
+                  alt=""
+                  className="mx-auto mt-3 h-40 w-40 rounded-xl bg-white p-1.5 shadow-lg"
+                />
+              )}
               <p className="mt-2 font-mono text-4xl font-bold tracking-[0.35em] text-hero-gold">
                 {redeemCode.code}
               </p>
@@ -348,6 +385,13 @@ export default function Loyalty() {
                 <p className="text-xs uppercase tracking-wider text-slate-500">
                   {t('loy.yourcode')}
                 </p>
+                {codeQr && (
+                  <img
+                    src={codeQr}
+                    alt=""
+                    className="mx-auto mt-3 h-40 w-40 rounded-xl bg-white p-1.5 shadow-lg"
+                  />
+                )}
                 <motion.p
                   key={me.code}
                   initial={{ scale: 0.9, opacity: 0 }}

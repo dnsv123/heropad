@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
 import { useT } from '../i18n';
+import QrScanner from '../components/QrScanner';
 
 // Business page — the barista / merchant device.
 // ---------------------------------------------------------------------------
@@ -64,6 +65,7 @@ export default function Business() {
   const [claiming, setClaiming] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [setupCode, setSetupCode] = useState('');
+  const [scanning, setScanning] = useState(false);
 
   const [codeInput, setCodeInput] = useState('');
   const [redeemInput, setRedeemInput] = useState('');
@@ -182,6 +184,34 @@ export default function Business() {
     }
   }
 
+  /**
+   * One scanner for both code kinds: HPC = the customer's permanent code
+   * (look them up), HPR = a one-time reward code (redeem straight away). A
+   * bare 6-char code is treated as a customer code so hand-typed or older
+   * QRs still work.
+   */
+  function handleScan(raw: string) {
+    setScanning(false);
+    const text = raw.trim().toUpperCase();
+    const reward = text.startsWith('HPR:') ? text.slice(4) : null;
+    const customerCode = text.startsWith('HPC:') ? text.slice(4) : CODE_RE.test(text) ? text : null;
+
+    if (reward && CODE_RE.test(reward)) {
+      setRedeemInput(reward);
+      hapticTap(15);
+      if (customer) void redeemWith(reward);
+      else setNotice({ kind: 'ok', text: t('b.n.scan.reward') });
+      return;
+    }
+    if (customerCode && CODE_RE.test(customerCode)) {
+      setCodeInput(customerCode);
+      hapticTap(15);
+      void lookupCustomer(customerCode);
+      return;
+    }
+    setNotice({ kind: 'err', text: t('b.n.scan.unknown') });
+  }
+
   async function revokeOne() {
     if (!customer) return;
     setBusy(true);
@@ -265,9 +295,13 @@ export default function Business() {
     }
   }
 
-  async function redeem() {
+  function redeem() {
+    return redeemWith(redeemInput);
+  }
+
+  async function redeemWith(code: string) {
     if (!customer) return;
-    const rc = redeemInput.trim().toUpperCase();
+    const rc = code.trim().toUpperCase();
     if (!CODE_RE.test(rc)) {
       setNotice({ kind: 'err', text: t('b.n.askcode') });
       return;
@@ -404,6 +438,15 @@ export default function Business() {
                   {t('b.find')}
                 </button>
               </div>
+
+              {/* Reverse scan — the fast path at a busy counter. */}
+              <button
+                type="button"
+                onClick={() => setScanning(true)}
+                className="mt-2 w-full rounded-full border border-hero-cyan/40 py-2.5 text-sm font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10"
+              >
+                {t('b.scan.btn')}
+              </button>
 
               {/* Customer card */}
               <AnimatePresence mode="wait">
@@ -765,6 +808,15 @@ export default function Business() {
         <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-600">
           {t('b.footer')}
         </p>
+
+        {scanning && (
+          <QrScanner
+            title={t('b.scan.title')}
+            hint={t('b.scan.hint')}
+            onResult={handleScan}
+            onClose={() => setScanning(false)}
+          />
+        )}
       </div>
     </section>
   );
