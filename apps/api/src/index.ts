@@ -60,7 +60,9 @@ app.use(
       }
       // eslint-disable-next-line no-console
       console.warn(`[CORS] Blocked origin: ${origin}`);
-      return cb(new Error(`Origin ${origin} not allowed by CORS`));
+      // Deny without throwing: throwing surfaces as a 500 "server_error",
+      // making blocked origins look like outages in monitoring.
+      return cb(null, false);
     },
     credentials: true,
   })

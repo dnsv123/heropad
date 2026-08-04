@@ -53,7 +53,10 @@ interface VenueAnalytics {
 
 export default function Business() {
   const [params] = useSearchParams();
-  const slug = params.get('venue') ?? VENUE_SLUG_DEFAULT;
+  // Constrain the venue slug to the shape the API accepts — a raw query value
+  // is interpolated into request paths, and `?`/`#` would reshape them.
+  const rawSlug = params.get('venue') ?? VENUE_SLUG_DEFAULT;
+  const slug = /^[a-z0-9-]{2,60}$/.test(rawSlug) ? rawSlug : VENUE_SLUG_DEFAULT;
   const { ready, authenticated, login, logout, getAccessToken } = usePrivy();
   const { t } = useT();
 
