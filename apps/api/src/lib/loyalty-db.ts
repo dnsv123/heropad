@@ -16,6 +16,19 @@ export interface VenueRow {
   branding: Record<string, unknown>;
   active: boolean;
   owner_identity_id: string | null;
+  gps_lat: number | null;
+  gps_lng: number | null;
+}
+
+/** Happy-hour config stored in venues.branding.happyHour. */
+export interface HappyHourConfig {
+  /** Weekdays 0 (Sun) – 6 (Sat). */
+  days: number[];
+  /** "HH:MM" 24h, Romania local time. */
+  start: string;
+  end: string;
+  /** Stamp multiplier while active (2 or 3). */
+  mult: number;
 }
 
 export interface IdentityRow {
@@ -39,7 +52,7 @@ export interface VenueProgress {
 export async function getVenueBySlug(slug: string): Promise<VenueRow | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('venues')
-    .select('id, slug, name, stamps_required, branding, active, owner_identity_id')
+    .select('id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng')
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getVenueBySlug: ${error.message}`);
@@ -381,7 +394,15 @@ export async function markRedeemCodeUsed(id: string): Promise<void> {
  */
 export async function updateVenueSettings(
   venueId: string,
-  input: { stampsRequired?: number; rewardLabel?: string }
+  input: {
+    stampsRequired?: number;
+    rewardLabel?: string;
+    /** Empty string clears the value. */
+    reviewUrl?: string;
+    phone?: string;
+    /** null clears the schedule. */
+    happyHour?: HappyHourConfig | null;
+  }
 ): Promise<void> {
   const supa = getSupabaseAdmin();
   const patch: Record<string, unknown> = {};
@@ -389,7 +410,14 @@ export async function updateVenueSettings(
   if (input.stampsRequired !== undefined) {
     patch.stamps_required = input.stampsRequired;
   }
-  if (input.rewardLabel !== undefined) {
+
+  const brandingKeysTouched =
+    input.rewardLabel !== undefined ||
+    input.reviewUrl !== undefined ||
+    input.phone !== undefined ||
+    input.happyHour !== undefined;
+
+  if (brandingKeysTouched) {
     const { data, error } = await supa
       .from('venues')
       .select('branding')
@@ -398,7 +426,21 @@ export async function updateVenueSettings(
     if (error) throw new Error(`[Supabase] settings read: ${error.message}`);
     const branding = ((data as { branding: Record<string, unknown> | null }).branding ??
       {}) as Record<string, unknown>;
-    patch.branding = { ...branding, reward: input.rewardLabel };
+
+    if (input.rewardLabel !== undefined) branding.reward = input.rewardLabel;
+    if (input.reviewUrl !== undefined) {
+      if (input.reviewUrl === '') delete branding.reviewUrl;
+      else branding.reviewUrl = input.reviewUrl;
+    }
+    if (input.phone !== undefined) {
+      if (input.phone === '') delete branding.phone;
+      else branding.phone = input.phone;
+    }
+    if (input.happyHour !== undefined) {
+      if (input.happyHour === null) delete branding.happyHour;
+      else branding.happyHour = input.happyHour;
+    }
+    patch.branding = branding;
   }
   if (Object.keys(patch).length === 0) return;
 

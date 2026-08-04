@@ -188,6 +188,21 @@ const en = {
     'You don’t have a Solana wallet yet. Create one in a click — Privy secures it with your login, no seed phrase to write down.',
   'w.create.btn': 'Create my Solana wallet',
   'w.create.busy': 'Creating…',
+  // --- Happy Hour / review / contact ---
+  'loy.hh.active': '⚡ HAPPY HOUR — every purchase counts x{m} right now!',
+  'loy.review.btn': '⭐ Leave us a Google review',
+  'loy.map': '📍 Map',
+  'loy.call': '📞 Call',
+  'b.set.review': 'Google review link (shown to customers at reward)',
+  'b.set.phone': 'Venue phone (the customer “Call” button)',
+  'b.set.hh': '⚡ Happy Hour — multiplied stamps',
+  'b.set.hh.days': 'Days',
+  'b.set.hh.from': 'From',
+  'b.set.hh.to': 'Until',
+  'b.set.hh.mult': 'Multiplier',
+  'b.set.hh.hint': 'Pick at least one day + interval, then Save. Clear the days to disable.',
+  'b.days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+  'b.n.saved.gen': 'Settings saved — applied instantly on customers’ phones.',
 } as const;
 
 const ro: Record<TranslationKey, string> = {
@@ -350,6 +365,20 @@ const ro: Record<TranslationKey, string> = {
     'Nu ai încă un portofel Solana. Creezi unul cu un click — Privy îl securizează cu contul tău, fără nicio frază secretă de notat.',
   'w.create.btn': 'Creează-mi portofelul Solana',
   'w.create.busy': 'Se creează…',
+  'loy.hh.active': '⚡ HAPPY HOUR — fiecare cumpărătură contează x{m} chiar acum!',
+  'loy.review.btn': '⭐ Lasă-ne o recenzie pe Google',
+  'loy.map': '📍 Hartă',
+  'loy.call': '📞 Sună',
+  'b.set.review': 'Link recenzie Google (arătat clienților la recompensă)',
+  'b.set.phone': 'Telefonul localului (butonul „Sună" la clienți)',
+  'b.set.hh': '⚡ Happy Hour — bonusuri multiplicate',
+  'b.set.hh.days': 'Zile',
+  'b.set.hh.from': 'De la',
+  'b.set.hh.to': 'Până la',
+  'b.set.hh.mult': 'Multiplicator',
+  'b.set.hh.hint': 'Alege cel puțin o zi + intervalul, apoi Salvează. Golește zilele ca să dezactivezi.',
+  'b.days': 'Du,Lu,Ma,Mi,Jo,Vi,Sâ',
+  'b.n.saved.gen': 'Setări salvate — se aplică instant pe telefoanele clienților.',
 };
 
 export type TranslationKey = keyof typeof en;
