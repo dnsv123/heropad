@@ -32,6 +32,24 @@ export interface AuthedRequest extends Request {
   privyId?: string;
 }
 
+/**
+ * Every Solana wallet address linked to a Privy user (embedded + external).
+ * Used to prove a caller actually owns the wallet they're asking about —
+ * wallet addresses are public on-chain, so they can never be treated as
+ * proof of identity on their own.
+ */
+export async function getUserSolanaWallets(privyId: string): Promise<string[]> {
+  const user = await getPrivyClient().getUser(privyId);
+  return (user.linkedAccounts ?? [])
+    .filter(
+      (a) =>
+        a.type === 'wallet' &&
+        (a as { chainType?: string }).chainType === 'solana' &&
+        typeof (a as { address?: string }).address === 'string'
+    )
+    .map((a) => (a as unknown as { address: string }).address);
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,

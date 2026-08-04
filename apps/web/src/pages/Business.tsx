@@ -25,7 +25,6 @@ interface VenueInfo {
   slug: string;
   name: string;
   stampsRequired: number;
-  hasOwner: boolean;
 }
 
 interface CustomerInfo {
@@ -326,24 +325,25 @@ export default function Business() {
                 {t('b.login.btn')}
               </button>
             </div>
-          ) : isOwner === false && venue && !venue.hasOwner ? (
-            <div className="text-center">
-              <p className="mb-3 text-sm text-slate-400">{t('b.claim.hint')}</p>
-              <button
-                type="button"
-                onClick={handleClaimOwnership}
-                disabled={claiming}
-                className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
-              >
-                {claiming ? t('b.claim.busy') : t('b.claim.btn')}
-              </button>
-            </div>
           ) : isOwner === false ? (
-            <div className="text-center text-sm text-red-300">
-              {t('b.notmerchant', { name: venue?.name ?? '…' })}
-              <button type="button" onClick={logout} className="ml-2 underline">
-                {t('b.switch')}
-              </button>
+            <div className="text-center">
+              <p className="mb-3 text-sm text-slate-400">
+                {t('b.notmerchant', { name: venue?.name ?? '…' })}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleClaimOwnership}
+                  disabled={claiming}
+                  className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+                >
+                  {claiming ? t('b.claim.busy') : t('b.claim.btn')}
+                </button>
+                <button type="button" onClick={logout} className="text-sm text-slate-400 underline">
+                  {t('b.switch')}
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-600">{t('b.claim.hint')}</p>
             </div>
           ) : (
             <>

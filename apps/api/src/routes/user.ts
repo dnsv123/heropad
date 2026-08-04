@@ -2,6 +2,11 @@ import { Router, type Request, type Response } from 'express';
 
 import { getOwnedCollectibles } from '../lib/helius.js';
 import { getBitsBalance } from '../lib/supabase-admin.js';
+import {
+  requireAuth,
+  getUserSolanaWallets,
+  type AuthedRequest,
+} from '../middleware/auth.js';
 
 // GET /api/user/me?wallet=<address>
 // ---------------------------------
@@ -42,13 +47,41 @@ function setCached(key: string, data: unknown): void {
   cache.set(key, { data, expiresAt: Date.now() + TTL_MS });
 }
 
-userRouter.get('/me', async (req: Request, res: Response) => {
-  const wallet = String(req.query.wallet ?? '').trim();
-  if (!wallet || wallet.length < 32 || wallet.length > 44) {
-    return res.status(400).json({
+userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
+  const privyId = (req as AuthedRequest).privyId as string;
+
+  // The wallet is DERIVED from the verified session, never trusted from the
+  // request: on-chain addresses are public, so accepting one from the client
+  // would let anybody read anyone else's balance and collection.
+  let wallets: string[];
+  try {
+    wallets = await getUserSolanaWallets(privyId);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[user.me] privy lookup failed:', (err as Error).message);
+    return res.status(502).json({
       ok: false,
-      error: 'invalid_wallet',
-      message: 'Provide ?wallet=<base58 Solana address>',
+      error: 'auth_lookup_failed',
+      message: 'Could not verify your wallet. Please try again.',
+    });
+  }
+
+  // A caller may ask for a specific one of THEIR wallets; anything else is
+  // rejected. With no hint we default to the first linked wallet.
+  const requested = String(req.query.wallet ?? '').trim();
+  const wallet = requested || wallets[0];
+  if (!wallet) {
+    return res.status(404).json({
+      ok: false,
+      error: 'no_wallet',
+      message: 'No Solana wallet linked to this account yet.',
+    });
+  }
+  if (!wallets.includes(wallet)) {
+    return res.status(403).json({
+      ok: false,
+      error: 'not_your_wallet',
+      message: 'That wallet does not belong to your account.',
     });
   }
 
