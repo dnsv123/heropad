@@ -14,6 +14,8 @@ const API_BASE_URL =
 export interface ApiClientError extends Error {
   code: string;
   status: number;
+  /** Extra fields the endpoint returned alongside the error. */
+  details?: Record<string, unknown>;
 }
 
 function makeError(message: string, code: string, status: number): ApiClientError {
@@ -51,11 +53,13 @@ async function request<TRes>(path: string, init?: RequestInit, token?: string): 
 
   if (!res.ok) {
     const body = (data as ApiErrorBody | null) ?? {};
-    throw makeError(
+    const err = makeError(
       body.message ?? `Request failed with ${res.status}`,
       body.error ?? 'unknown_error',
       res.status
     );
+    err.details = (data as Record<string, unknown>) ?? undefined;
+    throw err;
   }
 
   return data as TRes;
