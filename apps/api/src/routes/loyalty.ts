@@ -63,6 +63,55 @@ loyaltyRouter.use(
 // merchant setting in the dashboard phase.
 const MAX_STAMPS_PER_DAY = Number(process.env.LOYALTY_DAILY_CAP ?? 10);
 
+// --- Happy Hour (Romania local time) -----------------------------------------
+
+interface HappyHour {
+  days: number[];
+  start: string;
+  end: string;
+  mult: number;
+}
+
+function parseHappyHour(branding: Record<string, unknown> | null): HappyHour | null {
+  const hh = branding?.happyHour as Partial<HappyHour> | undefined;
+  if (
+    !hh ||
+    !Array.isArray(hh.days) ||
+    hh.days.length === 0 ||
+    typeof hh.start !== 'string' ||
+    typeof hh.end !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    days: hh.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
+    start: hh.start,
+    end: hh.end,
+    mult: Number(hh.mult) >= 2 && Number(hh.mult) <= 3 ? Number(hh.mult) : 2,
+  };
+}
+
+/** Multiplier if happy hour is active RIGHT NOW in Romania, else null. */
+function happyHourMultNow(branding: Record<string, unknown> | null): number | null {
+  const hh = parseHappyHour(branding);
+  if (!hh) return null;
+  const now = new Date();
+  const dayName = now.toLocaleDateString('en-US', {
+    timeZone: 'Europe/Bucharest',
+    weekday: 'short',
+  });
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(dayName);
+  const time = now.toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/Bucharest',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  // "HH:MM" strings compare correctly lexicographically.
+  if (hh.days.includes(day) && hh.start <= time && time < hh.end) return hh.mult;
+  return null;
+}
+
 const SLUG_RE = /^[a-z0-9-]{2,60}$/;
 const CODE_RE = /^[A-Z2-9]{6}$/i;
 
@@ -125,6 +174,7 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
   try {
     const venue = await loadActiveVenue(req.params.slug, res);
     if (!venue) return;
+    const hhMult = happyHourMultNow(venue.branding);
     return res.status(200).json({
       ok: true,
       venue: {
@@ -133,6 +183,9 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
         stampsRequired: venue.stamps_required,
         branding: venue.branding,
         hasOwner: Boolean(venue.owner_identity_id),
+        gpsLat: venue.gps_lat,
+        gpsLng: venue.gps_lng,
+        happyHour: hhMult ? { active: true, mult: hhMult } : null,
       },
     });
   } catch (err) {
@@ -259,6 +312,31 @@ loyaltyRouter.post(
 const SettingsBody = z.object({
   stampsRequired: z.number().int().min(3).max(30).optional(),
   rewardLabel: z.string().trim().min(2).max(60).optional(),
+  reviewUrl: z
+    .union([
+      z
+        .string()
+        .trim()
+        .url()
+        .max(300)
+        // Rendered as an <a href> on the customer page — https only, so a
+        // compromised merchant account can't inject javascript:/data: links.
+        .refine((u) => u.startsWith('https://'), 'Must be an https:// link'),
+      z.literal(''),
+    ])
+    .optional(),
+  phone: z
+    .union([z.string().trim().regex(/^[+0-9 ()\-.]{5,20}$/), z.literal('')])
+    .optional(),
+  happyHour: z
+    .object({
+      days: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+      start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+      end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+      mult: z.number().int().min(2).max(3),
+    })
+    .nullable()
+    .optional(),
 });
 
 // POST /api/loyalty/merchant/:slug/settings — merchant self-service campaign
@@ -395,8 +473,13 @@ loyaltyRouter.post(
         });
       }
 
+      // Happy hour: purchases during the configured window earn multiplied
+      // stamps. The multiplier is decided SERVER-side so it can't be spoofed.
+      const hhMult = happyHourMultNow(owned.venue.branding);
+      const effectiveCount = parsed.data.count * (hhMult ?? 1);
+
       const today = await countStampsToday(customer.id, owned.venue.id);
-      if (today + parsed.data.count > MAX_STAMPS_PER_DAY) {
+      if (today + effectiveCount > MAX_STAMPS_PER_DAY) {
         return res.status(429).json({
           ok: false,
           error: 'daily_cap',
@@ -407,7 +490,7 @@ loyaltyRouter.post(
       await grantStamps({
         identityId: customer.id,
         venueId: owned.venue.id,
-        count: parsed.data.count,
+        count: effectiveCount,
         grantedBy: owned.merchantIdentityId,
         source: 'merchant',
       });
@@ -415,7 +498,8 @@ loyaltyRouter.post(
       const progress = await getVenueProgress(customer.id, owned.venue.id);
       return res.status(200).json({
         ok: true,
-        granted: parsed.data.count,
+        granted: effectiveCount,
+        happyHour: hhMult,
         stamps: progress.current,
         required: owned.venue.stamps_required,
         canRedeem: progress.current >= owned.venue.stamps_required,

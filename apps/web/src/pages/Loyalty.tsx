@@ -23,6 +23,9 @@ interface VenueInfo {
   name: string;
   stampsRequired: number;
   branding: Record<string, unknown>;
+  gpsLat?: number | null;
+  gpsLng?: number | null;
+  happyHour?: { active: boolean; mult: number } | null;
 }
 
 interface MeResponse {
@@ -190,7 +193,38 @@ export default function Loyalty() {
           {venueError && (
             <p className="mt-2 text-sm text-red-300">{venueError}</p>
           )}
+
+          {/* Quick contact: map + call, only when the venue has the data. */}
+          {(venue?.gpsLat != null || typeof venue?.branding?.phone === 'string') && (
+            <div className="mt-3 flex justify-center gap-2">
+              {venue?.gpsLat != null && venue?.gpsLng != null && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${venue.gpsLat},${venue.gpsLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                >
+                  {t('loy.map')}
+                </a>
+              )}
+              {typeof venue?.branding?.phone === 'string' && (
+                <a
+                  href={`tel:${venue.branding.phone as string}`}
+                  className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                >
+                  {t('loy.call')}
+                </a>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Happy Hour — gold pulsing banner while the window is live. */}
+        {venue?.happyHour?.active && (
+          <div className="mt-4 animate-pulse rounded-xl border-2 border-hero-gold bg-hero-gold/15 p-3 text-center text-sm font-bold text-hero-gold">
+            {t('loy.hh.active', { m: venue.happyHour.mult })}
+          </div>
+        )}
 
         {/* Celebration overlay when a card was just completed & redeemed */}
         <AnimatePresence>
@@ -212,6 +246,18 @@ export default function Loyalty() {
                 </a>
                 {t('loy.celebrate.tail')}
               </p>
+              {/* Review invite — shown to EVERYONE at the happiest moment (free
+                  reward in hand). No filtering: Google forbids review-gating. */}
+              {typeof venue?.branding?.reviewUrl === 'string' && (
+                <a
+                  href={venue.branding.reviewUrl as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-hero-deep shadow transition hover:bg-hero-gold-bright"
+                >
+                  {t('loy.review.btn')}
+                </a>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

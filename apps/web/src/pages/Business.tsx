@@ -72,6 +72,13 @@ export default function Business() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [setRequired, setSetRequired] = useState('');
   const [setReward, setSetReward] = useState('');
+  const [setReview, setSetReview] = useState('');
+  const [setPhone, setSetPhone] = useState('');
+  const [hhDays, setHhDays] = useState<number[]>([]);
+  const [hhStart, setHhStart] = useState('');
+  const [hhEnd, setHhEnd] = useState('');
+  const [hhMult, setHhMult] = useState(2);
+  const [hhTouched, setHhTouched] = useState(false);
 
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
@@ -144,7 +151,10 @@ export default function Business() {
     setNotice(null);
     try {
       const token = await getAccessToken();
-      const r = await postJson<{ code: string; count: number }, { ok: true } & CustomerInfo>(
+      const r = await postJson<
+        { code: string; count: number },
+        { ok: true; granted: number; happyHour: number | null } & CustomerInfo
+      >(
         `/api/loyalty/merchant/${slug}/grant`,
         { code: customer.code, count },
         token ?? undefined
@@ -153,7 +163,9 @@ export default function Business() {
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
       setNotice({
         kind: 'ok',
-        text: t('b.n.granted', { n: count, s: r.stamps, r: r.required }),
+        text:
+          t('b.n.granted', { n: r.granted ?? count, s: r.stamps, r: r.required }) +
+          (r.happyHour ? ` ⚡ HAPPY HOUR x${r.happyHour}` : ''),
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -190,10 +202,24 @@ export default function Business() {
     setNotice(null);
     try {
       const token = await getAccessToken();
-      const body: { stampsRequired?: number; rewardLabel?: string } = {};
+      const body: {
+        stampsRequired?: number;
+        rewardLabel?: string;
+        reviewUrl?: string;
+        phone?: string;
+        happyHour?: { days: number[]; start: string; end: string; mult: number } | null;
+      } = {};
       const n = parseInt(setRequired, 10);
       if (!Number.isNaN(n)) body.stampsRequired = n;
       if (setReward.trim().length >= 2) body.rewardLabel = setReward.trim();
+      if (setReview.trim().length > 0) body.reviewUrl = setReview.trim();
+      if (setPhone.trim().length > 0) body.phone = setPhone.trim();
+      if (hhTouched) {
+        body.happyHour =
+          hhDays.length > 0 && hhStart && hhEnd
+            ? { days: hhDays, start: hhStart, end: hhEnd, mult: hhMult }
+            : null;
+      }
       if (Object.keys(body).length === 0) {
         setNotice({ kind: 'err', text: t('b.n.nothing') });
         return;
@@ -205,13 +231,7 @@ export default function Business() {
       hapticTap(15);
       setVenue((v) => (v ? { ...v, stampsRequired: r.venue.stampsRequired } : v));
       setCustomer(null);
-      setNotice({
-        kind: 'ok',
-        text: t('b.n.saved', {
-          n: r.venue.stampsRequired,
-          label: r.venue.rewardLabel ?? t('pp.reward.generic'),
-        }),
-      });
+      setNotice({ kind: 'ok', text: t('b.n.saved.gen') });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
@@ -496,6 +516,107 @@ export default function Business() {
                           />
                         </label>
                       </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.review')}
+                          <input
+                            type="url"
+                            maxLength={300}
+                            value={setReview}
+                            onChange={(e) => setSetReview(e.target.value)}
+                            placeholder="https://g.page/r/..."
+                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.phone')}
+                          <input
+                            type="tel"
+                            maxLength={20}
+                            value={setPhone}
+                            onChange={(e) => setSetPhone(e.target.value)}
+                            placeholder="+40 7xx xxx xxx"
+                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Happy Hour scheduler */}
+                      <div className="mt-3 rounded-xl border border-hero-gold/30 bg-hero-gold/5 p-3">
+                        <p className="text-xs font-semibold text-hero-gold">{t('b.set.hh')}</p>
+                        <div className="mt-2">
+                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                            {t('b.set.hh.days')}
+                          </p>
+                          <div className="mt-1 grid grid-cols-7 gap-1">
+                            {t('b.days')
+                              .split(',')
+                              .map((label, day) => (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => {
+                                    setHhTouched(true);
+                                    setHhDays((d) =>
+                                      d.includes(day)
+                                        ? d.filter((x) => x !== day)
+                                        : [...d, day]
+                                    );
+                                  }}
+                                  className={`rounded-lg border py-1.5 text-[11px] font-semibold transition ${
+                                    hhDays.includes(day)
+                                      ? 'border-hero-gold bg-hero-gold text-hero-deep'
+                                      : 'border-hero-blue/30 text-slate-400 hover:border-hero-gold/50'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                            {t('b.set.hh.from')}
+                            <input
+                              type="time"
+                              value={hhStart}
+                              onChange={(e) => {
+                                setHhTouched(true);
+                                setHhStart(e.target.value);
+                              }}
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                            {t('b.set.hh.to')}
+                            <input
+                              type="time"
+                              value={hhEnd}
+                              onChange={(e) => {
+                                setHhTouched(true);
+                                setHhEnd(e.target.value);
+                              }}
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                            {t('b.set.hh.mult')}
+                            <select
+                              value={hhMult}
+                              onChange={(e) => {
+                                setHhTouched(true);
+                                setHhMult(Number(e.target.value));
+                              }}
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            >
+                              <option value={2}>x2</option>
+                              <option value={3}>x3</option>
+                            </select>
+                          </label>
+                        </div>
+                        <p className="mt-1.5 text-[10px] text-slate-600">{t('b.set.hh.hint')}</p>
+                      </div>
+
                       <button
                         type="button"
                         disabled={busy}
