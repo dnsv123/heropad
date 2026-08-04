@@ -39,6 +39,8 @@ export default function Admin() {
   const { ready, authenticated, login, getAccessToken } = usePrivy();
 
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [myPrivyId, setMyPrivyId] = useState<string | null>(null);
+  const [allowlistSet, setAllowlistSet] = useState(true);
   const [venues, setVenues] = useState<VenueRow[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [busy, setBusy] = useState(false);
@@ -67,9 +69,16 @@ export default function Admin() {
       setVenues(v.venues);
       setOverview(o);
     } catch (err) {
-      const e = err as { code?: string; message: string };
-      if (e.code === 'not_admin') setIsAdmin(false);
-      else setNotice({ kind: 'err', text: e.message });
+      const e = err as {
+        code?: string;
+        message: string;
+        details?: { yourPrivyId?: string | null; allowlistConfigured?: boolean };
+      };
+      if (e.code === 'not_admin') {
+        setIsAdmin(false);
+        setMyPrivyId(e.details?.yourPrivyId ?? null);
+        setAllowlistSet(e.details?.allowlistConfigured ?? true);
+      } else setNotice({ kind: 'err', text: e.message });
     }
   }, [getAccessToken]);
 
@@ -179,11 +188,38 @@ export default function Admin() {
 
   if (isAdmin === false) {
     return (
-      <section className="mx-auto max-w-md px-6 py-20 text-center">
+      <section className="mx-auto max-w-lg px-6 py-20 text-center">
         <h1 className="font-display text-2xl font-semibold">Not authorized</h1>
         <p className="mt-2 text-sm text-slate-400">
-          This account is not on the admin allowlist.
+          {allowlistSet
+            ? 'This account is not on the admin allowlist.'
+            : 'No admin allowlist is configured yet (ADMIN_PRIVY_IDS is empty).'}
         </p>
+
+        {myPrivyId && (
+          <div className="mt-6 rounded-2xl border border-hero-gold/30 bg-hero-gold/5 p-4 text-left">
+            <p className="text-xs uppercase tracking-wider text-hero-gold">
+              This account&rsquo;s ID
+            </p>
+            <code className="mt-2 block break-all rounded-lg bg-hero-deep/80 px-3 py-2 font-mono text-xs text-hero-cyan">
+              {myPrivyId}
+            </code>
+            <button
+              type="button"
+              onClick={() => void copy(myPrivyId, 'did')}
+              className="mt-3 rounded-full border border-hero-gold/40 px-4 py-1.5 text-xs text-hero-gold transition hover:bg-hero-gold/10"
+            >
+              {copied === 'did' ? 'Copied!' : 'Copy ID'}
+            </button>
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+              To grant admin access: Railway → <b>@heropad/api</b> → Variables →{' '}
+              <b>ADMIN_PRIVY_IDS</b> → paste this exact value (comma-separated for
+              several admins) → wait for the redeploy → reload this page.
+              <br />
+              Logged in with the wrong account? Log out and sign in with the admin one.
+            </p>
+          </div>
+        )}
       </section>
     );
   }

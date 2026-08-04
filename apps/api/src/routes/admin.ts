@@ -47,6 +47,10 @@ function requireAdmin(req: Request, res: Response, next: () => void): void {
       ok: false,
       error: 'not_admin',
       message: 'This account does not have admin access.',
+      // Echo the caller's OWN id so the operator can copy it straight into
+      // ADMIN_PRIVY_IDS. Safe: you only ever learn your own identifier.
+      yourPrivyId: privyId ?? null,
+      allowlistConfigured: allowed.length > 0,
     });
     return;
   }
