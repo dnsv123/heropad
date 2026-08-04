@@ -63,6 +63,7 @@ export default function Business() {
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
+  const [setupCode, setSetupCode] = useState('');
 
   const [codeInput, setCodeInput] = useState('');
   const [redeemInput, setRedeemInput] = useState('');
@@ -119,8 +120,13 @@ export default function Business() {
     setNotice(null);
     try {
       const token = await getAccessToken();
-      await postJson(`/api/loyalty/venue/${slug}/claim-ownership`, {}, token ?? undefined);
+      await postJson(
+        `/api/loyalty/venue/${slug}/claim-ownership`,
+        { setupCode: setupCode.trim().toUpperCase() },
+        token ?? undefined
+      );
       setIsOwner(true);
+      setSetupCode('');
       setNotice({ kind: 'ok', text: 'You are now the merchant of this venue. ☕' });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -333,20 +339,35 @@ export default function Business() {
               <p className="mb-3 text-sm text-slate-400">
                 {t('b.notmerchant', { name: venue?.name ?? '…' })}
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="mx-auto mt-3 flex max-w-xs items-stretch gap-2">
+                <input
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  maxLength={8}
+                  value={setupCode}
+                  onChange={(e) => setSetupCode(e.target.value.toUpperCase())}
+                  placeholder={t('b.setupcode.ph')}
+                  className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2.5 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                />
                 <button
                   type="button"
                   onClick={handleClaimOwnership}
-                  disabled={claiming}
-                  className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+                  disabled={claiming || setupCode.trim().length !== 8}
+                  className="shrink-0 rounded-full bg-hero-gold px-5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
                 >
                   {claiming ? t('b.claim.busy') : t('b.claim.btn')}
                 </button>
-                <button type="button" onClick={logout} className="text-sm text-slate-400 underline">
-                  {t('b.switch')}
-                </button>
               </div>
-              <p className="mt-2 text-[11px] text-slate-600">{t('b.claim.hint')}</p>
+              <p className="mt-2 text-[11px] text-slate-600">{t('b.setupcode.hint')}</p>
+              <button
+                type="button"
+                onClick={logout}
+                className="mt-3 text-xs text-slate-400 underline"
+              >
+                {t('b.switch')}
+              </button>
             </div>
           ) : (
             <>
