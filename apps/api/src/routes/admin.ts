@@ -296,6 +296,145 @@ adminRouter.get('/overview', async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/admin/venues/:slug/analytics — the operator's deep-dive for one
+// venue: growth over time, retention, and the customer roster BY ANONYMOUS
+// CODE. Deliberately no emails/wallets: the operator answers support with the
+// code the customer reads off their own screen.
+adminRouter.get('/venues/:slug/analytics', async (req: Request, res: Response) => {
+  try {
+    const venue = await getVenueBySlug(req.params.slug);
+    if (!venue) {
+      return res.status(404).json({ ok: false, error: 'unknown_venue', message: 'No such venue.' });
+    }
+    const supa = getSupabaseAdmin();
+    const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
+      await Promise.all([
+        supa
+          .from('stamps')
+          .select('user_identity_id, stamp_day, created_at, source')
+          .eq('venue_id', venue.id),
+        supa
+          .from('rewards_redeemed')
+          .select('user_identity_id, redeemed_at, trophy_asset_id, reward_type, stamps_consumed')
+          .eq('venue_id', venue.id),
+      ]);
+    if (sErr) throw new Error(sErr.message);
+    if (rErr) throw new Error(rErr.message);
+
+    const stamps = (stampRows ?? []) as Array<{
+      user_identity_id: string;
+      stamp_day: string;
+      created_at: string;
+      source: string;
+    }>;
+    const rewards = (rewardRows ?? []) as Array<{
+      user_identity_id: string;
+      redeemed_at: string;
+      trophy_asset_id: string | null;
+      reward_type: string | null;
+      stamps_consumed: number;
+    }>;
+
+    // Per-customer rollup (keyed by identity id, surfaced as loyalty_code).
+    interface Agg {
+      stamps: number;
+      days: Set<string>;
+      first: string;
+      last: string;
+      rewards: number;
+      consumed: number;
+    }
+    const byCustomer = new Map<string, Agg>();
+    for (const s of stamps) {
+      const a = byCustomer.get(s.user_identity_id) ?? {
+        stamps: 0,
+        days: new Set<string>(),
+        first: s.created_at,
+        last: s.created_at,
+        rewards: 0,
+        consumed: 0,
+      };
+      a.stamps += 1;
+      a.days.add(s.stamp_day);
+      if (s.created_at < a.first) a.first = s.created_at;
+      if (s.created_at > a.last) a.last = s.created_at;
+      byCustomer.set(s.user_identity_id, a);
+    }
+    for (const r of rewards) {
+      const a = byCustomer.get(r.user_identity_id);
+      if (!a) continue;
+      a.rewards += 1;
+      a.consumed += Number(r.stamps_consumed ?? 0);
+    }
+
+    // Resolve identity ids → anonymous loyalty codes (never emails).
+    const ids = [...byCustomer.keys()];
+    const codeById = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: idents, error: iErr } = await supa
+        .from('user_identity')
+        .select('id, loyalty_code')
+        .in('id', ids);
+      if (iErr) throw new Error(iErr.message);
+      for (const row of (idents ?? []) as Array<{ id: string; loyalty_code: string | null }>) {
+        codeById.set(row.id, row.loyalty_code ?? '—');
+      }
+    }
+
+    const customers = [...byCustomer.entries()]
+      .map(([id, a]) => ({
+        code: codeById.get(id) ?? '—',
+        stamps: a.stamps,
+        visits: a.days.size,
+        rewards: a.rewards,
+        current: Math.max(0, a.stamps - a.consumed),
+        firstSeen: a.first,
+        lastSeen: a.last,
+      }))
+      .sort((x, y) => y.stamps - x.stamps);
+
+    // Daily series (all active days, oldest→newest).
+    const byDay = new Map<string, { stamps: number; customers: Set<string> }>();
+    for (const s of stamps) {
+      if (!byDay.has(s.stamp_day)) {
+        byDay.set(s.stamp_day, { stamps: 0, customers: new Set() });
+      }
+      const d = byDay.get(s.stamp_day)!;
+      d.stamps += 1;
+      d.customers.add(s.user_identity_id);
+    }
+    const daily = [...byDay.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, d]) => ({ day, stamps: d.stamps, customers: d.customers.size }));
+
+    const now = Date.now();
+    const since = (days: number) =>
+      stamps.filter((s) => now - new Date(s.created_at).getTime() < days * 864e5).length;
+
+    return res.status(200).json({
+      ok: true,
+      venue: { slug: venue.slug, name: venue.name, stampsRequired: venue.stamps_required },
+      totals: {
+        stamps: stamps.length,
+        customers: byCustomer.size,
+        rewards: rewards.length,
+        trophies: rewards.filter((r) => r.trophy_asset_id).length,
+        repeatCustomers: [...byCustomer.values()].filter((a) => a.days.size >= 2).length,
+        stamps7d: since(7),
+        stamps30d: since(30),
+        bySource: {
+          merchant: stamps.filter((s) => s.source === 'merchant').length,
+          ntag: stamps.filter((s) => s.source === 'ntag_tap').length,
+        },
+      },
+      daily,
+      customers,
+    });
+  } catch (err) {
+    return serverError(res, 'venue-analytics', err);
+  }
+});
+
 /** Exposed for the merchant claim flow in routes/loyalty.ts. */
 export async function claimVenueWithToken(
   slug: string,

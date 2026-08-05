@@ -32,6 +32,38 @@ interface Overview {
   trophies: number;
 }
 
+interface VenueAnalytics {
+  venue: { slug: string; name: string; stampsRequired: number };
+  totals: {
+    stamps: number;
+    customers: number;
+    rewards: number;
+    trophies: number;
+    repeatCustomers: number;
+    stamps7d: number;
+    stamps30d: number;
+    bySource: { merchant: number; ntag: number };
+  };
+  daily: Array<{ day: string; stamps: number; customers: number }>;
+  customers: Array<{
+    code: string;
+    stamps: number;
+    visits: number;
+    rewards: number;
+    current: number;
+    firstSeen: string;
+    lastSeen: string;
+  }>;
+}
+
+function shortDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  } catch {
+    return '—';
+  }
+}
+
 const PUBLIC_BASE =
   typeof window !== 'undefined' ? window.location.origin : 'https://heropad.supervictoruniverse.com';
 
@@ -46,6 +78,8 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
+  const [analyticsFor, setAnalyticsFor] = useState<string | null>(null);
 
   // New-venue form
   const [slug, setSlug] = useState('');
@@ -138,6 +172,30 @@ export default function Admin() {
       await load();
     } catch (err) {
       setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openAnalytics(v: VenueRow) {
+    if (analyticsFor === v.slug) {
+      setAnalyticsFor(null);
+      setAnalytics(null);
+      return;
+    }
+    setBusy(true);
+    setAnalyticsFor(v.slug);
+    setAnalytics(null);
+    try {
+      const token = await getAccessToken();
+      const r = await getJson<{ ok: true } & VenueAnalytics>(
+        `/api/admin/venues/${v.slug}/analytics`,
+        token ?? undefined
+      );
+      setAnalytics(r);
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+      setAnalyticsFor(null);
     } finally {
       setBusy(false);
     }
@@ -441,7 +499,116 @@ export default function Admin() {
                 >
                   {v.active ? 'Disable' : 'Enable'}
                 </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void openAnalytics(v)}
+                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
+                >
+                  {analyticsFor === v.slug ? 'Hide analytics' : '📊 Analytics'}
+                </button>
               </div>
+
+              {/* ---- Per-venue deep dive ---- */}
+              {analyticsFor === v.slug && (
+                <div className="mt-4 border-t border-hero-blue/15 pt-4">
+                  {!analytics ? (
+                    <p className="text-sm text-slate-500">Loading…</p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {[
+                          { v: analytics.totals.stamps7d, l: 'Stamps · 7d' },
+                          { v: analytics.totals.stamps30d, l: 'Stamps · 30d' },
+                          {
+                            v:
+                              analytics.totals.customers > 0
+                                ? `${Math.round(
+                                    (analytics.totals.repeatCustomers /
+                                      analytics.totals.customers) *
+                                      100
+                                  )}%`
+                                : '—',
+                            l: 'Repeat rate',
+                          },
+                          { v: analytics.totals.trophies, l: 'Trophies' },
+                        ].map((t) => (
+                          <div
+                            key={t.l}
+                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+                          >
+                            <p className="font-display text-xl font-bold text-hero-cyan">{t.v}</p>
+                            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
+                              {t.l}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {analytics.daily.length > 0 && (
+                        <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
+                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                            Daily stamps ({analytics.daily.length} active days)
+                          </p>
+                          <div className="mt-2 flex h-16 items-end gap-1">
+                            {analytics.daily.slice(-30).map((d) => {
+                              const max = Math.max(...analytics.daily.map((x) => x.stamps));
+                              return (
+                                <div
+                                  key={d.day}
+                                  title={`${d.day}: ${d.stamps} stamps · ${d.customers} customers`}
+                                  className="flex-1 rounded-t bg-gradient-to-t from-hero-blue to-hero-cyan"
+                                  style={{ height: `${Math.max(8, (d.stamps / max) * 100)}%` }}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="mt-4 text-[10px] uppercase tracking-wider text-slate-500">
+                        Customers ({analytics.customers.length}) — by anonymous code
+                      </p>
+                      <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-hero-blue/15">
+                        <table className="w-full text-left text-xs">
+                          <thead className="sticky top-0 bg-hero-deep text-slate-500">
+                            <tr>
+                              <th className="px-3 py-2 font-medium">Code</th>
+                              <th className="px-2 py-2 font-medium">Stamps</th>
+                              <th className="px-2 py-2 font-medium">Visits</th>
+                              <th className="px-2 py-2 font-medium">Card</th>
+                              <th className="px-2 py-2 font-medium">🎁</th>
+                              <th className="px-2 py-2 font-medium">Last</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analytics.customers.map((c) => (
+                              <tr key={c.code} className="border-t border-hero-blue/10">
+                                <td className="px-3 py-1.5 font-mono text-hero-cyan">{c.code}</td>
+                                <td className="px-2 py-1.5 text-slate-300">{c.stamps}</td>
+                                <td className="px-2 py-1.5 text-slate-300">{c.visits}</td>
+                                <td className="px-2 py-1.5 text-slate-400">
+                                  {Math.min(c.current, analytics.venue.stampsRequired)}/
+                                  {analytics.venue.stampsRequired}
+                                </td>
+                                <td className="px-2 py-1.5 text-solana-green">{c.rewards}</td>
+                                <td className="px-2 py-1.5 text-slate-500">
+                                  {shortDate(c.lastSeen)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="mt-2 text-[10px] text-slate-600">
+                        Anonymous codes only — no emails or wallets, here or anywhere else.
+                        Stamps by source: {analytics.totals.bySource.merchant} counter ·{' '}
+                        {analytics.totals.bySource.ntag} figurine tap.
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
