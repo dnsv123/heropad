@@ -175,6 +175,30 @@ export async function getIdentityById(id: string): Promise<IdentityRow | null> {
   return (data as IdentityRow) ?? null;
 }
 
+/**
+ * Records (or withdraws) marketing consent. Storing the email is gated on
+ * consent: the loyalty service itself runs on the contract basis and never
+ * needs a local copy — Privy holds the account email.
+ */
+export async function setMarketingConsent(
+  identityId: string,
+  consent: boolean,
+  email: string | null,
+  version: string
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    marketing_consent: consent,
+    marketing_consent_at: new Date().toISOString(),
+    marketing_consent_version: version,
+    marketing_email: consent ? email : null,
+  };
+  const { error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .update(patch)
+    .eq('id', identityId);
+  if (error) throw new Error(`[Supabase] setMarketingConsent: ${error.message}`);
+}
+
 export async function findIdentityByCode(code: string): Promise<IdentityRow | null> {
   const normalized = code.trim().toUpperCase();
   const { data, error } = await getSupabaseAdmin()

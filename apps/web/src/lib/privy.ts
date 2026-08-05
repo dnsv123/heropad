@@ -21,8 +21,20 @@ const solanaConnectors = toSolanaWalletConnectors({ shouldAutoConnect: false });
 
 export const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID as string | undefined;
 
+const SITE =
+  typeof window !== 'undefined'
+    ? window.location.origin
+    : 'https://heropad.supervictoruniverse.com';
+
 export const privyConfig: PrivyClientConfig = {
   loginMethods: ['email', 'google', 'wallet'],
+  // GDPR Art. 13: the notice must be reachable AT the point of collection.
+  // Privy renders these inside its own login modal, so a customer signing up
+  // at a café counter sees them without hunting through the footer.
+  legal: {
+    privacyPolicyUrl: `${SITE}/privacy`,
+    termsAndConditionsUrl: `${SITE}/terms`,
+  },
   appearance: {
     theme: 'dark',
     // Solana brand purple — matches the rest of the HeroPad palette.

@@ -209,6 +209,13 @@ const en = {
   'b.n.scan.reward': 'Reward code scanned — find the customer, then press Redeem.',
   'b.n.scan.unknown': 'That QR is not a HeroPad code.',
   'loy.qr.hint': 'Show this QR or read out the code at the counter.',
+  'consent.title': '📬 Want news and offers?',
+  'consent.body':
+    'Optional: get occasional emails about new partner venues, rewards and SuperVictor news. Nothing to do with your stamps — those work either way.',
+  'consent.yes': 'Yes, keep me posted',
+  'consent.no': 'No thanks',
+  'consent.saved': 'Saved. You can change this any time from your profile.',
+  'consent.privacy': 'Privacy policy',
   'b.setupcode.ph': 'SETUP CODE',
   'b.setupcode.hint':
     'Enter the 8-character setup code you received from HeroPad to link this venue to your account.',
@@ -394,6 +401,13 @@ const ro: Record<TranslationKey, string> = {
   'b.n.scan.reward': 'Cod de recompensă scanat — caută clientul, apoi apasă Validează.',
   'b.n.scan.unknown': 'Acel QR nu este un cod HeroPad.',
   'loy.qr.hint': 'Arată acest QR sau spune codul la casă.',
+  'consent.title': '📬 Vrei noutăți și oferte?',
+  'consent.body':
+    'Opțional: primești ocazional emailuri despre localuri partenere noi, recompense și noutăți SuperVictor. Nu are legătură cu bonusurile tale — ele funcționează oricum.',
+  'consent.yes': 'Da, ține-mă la curent',
+  'consent.no': 'Nu, mulțumesc',
+  'consent.saved': 'Salvat. Poți schimba oricând din profil.',
+  'consent.privacy': 'Politica de confidențialitate',
   'b.setupcode.ph': 'COD SETUP',
   'b.setupcode.hint':
     'Introdu codul de setup de 8 caractere primit de la HeroPad ca să legi localul de contul tău.',

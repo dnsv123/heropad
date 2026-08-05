@@ -1,12 +1,16 @@
-import { randomInt } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 
 import { Router, type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
-import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import {
+  requireAuth,
+  getPrivyUserContact,
+  type AuthedRequest,
+} from '../middleware/auth.js';
 import { getSupabaseAdmin } from '../lib/supabase-admin.js';
-import { ensureIdentity, getVenueBySlug } from '../lib/loyalty-db.js';
+import { ensureIdentity, getVenueBySlug, findIdentityByCode } from '../lib/loyalty-db.js';
 
 // Admin routes — the operator's control panel (Valentin only).
 // ---------------------------------------------------------------------------
@@ -432,6 +436,241 @@ adminRouter.get('/venues/:slug/analytics', async (req: Request, res: Response) =
     });
   } catch (err) {
     return serverError(res, 'venue-analytics', err);
+  }
+});
+
+// --- GDPR / support -----------------------------------------------------------
+
+/** Writes an audit entry. Never throws into the request path. */
+async function audit(
+  adminPrivyId: string,
+  action: string,
+  subjectCode: string | null,
+  detail: Record<string, unknown> = {}
+): Promise<void> {
+  try {
+    await getSupabaseAdmin().from('admin_audit_log').insert({
+      admin_privy_id: adminPrivyId,
+      action,
+      subject_code: subjectCode,
+      detail,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[admin.audit] failed:', (err as Error).message);
+  }
+}
+
+/** Everything we hold about one identity, for export or review. */
+async function collectSubjectData(identityId: string, wallet: string | null) {
+  const supa = getSupabaseAdmin();
+  const [stamps, rewards, codes, bits, claims] = await Promise.all([
+    supa
+      .from('stamps')
+      .select('venue_id, source, created_at')
+      .eq('user_identity_id', identityId),
+    supa
+      .from('rewards_redeemed')
+      .select('venue_id, reward_type, stamps_consumed, trophy_asset_id, redeemed_at')
+      .eq('user_identity_id', identityId),
+    supa
+      .from('redeem_codes')
+      .select('venue_id, created_at, used_at')
+      .eq('user_identity_id', identityId),
+    wallet
+      ? supa.from('bits_transactions').select('amount, reason, created_at').eq('wallet_address', wallet)
+      : Promise.resolve({ data: [] as unknown[] }),
+    wallet
+      ? supa.from('claims').select('code, cnft_mint_address, claimed_at').eq('wallet_address', wallet)
+      : Promise.resolve({ data: [] as unknown[] }),
+  ]);
+  return {
+    stamps: stamps.data ?? [],
+    rewards: rewards.data ?? [],
+    redeemCodes: codes.data ?? [],
+    bitsTransactions: bits.data ?? [],
+    claims: claims.data ?? [],
+  };
+}
+
+const CodeParam = /^[A-Z2-9]{6}$/i;
+
+// GET /api/admin/support/:code — resolve a loyalty code to the real person.
+// EVERY call is written to admin_audit_log: this is the one place where the
+// operator crosses from anonymous codes into personal data.
+adminRouter.get('/support/:code', async (req: Request, res: Response) => {
+  try {
+    const adminId = (req as AuthedRequest).privyId as string;
+    const code = String(req.params.code ?? '').toUpperCase();
+    if (!CodeParam.test(code)) {
+      return res.status(400).json({ ok: false, error: 'bad_code', message: 'Code is 6 characters.' });
+    }
+    const identity = await findIdentityByCode(code);
+    if (!identity) {
+      await audit(adminId, 'support_lookup_miss', code, {
+        reason: String(req.query.reason ?? ''),
+      });
+      return res.status(404).json({ ok: false, error: 'unknown_code', message: 'No such code.' });
+    }
+
+    let contact: { email: string | null; createdAt: string | null } = {
+      email: null,
+      createdAt: null,
+    };
+    try {
+      contact = await getPrivyUserContact(identity.privy_id);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[admin.support] privy lookup failed:', (err as Error).message);
+    }
+
+    const data = await collectSubjectData(identity.id, identity.solana_wallet);
+    await audit(adminId, 'support_lookup', code, {
+      reason: String(req.query.reason ?? ''),
+      privyId: identity.privy_id,
+    });
+
+    const { data: identRow } = await getSupabaseAdmin()
+      .from('user_identity')
+      .select('marketing_consent, marketing_consent_at, created_at')
+      .eq('id', identity.id)
+      .maybeSingle();
+
+    return res.status(200).json({
+      ok: true,
+      code: identity.loyalty_code,
+      email: contact.email,
+      privyId: identity.privy_id,
+      wallet: identity.solana_wallet,
+      accountCreated: (identRow as { created_at?: string } | null)?.created_at ?? contact.createdAt,
+      marketingConsent: Boolean((identRow as { marketing_consent?: boolean } | null)?.marketing_consent),
+      marketingConsentAt:
+        (identRow as { marketing_consent_at?: string } | null)?.marketing_consent_at ?? null,
+      counts: {
+        stamps: data.stamps.length,
+        rewards: data.rewards.length,
+        bitsTransactions: data.bitsTransactions.length,
+        claims: data.claims.length,
+      },
+    });
+  } catch (err) {
+    return serverError(res, 'support', err);
+  }
+});
+
+// GET /api/admin/support/:code/export — GDPR Art. 20 data export (JSON).
+adminRouter.get('/support/:code/export', async (req: Request, res: Response) => {
+  try {
+    const adminId = (req as AuthedRequest).privyId as string;
+    const code = String(req.params.code ?? '').toUpperCase();
+    if (!CodeParam.test(code)) {
+      return res.status(400).json({ ok: false, error: 'bad_code', message: 'Code is 6 characters.' });
+    }
+    const identity = await findIdentityByCode(code);
+    if (!identity) {
+      return res.status(404).json({ ok: false, error: 'unknown_code', message: 'No such code.' });
+    }
+    let email: string | null = null;
+    try {
+      email = (await getPrivyUserContact(identity.privy_id)).email;
+    } catch {
+      /* export still valid without it */
+    }
+    const data = await collectSubjectData(identity.id, identity.solana_wallet);
+    await audit(adminId, 'export', code, { privyId: identity.privy_id });
+
+    return res.status(200).json({
+      ok: true,
+      export: {
+        generatedAt: new Date().toISOString(),
+        subject: {
+          loyaltyCode: identity.loyalty_code,
+          email,
+          privyId: identity.privy_id,
+          solanaWallet: identity.solana_wallet,
+        },
+        ...data,
+        note: 'Account email and login history are held by Privy (our processor). Blockchain collectibles are public on Solana and cannot be deleted.',
+      },
+    });
+  } catch (err) {
+    return serverError(res, 'export', err);
+  }
+});
+
+// POST /api/admin/support/:code/erase — GDPR Art. 17.
+// Deletes the identity (cascades stamps/rewards/redeem codes) AND the
+// wallet-keyed rows that no cascade covers (bits + claims), then records
+// proof of erasure without keeping the personal data itself.
+adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => {
+  try {
+    const adminId = (req as AuthedRequest).privyId as string;
+    const code = String(req.params.code ?? '').toUpperCase();
+    if (!CodeParam.test(code)) {
+      return res.status(400).json({ ok: false, error: 'bad_code', message: 'Code is 6 characters.' });
+    }
+    if ((req.body as { confirm?: unknown })?.confirm !== code) {
+      return res.status(400).json({
+        ok: false,
+        error: 'confirm_required',
+        message: 'Type the customer code to confirm erasure.',
+      });
+    }
+    const identity = await findIdentityByCode(code);
+    if (!identity) {
+      return res.status(404).json({ ok: false, error: 'unknown_code', message: 'No such code.' });
+    }
+
+    const supa = getSupabaseAdmin();
+    const before = await collectSubjectData(identity.id, identity.solana_wallet);
+
+    // Wallet-keyed tables first — they have no FK to user_identity.
+    if (identity.solana_wallet) {
+      await supa.from('bits_transactions').delete().eq('wallet_address', identity.solana_wallet);
+      await supa.from('bits_balance').delete().eq('wallet_address', identity.solana_wallet);
+      await supa.from('claims').delete().eq('wallet_address', identity.solana_wallet);
+    }
+    // Identity delete cascades stamps / rewards_redeemed / redeem_codes.
+    const { error: delErr } = await supa.from('user_identity').delete().eq('id', identity.id);
+    if (delErr) throw new Error(delErr.message);
+
+    const rowsDeleted = {
+      stamps: before.stamps.length,
+      rewards: before.rewards.length,
+      redeemCodes: before.redeemCodes.length,
+      bitsTransactions: before.bitsTransactions.length,
+      claims: before.claims.length,
+    };
+    await supa.from('erasure_log').insert({
+      privy_id_hash: createHash('sha256').update(identity.privy_id).digest('hex'),
+      erased_by: adminId,
+      rows_deleted: rowsDeleted,
+    });
+    await audit(adminId, 'erase', code, rowsDeleted);
+
+    return res.status(200).json({
+      ok: true,
+      erased: rowsDeleted,
+      reminder:
+        'Also delete the user in the Privy dashboard (account email) — and note that on-chain collectibles are public and permanent.',
+    });
+  } catch (err) {
+    return serverError(res, 'erase', err);
+  }
+});
+
+// GET /api/admin/audit — the accountability trail.
+adminRouter.get('/audit', async (_req: Request, res: Response) => {
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from('admin_audit_log')
+      .select('admin_privy_id, action, subject_code, detail, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return res.status(200).json({ ok: true, entries: data ?? [] });
+  } catch (err) {
+    return serverError(res, 'audit', err);
   }
 });
 
