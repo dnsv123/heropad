@@ -33,6 +33,29 @@ export interface AuthedRequest extends Request {
 }
 
 /**
+ * Contact details Privy holds for a user. Used ONLY by the audited admin
+ * support lookup — never by merchant-facing code.
+ */
+export async function getPrivyUserContact(
+  privyId: string
+): Promise<{ email: string | null; createdAt: string | null }> {
+  const user = await getPrivyClient().getUser(privyId);
+  const accounts = (user.linkedAccounts ?? []) as Array<{
+    type?: string;
+    address?: string;
+    email?: string;
+  }>;
+  const email =
+    accounts.find((a) => a.type === 'email')?.address ??
+    accounts.find((a) => a.type === 'google_oauth')?.email ??
+    null;
+  return {
+    email: email ?? null,
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
+  };
+}
+
+/**
  * Every Solana wallet address linked to a Privy user (embedded + external).
  * Used to prove a caller actually owns the wallet they're asking about —
  * wallet addresses are public on-chain, so they can never be treated as

@@ -56,6 +56,17 @@ interface VenueAnalytics {
   }>;
 }
 
+interface SupportSubject {
+  code: string;
+  email: string | null;
+  privyId: string;
+  wallet: string | null;
+  accountCreated: string | null;
+  marketingConsent: boolean;
+  marketingConsentAt: string | null;
+  counts: { stamps: number; rewards: number; bitsTransactions: number; claims: number };
+}
+
 function shortDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
@@ -80,6 +91,12 @@ export default function Admin() {
   const [copied, setCopied] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
   const [analyticsFor, setAnalyticsFor] = useState<string | null>(null);
+
+  // Support / GDPR desk
+  const [supportCode, setSupportCode] = useState('');
+  const [supportReason, setSupportReason] = useState('');
+  const [subject, setSubject] = useState<SupportSubject | null>(null);
+  const [eraseConfirm, setEraseConfirm] = useState('');
 
   // New-venue form
   const [slug, setSlug] = useState('');
@@ -170,6 +187,74 @@ export default function Admin() {
       );
       setNotice({ kind: 'ok', text: `New setup code for ${v.name}: ${r.setupCode}` });
       await load();
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function lookupSubject() {
+    setBusy(true);
+    setNotice(null);
+    setSubject(null);
+    setEraseConfirm('');
+    try {
+      const token = await getAccessToken();
+      const qs = supportReason.trim()
+        ? `?reason=${encodeURIComponent(supportReason.trim())}`
+        : '';
+      const r = await getJson<{ ok: true } & SupportSubject>(
+        `/api/admin/support/${supportCode.trim().toUpperCase()}${qs}`,
+        token ?? undefined
+      );
+      setSubject(r);
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function exportSubject() {
+    setBusy(true);
+    try {
+      const token = await getAccessToken();
+      const r = await getJson<{ ok: true; export: unknown }>(
+        `/api/admin/support/${supportCode.trim().toUpperCase()}/export`,
+        token ?? undefined
+      );
+      // Download as a file the customer can be sent directly.
+      const blob = new Blob([JSON.stringify(r.export, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `heropad-export-${supportCode.trim().toUpperCase()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setNotice({ kind: 'ok', text: 'Export downloaded — send this file to the customer.' });
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function eraseSubject() {
+    const code = supportCode.trim().toUpperCase();
+    setBusy(true);
+    try {
+      const token = await getAccessToken();
+      const r = await postJson<{ confirm: string }, { ok: true; reminder: string }>(
+        `/api/admin/support/${code}/erase`,
+        { confirm: code },
+        token ?? undefined
+      );
+      setSubject(null);
+      setEraseConfirm('');
+      setNotice({ kind: 'ok', text: `Erased. ${r.reminder}` });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as { message: string }).message });
     } finally {
@@ -319,6 +404,109 @@ export default function Admin() {
           {notice.text}
         </p>
       )}
+
+      {/* ---- Support / GDPR desk ---- */}
+      <div className="mt-8 rounded-2xl border border-solana-purple/30 bg-hero-deep/50 p-5">
+        <h2 className="font-display text-lg font-semibold text-solana-purple">
+          🔎 Support &amp; GDPR desk
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          Resolve a customer code to the real person — for support, data export
+          (Art. 20) or erasure (Art. 17). <b>Every lookup is written to the audit
+          log</b>, so keep the reason accurate.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-[160px_1fr_auto]">
+          <input
+            value={supportCode}
+            onChange={(e) => setSupportCode(e.target.value.toUpperCase())}
+            maxLength={6}
+            placeholder="J7JBXR"
+            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-solana-purple focus:outline-none"
+          />
+          <input
+            value={supportReason}
+            onChange={(e) => setSupportReason(e.target.value)}
+            maxLength={120}
+            placeholder="Reason (e.g. customer asked for their data)"
+            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-solana-purple focus:outline-none"
+          />
+          <button
+            type="button"
+            disabled={busy || supportCode.trim().length !== 6}
+            onClick={() => void lookupSubject()}
+            className="rounded-full bg-solana-purple px-5 py-2 text-sm font-semibold text-white transition hover:bg-solana-purple-deep disabled:opacity-40"
+          >
+            Look up
+          </button>
+        </div>
+
+        {subject && (
+          <div className="mt-4 rounded-xl border border-hero-blue/20 bg-hero-deep/70 p-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <p className="text-sm">
+                <span className="text-slate-500">Email:</span>{' '}
+                <span className="text-slate-100">{subject.email ?? '— (not available)'}</span>
+              </p>
+              <p className="text-sm">
+                <span className="text-slate-500">Code:</span>{' '}
+                <span className="font-mono text-hero-cyan">{subject.code}</span>
+              </p>
+              <p className="text-xs text-slate-400">
+                Account created:{' '}
+                {subject.accountCreated ? shortDate(subject.accountCreated) : '—'}
+              </p>
+              <p className="text-xs text-slate-400">
+                Newsletter consent:{' '}
+                {subject.marketingConsent ? (
+                  <span className="text-solana-green">
+                    yes
+                    {subject.marketingConsentAt
+                      ? ` · ${shortDate(subject.marketingConsentAt)}`
+                      : ''}
+                  </span>
+                ) : (
+                  <span className="text-slate-500">no</span>
+                )}
+              </p>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              ☕ {subject.counts.stamps} stamps · 🎁 {subject.counts.rewards} rewards · ⚡{' '}
+              {subject.counts.bitsTransactions} BITS entries · 🦸 {subject.counts.claims} claims
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void exportSubject()}
+                className="rounded-full border border-hero-cyan/40 px-4 py-1.5 text-xs text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
+              >
+                ⬇ Export data (JSON)
+              </button>
+              <input
+                value={eraseConfirm}
+                onChange={(e) => setEraseConfirm(e.target.value.toUpperCase())}
+                maxLength={6}
+                placeholder="type code"
+                className="w-28 rounded-lg border border-red-400/40 bg-hero-deep/80 px-2 py-1.5 text-center font-mono text-xs text-red-200 focus:border-red-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                disabled={busy || eraseConfirm !== subject.code}
+                onClick={() => void eraseSubject()}
+                className="rounded-full border border-red-400/50 px-4 py-1.5 text-xs text-red-300 transition hover:bg-red-400/10 disabled:opacity-30"
+              >
+                🗑 Erase all data
+              </button>
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
+              Erasure removes stamps, rewards, BITS and claims permanently. Afterwards
+              also delete the user in the Privy dashboard (account email). On-chain
+              collectibles are public and cannot be deleted.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* ---- New venue ---- */}
       <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">

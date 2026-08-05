@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import PowerMeter from '../components/PowerMeter';
+import ConsentPrompt from '../components/ConsentPrompt';
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
 import { useT } from '../i18n';
@@ -421,6 +422,9 @@ export default function Loyalty() {
             )}
           </div>
         </div>
+
+        {/* Asked once, only after the customer has stamps worth coming back for. */}
+        <ConsentPrompt show={Boolean(me && me.totalStamps >= 2)} />
 
         <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-600">
           {t('loy.footnote')}

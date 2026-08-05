@@ -27,6 +27,7 @@ import {
   getUserLoyaltyStats,
   getVenueAnalytics,
   updateVenueSettings,
+  setMarketingConsent,
   type VenueRow,
 } from '../lib/loyalty-db.js';
 
@@ -282,6 +283,39 @@ loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) 
     });
   } catch (err) {
     return serverError(res, 'me', err);
+  }
+});
+
+const ConsentBody = z.object({
+  consent: z.boolean(),
+  email: z.string().trim().email().max(200).optional(),
+  version: z.string().trim().max(40).default('2026-08-v1'),
+});
+
+// POST /api/loyalty/me/consent — marketing consent, opt-in only.
+// Separate from using the service (contract basis) so the newsletter has its
+// own, provable legal basis: we store WHEN and WHICH text was accepted.
+loyaltyRouter.post('/me/consent', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const parsed = ConsentBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => i.message).join('; '),
+      });
+    }
+    const identity = await ensureIdentity(privyId);
+    await setMarketingConsent(
+      identity.id,
+      parsed.data.consent,
+      parsed.data.email ?? null,
+      parsed.data.version
+    );
+    return res.status(200).json({ ok: true, consent: parsed.data.consent });
+  } catch (err) {
+    return serverError(res, 'consent', err);
   }
 });
 
