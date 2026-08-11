@@ -63,10 +63,12 @@ async function postJson<TReq, TRes>(path: string, body: TReq): Promise<TRes> {
   return data as TRes;
 }
 
-async function getJson<TRes>(path: string): Promise<TRes> {
+async function getJson<TRes>(path: string, token?: string): Promise<TRes> {
   let res: Response;
+  const headers = new Headers();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
   try {
-    res = await fetch(`${API_BASE_URL}${path}`);
+    res = await fetch(`${API_BASE_URL}${path}`, { headers });
   } catch {
     throw makeApiError(
       `Cannot reach the HeroPad API at ${API_BASE_URL}.`,
@@ -125,7 +127,11 @@ export interface UserMeResponse {
   cached: boolean;
 }
 
-export function getUserMe(walletAddress: string): Promise<UserMeResponse> {
+/**
+ * `/api/user/me` is authenticated — the API checks the Privy token owns the
+ * wallet it is asked about, so a token is required, not optional in practice.
+ */
+export function getUserMe(walletAddress: string, token: string): Promise<UserMeResponse> {
   const qs = new URLSearchParams({ wallet: walletAddress }).toString();
-  return getJson<UserMeResponse>(`/api/user/me?${qs}`);
+  return getJson<UserMeResponse>(`/api/user/me?${qs}`, token);
 }

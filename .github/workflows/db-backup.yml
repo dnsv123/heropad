@@ -103,7 +103,7 @@ jobs:
           gzip -dc heropad-backup-*.sql.gz | grep -c 'CREATE TABLE' || true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: heropad-db-${{ env.STAMP }}
           path: heropad-backup-*.sql.gz

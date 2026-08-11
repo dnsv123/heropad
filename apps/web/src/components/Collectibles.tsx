@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { usePrivy } from '@privy-io/react-auth';
 
 import { getUserMe, type CollectibleSummary, type UserMeResponse } from '../lib/api';
 import CollectibleModal from './CollectibleModal';
@@ -17,6 +18,7 @@ interface CollectiblesProps {
 //   - error    → soft error message with retry
 //   - data     → BITS pill + grid of NFT cards
 export default function Collectibles({ walletAddress }: CollectiblesProps) {
+  const { ready, authenticated, getAccessToken } = usePrivy();
   const [state, setState] = useState<
     | { phase: 'loading' }
     | { phase: 'data'; data: UserMeResponse }
@@ -27,7 +29,11 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
   const load = async () => {
     setState({ phase: 'loading' });
     try {
-      const data = await getUserMe(walletAddress);
+      // The endpoint verifies this token owns the wallet, so a missing one is
+      // not a retryable error — stay in loading until Privy hands it over.
+      const token = await getAccessToken();
+      if (!token) return;
+      const data = await getUserMe(walletAddress, token);
       setState({ phase: 'data', data });
     } catch (err) {
       setState({
@@ -38,10 +44,12 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
   };
 
   useEffect(() => {
-    if (!walletAddress) return;
+    // Privy resolves the session asynchronously; firing before `ready` yields a
+    // null token and a spurious "not authorized" on an otherwise fine account.
+    if (!walletAddress || !ready || !authenticated) return;
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletAddress]);
+  }, [walletAddress, ready, authenticated]);
 
   // ---- Loading -----------------------------------------------------------
   if (state.phase === 'loading') {
