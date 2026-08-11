@@ -17,6 +17,7 @@ import {
   getIdentityById,
   getVenueProgress,
   countStampsToday,
+  countTrophiesToday,
   grantStamps,
   revokeLatestStampToday,
   redeemReward,
@@ -71,6 +72,14 @@ loyaltyRouter.use(
 const MAX_STAMPS_PER_DAY = (() => {
   const parsed = Number(process.env.LOYALTY_DAILY_CAP);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+})();
+
+// Trophy mints per venue per rolling 24h. Sized well above what a real café
+// produces (a customer completes a card every ~10 visits), so it only ever
+// trips on farming — the cost of which lands on OUR admin wallet on mainnet.
+const MAX_TROPHIES_PER_VENUE_DAY = (() => {
+  const parsed = Number(process.env.TROPHY_DAILY_CAP);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
 })();
 
 // --- Happy Hour (Romania local time) -----------------------------------------
@@ -786,6 +795,16 @@ loyaltyRouter.post(
       if (!wallet) {
         trophySkipped =
           'Customer wallet not linked yet — trophy will be mintable once they revisit their loyalty page.';
+      } else if ((await countTrophiesToday(owned.venue.id)) >= MAX_TROPHIES_PER_VENUE_DAY) {
+        // Anti-Sybil ceiling. The reward is STILL handed over — only the
+        // on-chain mint pauses, so a genuine (astonishing) day never costs a
+        // customer their free coffee. Retroactive minting covers the gap.
+        trophySkipped =
+          'Daily trophy limit reached for this venue — the reward stands and the trophy will be minted shortly.';
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[loyalty.redeem] trophy cap hit for venue ${owned.venue.slug} — possible farming`
+        );
       } else {
         try {
           const edition = after.cardsCompleted;
