@@ -8,7 +8,17 @@
 # Setup (one-time): repo → Settings → Secrets and variables → Actions →
 #   New repository secret: SUPABASE_DB_URL
 #   Value: Supabase → Project Settings → Database → Connection string →
-#          URI (session pooler), with the real password substituted in.
+#          URI, tab "Session pooler", with the real password substituted in.
+#
+#   IMPORTANT: it MUST be the *pooler* host (aws-0-...pooler.supabase.com).
+#   The direct host (db.<ref>.supabase.co) resolves to IPv6 only, and GitHub
+#   runners have no IPv6 — the connection dies before it starts.
+#
+#   If the password contains @ : / ? # or %, percent-encode it in the URI
+#   (@ → %40, : → %3A, / → %2F, # → %23, % → %25).
+#
+# pg_dump runs inside the official postgres:17 image so the job never depends
+# on apt repositories being reachable or consistent on the runner.
 #
 # Retention: GitHub keeps artifacts 30 days (configurable below). Download one
 # occasionally and keep it somewhere else too — a backup you have never
@@ -25,14 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Install postgresql-client 17
-        run: |
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-
-      - name: Dump database
+      # Fails loudly and specifically, instead of letting pg_dump die with a
+      # generic error. Prints host/port only — never the user or the password.
+      - name: Check connection string
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
@@ -40,15 +45,62 @@ jobs:
             echo "::error::SUPABASE_DB_URL secret is not set — see the header of this file."
             exit 1
           fi
+          # strip scheme + credentials, keep host:port/db
+          HOSTPART=$(printf '%s' "$SUPABASE_DB_URL" | sed -E 's#^[a-z+]+://[^@]*@##; s#\?.*$##')
+          echo "Connecting to: $HOSTPART"
+          case "$SUPABASE_DB_URL" in
+            postgres://*|postgresql://*) ;;
+            *) echo "::error::Not a postgres URI. It must start with postgresql://"; exit 1 ;;
+          esac
+          case "$HOSTPART" in
+            db.*.supabase.co*)
+              echo "::error::This is the DIRECT connection string (IPv6-only). GitHub runners are IPv4-only. Use Supabase → Database → Connection string → tab 'Session pooler' instead."
+              exit 1 ;;
+          esac
+          if printf '%s' "$HOSTPART" | grep -q '\[YOUR-PASSWORD\]\|YOUR-PASSWORD'; then
+            echo "::error::The placeholder [YOUR-PASSWORD] is still in the string — substitute the real database password."
+            exit 1
+          fi
+
+      - name: Dump database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
           STAMP=$(date -u +%Y-%m-%d)
-          pg_dump "$SUPABASE_DB_URL" \
-            --schema=public \
-            --no-owner --no-privileges \
-            --format=plain \
-            --file="heropad-backup-$STAMP.sql"
+          set +e
+          docker run --rm \
+            -e PGCONNECT_TIMEOUT=15 \
+            -e DBURL="$SUPABASE_DB_URL" \
+            -v "$PWD:/out" \
+            -w /out \
+            postgres:17 \
+            sh -c 'pg_dump "$DBURL" --schema=public --no-owner --no-privileges --format=plain --file="heropad-backup-'"$STAMP"'.sql"' 2> dump-err.log
+          RC=$?
+          set -e
+          if [ $RC -ne 0 ]; then
+            echo "::group::pg_dump error output"
+            # the URI (with the password) is never echoed by pg_dump, but scrub anyway
+            sed -E 's#(postgres(ql)?://)[^@]*@#\1***:***@#g' dump-err.log
+            echo "::endgroup::"
+            echo "::error::pg_dump failed with exit code $RC — see the group above."
+            exit $RC
+          fi
           gzip -9 "heropad-backup-$STAMP.sql"
           ls -lh heropad-backup-*.sql.gz
           echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+      # A dump that is technically a file but holds no tables is the failure
+      # mode that goes unnoticed for months. Assert it actually has content.
+      - name: Verify dump is not empty
+        run: |
+          SIZE=$(stat -c%s heropad-backup-*.sql.gz)
+          echo "Compressed size: $SIZE bytes"
+          if [ "$SIZE" -lt 1024 ]; then
+            echo "::error::Dump is suspiciously small ($SIZE bytes) — treating as a failed backup."
+            exit 1
+          fi
+          echo "Tables found in dump:"
+          gzip -dc heropad-backup-*.sql.gz | grep -c 'CREATE TABLE' || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
