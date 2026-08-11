@@ -1,0 +1,59 @@
+# Nightly off-site backup of the loyalty database.
+#
+# Why: Supabase's free tier has no PITR and its own backups live in the same
+# account — a compromised or deleted project takes them with it. This pulls a
+# plain SQL dump into GitHub (private repo) so the data survives losing
+# Supabase entirely.
+#
+# Setup (one-time): repo → Settings → Secrets and variables → Actions →
+#   New repository secret: SUPABASE_DB_URL
+#   Value: Supabase → Project Settings → Database → Connection string →
+#          URI (session pooler), with the real password substituted in.
+#
+# Retention: GitHub keeps artifacts 30 days (configurable below). Download one
+# occasionally and keep it somewhere else too — a backup you have never
+# restored is a hope, not a backup.
+name: db-backup
+
+on:
+  schedule:
+    - cron: '23 2 * * *' # 02:23 UTC daily
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install postgresql-client 17
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set — see the header of this file."
+            exit 1
+          fi
+          STAMP=$(date -u +%Y-%m-%d)
+          pg_dump "$SUPABASE_DB_URL" \
+            --schema=public \
+            --no-owner --no-privileges \
+            --format=plain \
+            --file="heropad-backup-$STAMP.sql"
+          gzip -9 "heropad-backup-$STAMP.sql"
+          ls -lh heropad-backup-*.sql.gz
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heropad-db-${{ env.STAMP }}
+          path: heropad-backup-*.sql.gz
+          retention-days: 30
+          if-no-files-found: error
