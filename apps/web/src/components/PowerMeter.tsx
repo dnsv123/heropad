@@ -24,7 +24,7 @@ interface PowerMeterProps {
 export default function PowerMeter({
   current,
   required,
-  heroSrc = '/super-victor-fly-1.png',
+  heroSrc = '/super-victor-fly-1.webp',
   justCharged = false,
 }: PowerMeterProps) {
   const { t } = useT();

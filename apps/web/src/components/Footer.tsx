@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-8 md:flex-row md:justify-between">
         <div className="flex items-center gap-3 text-sm text-slate-400">
           <img
-            src="/svu-logo.png"
+            src="/svu-logo.webp"
             alt="SuperVictor Universe"
             className="h-8 w-8 object-contain"
             onError={(e) => {

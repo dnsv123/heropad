@@ -15,7 +15,7 @@ export default function AccountCard() {
       <div className="flex items-center gap-4">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-hero-cyan/30 bg-gradient-to-br from-hero-blue/40 to-hero-deep md:h-20 md:w-20">
           <img
-            src="/super-victor-pfp.png"
+            src="/super-victor-pfp.webp"
             alt=""
             aria-hidden
             className="absolute inset-0 h-full w-full object-cover"

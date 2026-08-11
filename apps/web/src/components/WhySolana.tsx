@@ -8,7 +8,7 @@ const POINTS = [
     body: '$0.0001 per mint at scale. We can issue cNFTs with every figurine without breaking unit economics.',
     accent: 'text-hero-cyan',
     border: 'border-hero-cyan/20 hover:border-hero-cyan/60',
-    illustration: '/diamond-hands.png',
+    illustration: '/diamond-hands.webp',
   },
   {
     title: 'Sub-second finality',

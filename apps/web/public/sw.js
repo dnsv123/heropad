@@ -7,16 +7,13 @@
 //
 // We bump CACHE_VERSION whenever we want to evict old caches.
 
-const CACHE_VERSION = 'heropad-v1';
-const PRECACHE = [
-  '/',
-  '/super-victor.png',
-  '/super-victor-pfp.png',
-  '/super-victor-fly-1.png',
-  '/super-victor-boxing.png',
-  '/diamond-hands.png',
-  '/svu-logo.png',
-];
+// Precache ONLY the shell. Brand art used to be listed here, which meant a
+// customer opening /loyalty on café cellular downloaded ~11 MB of images they
+// would never see, competing with the live-stamp polling for bandwidth. The
+// cache-first image rule below still caches art the moment it is actually
+// used, so nothing is lost offline.
+const CACHE_VERSION = 'heropad-v2';
+const PRECACHE = ['/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
