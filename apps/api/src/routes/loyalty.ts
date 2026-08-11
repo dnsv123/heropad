@@ -9,7 +9,7 @@ import {
 } from '../middleware/auth.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
 import { creditBits } from '../lib/supabase-admin.js';
-import { claimVenueWithToken } from './admin.js';
+import { claimVenueWithToken, claimVenueByCodeOnly } from './admin.js';
 import {
   getVenueBySlug,
   ensureIdentity,
@@ -379,14 +379,28 @@ loyaltyRouter.post(
         });
       }
       const outcome = await claimVenueWithToken(venue.slug, token, privyId);
-      if (outcome !== 'ok') {
-        return res.status(403).json({
-          ok: false,
-          error: 'bad_setup_code',
-          message: 'That setup code is not valid for this venue (or was already used).',
+      if (outcome === 'ok') {
+        return res.status(200).json({ ok: true, alreadyOwner: false, slug: venue.slug });
+      }
+
+      // The code may belong to a DIFFERENT venue (merchant opened /business
+      // without ?venue=, or with the wrong one). Rather than failing, resolve
+      // the venue from the code itself and link them to the right café.
+      const byCode = await claimVenueByCodeOnly(token, privyId);
+      if (byCode.ok) {
+        return res.status(200).json({
+          ok: true,
+          alreadyOwner: false,
+          slug: byCode.slug,
+          name: byCode.name,
+          redirected: true,
         });
       }
-      return res.status(200).json({ ok: true, alreadyOwner: false });
+      return res.status(403).json({
+        ok: false,
+        error: 'bad_setup_code',
+        message: 'That setup code is not valid (or was already used).',
+      });
     } catch (err) {
       return serverError(res, 'claim-ownership', err);
     }

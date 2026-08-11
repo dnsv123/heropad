@@ -122,13 +122,22 @@ export default function Business() {
     setNotice(null);
     try {
       const token = await getAccessToken();
-      await postJson(
+      const r = await postJson<
+        { setupCode: string },
+        { ok: true; slug?: string; name?: string; redirected?: boolean }
+      >(
         `/api/loyalty/venue/${slug}/claim-ownership`,
         { setupCode: setupCode.trim().toUpperCase() },
         token ?? undefined
       );
-      setIsOwner(true);
       setSetupCode('');
+      // The code may have belonged to another venue — the API resolves it and
+      // tells us where the merchant actually landed, so we switch them there.
+      if (r.redirected && r.slug && r.slug !== slug) {
+        window.location.href = `/business?venue=${r.slug}`;
+        return;
+      }
+      setIsOwner(true);
       setNotice({ kind: 'ok', text: 'You are now the merchant of this venue. ☕' });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });

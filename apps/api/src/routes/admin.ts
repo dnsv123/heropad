@@ -674,6 +674,44 @@ adminRouter.get('/audit', async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * Claim by CODE ALONE — the setup code identifies its own venue, so the
+ * merchant can land on /business with no parameters and still end up linked
+ * to the right café. Removes the whole class of "wrong venue in the URL"
+ * failures. Returns the venue slug on success.
+ */
+export async function claimVenueByCodeOnly(
+  token: string,
+  privyId: string
+): Promise<{ ok: true; slug: string; name: string } | { ok: false }> {
+  const supa = getSupabaseAdmin();
+  const code = token.trim().toUpperCase();
+
+  const { data: match, error } = await supa
+    .from('venues')
+    .select('id, slug, name, active')
+    .eq('claim_token', code)
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] claimVenueByCodeOnly: ${error.message}`);
+  if (!match) return { ok: false };
+
+  const venue = match as { id: string; slug: string; name: string; active: boolean };
+  if (!venue.active) return { ok: false };
+
+  const identity = await ensureIdentity(privyId);
+  // Atomic: only lands while the token still matches, and clears it.
+  const { data, error: updErr } = await supa
+    .from('venues')
+    .update({ owner_identity_id: identity.id, claim_token: null })
+    .eq('id', venue.id)
+    .eq('claim_token', code)
+    .select('id');
+  if (updErr) throw new Error(`[Supabase] claimVenueByCodeOnly update: ${updErr.message}`);
+  if ((data?.length ?? 0) === 0) return { ok: false };
+
+  return { ok: true, slug: venue.slug, name: venue.name };
+}
+
 /** Exposed for the merchant claim flow in routes/loyalty.ts. */
 export async function claimVenueWithToken(
   slug: string,
