@@ -12,6 +12,11 @@
 # Downloads / Desktop, including one still inside the .zip GitHub hands you.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\verify-backup.ps1 -Path C:\some\file.sql.gz
+#
+# Keep this file pure ASCII. Windows PowerShell 5.1 reads BOM-less files as
+# ANSI, where the UTF-8 bytes of an em dash end in 0x94 - a curly closing
+# quote, which terminates a string mid-line and makes the whole script fail
+# to parse with errors pointing at innocent lines further down.
 
 param([string]$Path)
 
@@ -68,7 +73,7 @@ $tables = $lines | Select-String -Pattern '^CREATE TABLE (?:public\.)?"?([a-z0-9
     ForEach-Object { $_.Matches[0].Groups[1].Value }
 
 if (-not $tables) {
-    Write-Host "NO TABLES IN THIS DUMP — the backup is not usable." -ForegroundColor Red
+    Write-Host "NO TABLES IN THIS DUMP - the backup is not usable." -ForegroundColor Red
     exit 1
 }
 
@@ -105,6 +110,6 @@ if ($missing) {
 $empty = $critical | Where-Object { -not $rows.ContainsKey($_) -or $rows[$_] -eq 0 }
 Write-Host ("Found all {0} critical tables." -f $critical.Count) -ForegroundColor Green
 if ($empty) {
-    Write-Host "Note: no rows in $($empty -join ', ') — fine if that data does not exist yet." -ForegroundColor Yellow
+    Write-Host "Note: no rows in $($empty -join ', ') - fine if that data does not exist yet." -ForegroundColor Yellow
 }
 Write-Host "BACKUP IS VALID." -ForegroundColor Green
