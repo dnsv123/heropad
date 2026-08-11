@@ -245,6 +245,25 @@ export async function getVenueProgress(
   };
 }
 
+/**
+ * Trophies minted at this venue today. The anti-Sybil ceiling lives HERE
+ * rather than on stamps: a busy café legitimately hands out hundreds of
+ * stamps a day, but a real customer only completes a card every ~10 visits,
+ * so trophies/day stays small even at high volume. A merchant farming fake
+ * accounts, by contrast, shows up immediately.
+ */
+export async function countTrophiesToday(venueId: string): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await getSupabaseAdmin()
+    .from('rewards_redeemed')
+    .select('id', { count: 'exact', head: true })
+    .eq('venue_id', venueId)
+    .not('trophy_asset_id', 'is', null)
+    .gt('redeemed_at', since);
+  if (error) throw new Error(`[Supabase] countTrophiesToday: ${error.message}`);
+  return count ?? 0;
+}
+
 /** Stamps granted to this user at this venue today (UTC) — soft anti-abuse cap. */
 export async function countStampsToday(
   identityId: string,
