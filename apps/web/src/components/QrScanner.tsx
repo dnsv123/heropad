@@ -22,6 +22,14 @@ interface BarcodeDetectorLike {
   detect: (source: CanvasImageSource) => Promise<Array<{ rawValue: string }>>;
 }
 
+// The jsQR fallback is the ONLY path on iOS Safari (no BarcodeDetector there).
+// Scanning full sensor frames every animation frame allocates ~8 MB per frame
+// and pins a core — that is what makes the phone hot. A 640px working copy
+// decodes a QR held at counter distance just as well, and capping the rate at
+// ~10fps leaves the device responsive.
+const SCAN_EDGE = 640;
+const SCAN_INTERVAL_MS = 100;
+
 export default function QrScanner({ onResult, onClose, title, hint }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,13 +38,22 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
   const doneRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Hold the callback in a ref so the camera effect does NOT depend on it:
+  // callers usually pass an inline function, which changes identity on every
+  // parent render and would otherwise stop and restart the capture session
+  // mid-scan (black flash, possible second permission prompt on iOS).
+  const onResultRef = useRef(onResult);
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function start() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
+          video: { facingMode: 'environment', width: { ideal: 1280 } },
           audio: false,
         });
         if (cancelled) {
@@ -55,11 +72,14 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
         ).BarcodeDetector;
         const detector = Detector ? new Detector({ formats: ['qr_code'] }) : null;
 
+        let lastScan = 0;
         const tick = async () => {
           if (cancelled || doneRef.current) return;
           const v = videoRef.current;
           const canvas = canvasRef.current;
-          if (v && canvas && v.readyState === v.HAVE_ENOUGH_DATA) {
+          const now = performance.now();
+          if (v && canvas && v.readyState === v.HAVE_ENOUGH_DATA && now - lastScan >= SCAN_INTERVAL_MS) {
+            lastScan = now;
             let text: string | null = null;
             if (detector) {
               try {
@@ -71,17 +91,24 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
             }
             if (!text) {
               const ctx = canvas.getContext('2d', { willReadFrequently: true });
-              if (ctx) {
-                canvas.width = v.videoWidth;
-                canvas.height = v.videoHeight;
-                ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-                const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              if (ctx && v.videoWidth > 0) {
+                const scale = Math.min(1, SCAN_EDGE / Math.max(v.videoWidth, v.videoHeight));
+                const w = Math.round(v.videoWidth * scale);
+                const h = Math.round(v.videoHeight * scale);
+                // Only reassign when it actually changes — assigning canvas
+                // dimensions reallocates the backing store every time.
+                if (canvas.width !== w || canvas.height !== h) {
+                  canvas.width = w;
+                  canvas.height = h;
+                }
+                ctx.drawImage(v, 0, 0, w, h);
+                const img = ctx.getImageData(0, 0, w, h);
                 text = jsQR(img.data, img.width, img.height)?.data ?? null;
               }
             }
             if (text) {
               doneRef.current = true;
-              onResult(text);
+              onResultRef.current(text);
               return;
             }
           }
@@ -104,7 +131,7 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
       if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [onResult]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">

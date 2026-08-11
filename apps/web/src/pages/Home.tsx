@@ -17,7 +17,7 @@ export default function Home() {
 
       {/* Decorative floating mascot — desktop only, subtle. */}
       <motion.img
-        src="/super-victor-fly-1.png"
+        src="/super-victor-fly-1.webp"
         alt=""
         aria-hidden
         className="pointer-events-none absolute right-4 top-[62%] hidden h-32 w-auto opacity-90 drop-shadow-[0_10px_40px_rgba(93,211,255,0.3)] lg:block xl:right-12 xl:h-40"

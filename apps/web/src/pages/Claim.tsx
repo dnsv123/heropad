@@ -31,7 +31,7 @@ export default function Claim() {
             className="pointer-events-none absolute inset-0 mx-auto h-full w-full rounded-full bg-hero-cyan/15 blur-3xl"
           />
           <motion.img
-            src="/super-victor-fly-1.png"
+            src="/super-victor-fly-1.webp"
             alt="SuperVictor — ready to claim"
             className="relative w-full object-contain drop-shadow-[0_15px_50px_rgba(93,211,255,0.4)]"
             animate={{ y: [0, -10, 0] }}

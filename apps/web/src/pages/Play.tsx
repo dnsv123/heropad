@@ -14,21 +14,21 @@ const FEATURES = [
   {
     title: 'Hero Skins',
     body: 'The heroes you collect through HeroPad become wearable skins in V-DASH. Equip your collection and switch outfits between runs.',
-    image: '/super-victor-fly-1.png',
+    image: '/super-victor-fly-1.webp',
     accent: 'text-hero-cyan',
     border: 'border-hero-cyan/30',
   },
   {
     title: 'Hero Gear',
     body: 'Helmets, armor, pets and more — collectible gear for your hero. In the works; more news when it’s ready.',
-    image: '/super-victor-boxing.png',
+    image: '/super-victor-boxing.webp',
     accent: 'text-hero-gold',
     border: 'border-hero-gold/30',
   },
   {
     title: 'BITS Rewards',
     body: 'Earn BITS across the SuperVictor Universe — loyalty trophies included — and spend them on drops, upgrades and seasonal events.',
-    image: '/diamond-hands.png',
+    image: '/diamond-hands.webp',
     accent: 'text-solana-purple',
     border: 'border-solana-purple/30',
   },
@@ -87,7 +87,7 @@ export default function Play() {
               className="pointer-events-none absolute inset-0 rounded-3xl bg-hero-cyan/10 blur-2xl"
             />
             <motion.img
-              src="/super-victor.png"
+              src="/super-victor.webp"
               alt="V-DASH gameplay"
               className="relative mx-auto w-full max-w-sm object-contain drop-shadow-[0_15px_40px_rgba(93,211,255,0.3)]"
               animate={{ y: [0, -8, 0] }}

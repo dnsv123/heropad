@@ -220,12 +220,24 @@ export default function Loyalty() {
   useEffect(() => {
     if (!ready || !authenticated) return;
     void fetchMe();
-    const id = window.setInterval(() => void fetchMe(), POLL_MS);
+    // Poll only while the page is actually being looked at. A card left open
+    // in a pocket would otherwise fire ~900 requests an hour, each waking the
+    // cellular radio. Returning to the page refetches immediately, so the
+    // live-stamp feel is unchanged.
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void fetchMe();
+    }, POLL_MS);
     const onFocus = () => void fetchMe();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void fetchMe();
+    };
     window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.clearInterval(id);
       window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [ready, authenticated, fetchMe]);
 

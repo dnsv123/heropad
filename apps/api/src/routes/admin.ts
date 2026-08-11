@@ -527,7 +527,9 @@ adminRouter.get('/support/:code', async (req: Request, res: Response) => {
     const data = await collectSubjectData(identity.id, identity.solana_wallet);
     await audit(adminId, 'support_lookup', code, {
       reason: String(req.query.reason ?? ''),
-      privyId: identity.privy_id,
+      // Hashed, not raw: the audit row outlives an erasure request, so storing
+      // the DID here would leave the person identifiable after Art. 17 deletion.
+      privyIdHash: createHash('sha256').update(identity.privy_id).digest('hex'),
     });
 
     const { data: identRow } = await getSupabaseAdmin()
@@ -577,7 +579,9 @@ adminRouter.get('/support/:code/export', async (req: Request, res: Response) => 
       /* export still valid without it */
     }
     const data = await collectSubjectData(identity.id, identity.solana_wallet);
-    await audit(adminId, 'export', code, { privyId: identity.privy_id });
+    await audit(adminId, 'export', code, {
+      privyIdHash: createHash('sha256').update(identity.privy_id).digest('hex'),
+    });
 
     return res.status(200).json({
       ok: true,
