@@ -70,9 +70,34 @@ app.use(
 );
 app.use(express.json({ limit: '256kb' }));
 
+/**
+ * Which Solana cluster the configured RPC points at, derived from the host.
+ * Reported so a mainnet misconfiguration is visible from outside without
+ * anyone reading the env var — the URL itself carries an API key, so only
+ * this single derived word is ever exposed.
+ */
+function rpcCluster(): 'devnet' | 'mainnet' | 'unknown' {
+  const url = process.env.SOLANA_RPC_URL ?? process.env.VITE_SOLANA_RPC_URL;
+  if (!url) return 'unknown';
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return 'unknown';
+  }
+  if (host.includes('devnet')) return 'devnet';
+  if (host.includes('mainnet')) return 'mainnet';
+  return 'unknown';
+}
+
 // Health probe used by Railway / uptime monitors.
 app.get('/healthz', (_req, res) => {
-  res.json({ ok: true, service: 'heropad-api', ts: new Date().toISOString() });
+  res.json({
+    ok: true,
+    service: 'heropad-api',
+    cluster: rpcCluster(),
+    ts: new Date().toISOString(),
+  });
 });
 
 // Routes.
