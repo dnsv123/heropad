@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson, type ApiClientError } from '../services/apiClient';
@@ -66,6 +66,15 @@ export default function AdminPartners({
   onPartners?: (list: Array<{ code: string; name: string }>) => void;
 }) {
   const { getAccessToken } = usePrivy();
+  // The parent passes these as inline arrows, so they are new objects on every
+  // render. Depending on them made `load` change identity every render, the
+  // effect refire, and the fetch loop never stop - which is why the panel felt
+  // slow and why every button stayed disabled behind a `busy` that never
+  // cleared. Refs keep the latest callback without entering the dependency.
+  const noticeRef = useRef(onNotice);
+  const partnersRef = useRef(onPartners);
+  noticeRef.current = onNotice;
+  partnersRef.current = onPartners;
   const [partners, setPartners] = useState<PartnerRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [openCode, setOpenCode] = useState<string | null>(null);
@@ -87,17 +96,17 @@ export default function AdminPartners({
         at ?? undefined
       );
       setPartners(r.partners);
-      onPartners?.(
+      partnersRef.current?.(
         r.partners
           .filter((p) => p.partner.active)
           .map((p) => ({ code: p.partner.code, name: p.partner.displayName }))
       );
     } catch (err) {
-      onNotice('err', (err as ApiClientError).message);
+      noticeRef.current('err', (err as ApiClientError).message);
     } finally {
       setBusy(false);
     }
-  }, [getAccessToken, onNotice, onPartners]);
+  }, [getAccessToken]);
 
   useEffect(() => {
     void load();
