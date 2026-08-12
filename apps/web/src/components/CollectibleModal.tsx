@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import type { CollectibleSummary } from '../lib/api';
+import { explorerAddress } from '../lib/explorer';
 
 interface CollectibleModalProps {
   item: CollectibleSummary | null;
@@ -37,7 +38,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
 
   if (!item) return null;
 
-  const explorerUrl = `https://explorer.solana.com/address/${item.assetId}?cluster=devnet`;
+  const explorerUrl = explorerAddress(item.assetId);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(item.assetId);

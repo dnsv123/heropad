@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson } from '../services/apiClient';
+import { explorerAddress, explorerTx } from '../lib/explorer';
 import { useT } from '../i18n';
 
 // Profile → Power Pass widget. Three stat tiles; EACH opens its own specific
@@ -52,12 +53,8 @@ interface StatsResponse {
 
 type DetailKind = 'stamps' | 'rewards' | 'trophies' | null;
 
-function txUrl(sig: string): string {
-  return `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
-}
-function assetUrl(assetId: string): string {
-  return `https://explorer.solana.com/address/${assetId}?cluster=devnet`;
-}
+const txUrl = explorerTx;
+const assetUrl = explorerAddress;
 function shortHash(h: string): string {
   return `${h.slice(0, 4)}…${h.slice(-4)}`;
 }

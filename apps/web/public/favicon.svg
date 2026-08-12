@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HeroPad">
+  <!--
+    Tab icon. It is read at 16px in a row of a dozen other tabs, so it carries
+    one shape and one colour contrast, not the logo: the SuperVictor V, gold on
+    the brand navy. Anything finer disappears at that size.
+  -->
+  <defs>
+    <linearGradient id="v" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFDB6E"/>
+      <stop offset="100%" stop-color="#F5C842"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123163"/>
+      <stop offset="100%" stop-color="#0A1B3A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+
+  <!-- Cape sweep: the one cyan accent, enough to read as "not just a letter". -->
+  <path d="M11 15 L21 15 L34 47 L29 53 Z" fill="#5DD3FF" opacity="0.32"/>
+
+  <!-- The V itself, weighted heavily so it survives downscaling. -->
+  <path d="M14 13 L25.5 13 L32 34.5 L38.5 13 L50 13 L37.5 51 L26.5 51 Z" fill="url(#v)"/>
+</svg>

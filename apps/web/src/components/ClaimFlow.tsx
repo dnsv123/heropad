@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import { postClaim, type ApiCallError } from '../lib/api';
+import { explorerAddress } from '../lib/explorer';
 
 // localStorage backup for an in-progress claim. We persist the parsed
 // {code, signature} pair when the URL has them, so a refresh / accidental
@@ -64,9 +65,7 @@ type Status =
   | { phase: 'success'; mintAddress: string; bitsAwarded: number; txSignature: string }
   | { phase: 'error'; code: string; message: string };
 
-function explorerLink(asset: string): string {
-  return `https://explorer.solana.com/address/${asset}?cluster=devnet`;
-}
+const explorerLink = explorerAddress;
 
 function explainError(code: string, fallback: string): string {
   switch (code) {
