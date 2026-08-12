@@ -19,7 +19,8 @@ import { useT } from '../i18n';
 // button when the list before and after look alike.
 
 interface HistoryEvent {
-  kind: 'stamp' | 'reward';
+  kind: 'stamp' | 'reward' | 'revoke';
+  revoked?: boolean;
   at: string;
   code: string;
   source?: string;
@@ -176,7 +177,7 @@ export default function VenueHistory({
         e.at,
         e.kind,
         e.code,
-        e.kind === 'stamp' ? '1' : String(e.stampsConsumed ?? ''),
+        e.kind === 'stamp' ? '1' : e.kind === 'revoke' ? '-1' : String(e.stampsConsumed ?? ''),
         e.grantedBy ?? '',
         e.trophyAssetId ?? '',
       ]),
@@ -421,10 +422,12 @@ export default function VenueHistory({
                                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
                                       e.kind === 'reward'
                                         ? 'bg-hero-gold/15 text-hero-gold'
-                                        : 'bg-hero-cyan/10 text-hero-cyan'
+                                        : e.kind === 'revoke'
+                                          ? 'bg-red-500/10 text-red-300'
+                                          : 'bg-hero-cyan/10 text-hero-cyan'
                                     }`}
                                   >
-                                    {e.kind === 'reward' ? '🏆' : '☕'}
+                                    {e.kind === 'reward' ? '🏆' : e.kind === 'revoke' ? '↩' : '☕'}
                                   </span>
                                   <span className="min-w-0 flex-1">
                                     <span className="block truncate text-xs text-slate-200">
@@ -432,8 +435,18 @@ export default function VenueHistory({
                                         <span className="text-hero-gold">
                                           {t('b.hist.reward')}
                                         </span>
+                                      ) : e.kind === 'revoke' ? (
+                                        <span className="text-red-300">
+                                          {t('b.hist.revoked')}
+                                        </span>
                                       ) : (
-                                        <span className="text-hero-cyan">
+                                        <span
+                                          className={
+                                            e.revoked
+                                              ? 'text-slate-500 line-through'
+                                              : 'text-hero-cyan'
+                                          }
+                                        >
                                           +1 {t('b.hist.stamp')}
                                         </span>
                                       )}
@@ -485,11 +498,13 @@ export default function VenueHistory({
                                           })}
                                         </Row>
                                         <Row label={t('b.hist.d.what')}>
-                                          {e.kind === 'reward'
+                                          {e.kind === 'revoke'
+                                            ? t('b.hist.revoked')
+                                            : e.kind === 'reward'
                                             ? `${t('b.hist.reward')} (−${
                                                 e.stampsConsumed ?? 0
                                               } ${t('b.hist.stamps')})`
-                                            : `+1 ${t('b.hist.stamp')}`}
+                                              : `+1 ${t('b.hist.stamp')}`}
                                         </Row>
                                         <Row label={t('b.hist.d.who')}>
                                           <button

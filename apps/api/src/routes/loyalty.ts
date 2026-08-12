@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   requireAuth,
   getUserSolanaWallets,
+  getPrivyUserContact,
   type AuthedRequest,
 } from '../middleware/auth.js';
 import { queryString } from '../lib/query.js';
@@ -31,6 +32,8 @@ import {
   getVenueProgress,
   countStampsToday,
   countTrophiesToday,
+  countTrophiesTodayGlobal,
+  reserveTrophyMint,
   grantStamps,
   revokeLatestStampToday,
   redeemReward,
@@ -107,6 +110,14 @@ function seatLimit(raw: unknown): number {
 const TROPHY_BITS_REWARD = (() => {
   const parsed = Number(process.env.TROPHY_BITS_REWARD);
   return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 1000;
+})();
+
+// The ceiling that bounds what the admin keypair can spend in a day across
+// EVERY venue. A per-venue limit multiplies by the number of cafés, which is
+// not a budget — it is a number that grows with success.
+const MAX_TROPHIES_GLOBAL_DAY = (() => {
+  const parsed = Number(process.env.TROPHY_GLOBAL_DAILY_CAP);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 300;
 })();
 
 const MAX_TROPHIES_PER_VENUE_DAY = (() => {
@@ -378,12 +389,22 @@ loyaltyRouter.post('/me/consent', requireAuth, async (req: Request, res: Respons
       });
     }
     const identity = await ensureIdentity(privyId);
-    await setMarketingConsent(
-      identity.id,
-      parsed.data.consent,
-      parsed.data.email ?? null,
-      parsed.data.version
-    );
+
+    // The address comes from the VERIFIED Privy account, never from the
+    // request body. A body-supplied email lets a crafted call record a
+    // consent that looks perfectly valid for someone else's address — which
+    // inverts the entire point of storing consent as proof.
+    const contact = await getPrivyUserContact(privyId);
+    const email = contact.email ?? null;
+    if (parsed.data.consent && !email) {
+      return res.status(400).json({
+        ok: false,
+        error: 'no_email',
+        message: 'Your account has no email address to send the newsletter to.',
+      });
+    }
+
+    await setMarketingConsent(identity.id, parsed.data.consent, email, parsed.data.version);
     return res.status(200).json({ ok: true, consent: parsed.data.consent });
   } catch (err) {
     return serverError(res, 'consent', err);
@@ -1079,7 +1100,7 @@ loyaltyRouter.post(
           message: 'No customer with this code.',
         });
       }
-      const removed = await revokeLatestStampToday(customer.id, owned.venue.id);
+      const removed = await revokeLatestStampToday(customer.id, owned.venue.id, owned.merchantIdentityId);
       if (!removed) {
         return res.status(409).json({
           ok: false,
@@ -1201,6 +1222,14 @@ loyaltyRouter.post(
       if (!wallet) {
         trophySkipped =
           'Customer wallet not linked yet — trophy will be mintable once they revisit their loyalty page.';
+      } else if ((await countTrophiesTodayGlobal()) >= MAX_TROPHIES_GLOBAL_DAY) {
+        // The platform-wide budget. Reaching it means something is wrong
+        // somewhere, so it stops everywhere rather than per venue.
+        trophySkipped =
+          'Daily trophy budget reached — the reward stands and the trophy will be minted shortly.';
+        console.error(
+          `[loyalty.redeem] GLOBAL trophy budget hit (${MAX_TROPHIES_GLOBAL_DAY}/day) — investigate`
+        );
       } else if ((await countTrophiesToday(owned.venue.id)) >= MAX_TROPHIES_PER_VENUE_DAY) {
         // Anti-Sybil ceiling. The reward is STILL handed over — only the
         // on-chain mint pauses, so a genuine (astonishing) day never costs a
@@ -1210,6 +1239,10 @@ loyaltyRouter.post(
         console.warn(
           `[loyalty.redeem] trophy cap hit for venue ${owned.venue.slug} — possible farming`
         );
+      } else if (!(await reserveTrophyMint(rewardId))) {
+        // Already reserved — a retry, or a concurrent request that got there
+        // first. Never pay twice for the same reward.
+        trophySkipped = 'Trophy already being minted for this reward.';
       } else {
         try {
           const edition = after.cardsCompleted;

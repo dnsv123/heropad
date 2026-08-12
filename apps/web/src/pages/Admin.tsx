@@ -3,6 +3,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import AdminPartners from '../components/AdminPartners';
+import FolderTabs from '../components/FolderTabs';
 
 // /admin — the operator console (Valentin only; access is an allowlist of
 // Privy DIDs in ADMIN_PRIVY_IDS on the API).
@@ -434,475 +435,518 @@ export default function Admin() {
         </p>
       )}
 
-      {/* ---- Support / GDPR desk ---- */}
-      <div className="mt-8 rounded-2xl border border-solana-purple/30 bg-hero-deep/50 p-5">
-        <h2 className="font-display text-lg font-semibold text-solana-purple">
-          🔎 Support &amp; GDPR desk
-        </h2>
-        <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Resolve a customer code to the real person — for support, data export
-          (Art. 20) or erasure (Art. 17). <b>Every lookup is written to the audit
-          log</b>, so keep the reason accurate.
-        </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-[160px_1fr_auto]">
-          <input
-            value={supportCode}
-            onChange={(e) => setSupportCode(e.target.value.toUpperCase())}
-            maxLength={6}
-            placeholder="J7JBXR"
-            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-solana-purple focus:outline-none"
-          />
-          <input
-            value={supportReason}
-            onChange={(e) => setSupportReason(e.target.value)}
-            maxLength={120}
-            placeholder="Reason (e.g. customer asked for their data)"
-            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-solana-purple focus:outline-none"
-          />
-          <button
-            type="button"
-            disabled={busy || supportCode.trim().length !== 6}
-            onClick={() => void lookupSubject()}
-            className="rounded-full bg-solana-purple px-5 py-2 text-sm font-semibold text-white transition hover:bg-solana-purple-deep disabled:opacity-40"
-          >
-            Look up
-          </button>
-        </div>
+      {/* Folders, not a scroll. Four unrelated jobs live on this page - the
+          support desk, adding a cafe, paying partners, and running venues -
+          and stacking them meant hunting for the one you came for. */}
+      <FolderTabs
+        initial="venues"
+        tabs={[
+          {
+            key: 'venues',
+            icon: '☕',
+            label: 'Venues',
+            badge: venues.length > 0 ? String(venues.length) : undefined,
+            render: () => (
+              <div>
+                {/* ---- Venue list ---- */}
+                      <h2 className="mt-8 font-display text-lg font-semibold text-white">Venues</h2>
+                      <div className="mt-3 space-y-3">
+                        {venues.map((v) => {
+                          const customerUrl = `${PUBLIC_BASE}/loyalty/${v.slug}`;
+                          const businessUrl = `${PUBLIC_BASE}/business?venue=${v.slug}`;
+                          return (
+                            <div
+                              key={v.slug}
+                              className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-4"
+                            >
+                              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                <div>
+                                  <p className="font-display font-semibold text-white">
+                                    {v.name}{' '}
+                                    <span className="font-mono text-xs text-slate-500">/{v.slug}</span>
+                                  </p>
+                                  <p className="text-[11px] text-slate-500">
+                                    {v.address ?? '—'} · {v.stampsRequired} stamps → {v.reward ?? 'reward'}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px]">
+                                  <span
+                                    className={`rounded-full border px-2 py-0.5 ${
+                                      v.claimed
+                                        ? 'border-solana-green/40 text-solana-green'
+                                        : 'border-hero-gold/40 text-hero-gold'
+                                    }`}
+                                  >
+                                    {v.claimed ? 'merchant linked' : 'awaiting setup'}
+                                  </span>
+                                  <span
+                                    className={`rounded-full border px-2 py-0.5 ${
+                                      v.active ? 'border-hero-cyan/40 text-hero-cyan' : 'border-red-400/40 text-red-300'
+                                    }`}
+                                  >
+                                    {v.active ? 'active' : 'disabled'}
+                                  </span>
+                                </div>
+                              </div>
 
-        {subject && (
-          <div className="mt-4 rounded-xl border border-hero-blue/20 bg-hero-deep/70 p-4">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <p className="text-sm">
-                <span className="text-slate-500">Email:</span>{' '}
-                <span className="text-slate-100">{subject.email ?? '— (not available)'}</span>
-              </p>
-              <p className="text-sm">
-                <span className="text-slate-500">Code:</span>{' '}
-                <span className="font-mono text-hero-cyan">{subject.code}</span>
-              </p>
-              <p className="text-xs text-slate-400">
-                Account created:{' '}
-                {subject.accountCreated ? shortDate(subject.accountCreated) : '—'}
-              </p>
-              <p className="text-xs text-slate-400">
-                Newsletter consent:{' '}
-                {subject.marketingConsent ? (
-                  <span className="text-solana-green">
-                    yes
-                    {subject.marketingConsentAt
-                      ? ` · ${shortDate(subject.marketingConsentAt)}`
-                      : ''}
-                  </span>
-                ) : (
-                  <span className="text-slate-500">no</span>
-                )}
-              </p>
-            </div>
-            <p className="mt-2 text-xs text-slate-400">
-              ☕ {subject.counts.stamps} stamps · 🎁 {subject.counts.rewards} rewards · ⚡{' '}
-              {subject.counts.bitsTransactions} BITS entries · 🦸 {subject.counts.claims} claims
-            </p>
+                              <p className="mt-2 text-xs text-slate-400">
+                                ☕ {v.stats.stamps} stamps · 👤 {v.stats.customers} customers · 🎁{' '}
+                                {v.stats.rewards} rewards · 👥 {v.staffActive}/{v.staffSeats} team
+                                {v.staffPending > 0 && (
+                                  <span className="text-hero-gold"> ({v.staffPending} not activated)</span>
+                                )}
+                              </p>
+                              {/* Adoption, not vanity: a venue with no activity for days is a
+                                  venue about to churn, and it is the only signal that arrives
+                                  before the cancellation email. */}
+                              <p className="mt-1 text-[11px]">
+                                {(() => {
+                                  if (!v.lastStampAt) {
+                                    return <span className="text-slate-600">no activity yet</span>;
+                                  }
+                                  const days = Math.floor(
+                                    (Date.now() - new Date(v.lastStampAt).getTime()) / 86400000
+                                  );
+                                  const tone =
+                                    days <= 1 ? 'text-solana-green' : days <= 6 ? 'text-slate-400' : 'text-red-300';
+                                  const label =
+                                    days === 0 ? 'active today' : days === 1 ? 'active yesterday' : `quiet ${days} days`;
+                                  return <span className={tone}>● {label}</span>;
+                                })()}
+                              </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void exportSubject()}
-                className="rounded-full border border-hero-cyan/40 px-4 py-1.5 text-xs text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
-              >
-                ⬇ Export data (JSON)
-              </button>
-              <input
-                value={eraseConfirm}
-                onChange={(e) => setEraseConfirm(e.target.value.toUpperCase())}
-                maxLength={6}
-                placeholder="type code"
-                className="w-28 rounded-lg border border-red-400/40 bg-hero-deep/80 px-2 py-1.5 text-center font-mono text-xs text-red-200 focus:border-red-400 focus:outline-none"
-              />
-              <button
-                type="button"
-                disabled={busy || eraseConfirm !== subject.code}
-                onClick={() => void eraseSubject()}
-                className="rounded-full border border-red-400/50 px-4 py-1.5 text-xs text-red-300 transition hover:bg-red-400/10 disabled:opacity-30"
-              >
-                🗑 Erase all data
-              </button>
-            </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
-              Erasure removes stamps, rewards, BITS and claims permanently. Afterwards
-              also delete the user in the Privy dashboard (account email). On-chain
-              collectibles are public and cannot be deleted.
-            </p>
-          </div>
-        )}
-      </div>
+                              {/* Billing + who brought this venue — the inputs to commission */}
+                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Fee / month
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    defaultValue={v.monthlyFee}
+                                    onBlur={(e) => {
+                                      const n = Number(e.target.value);
+                                      if (n !== v.monthlyFee) void saveBilling(v, { monthlyFee: n });
+                                    }}
+                                    className="mt-1 block w-24 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                  />
+                                </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Billing
+                                  <select
+                                    value={v.billingStatus}
+                                    onChange={(e) => void saveBilling(v, { billingStatus: e.target.value })}
+                                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                  >
+                                    <option value="trial">trial (free)</option>
+                                    <option value="active">active (paying)</option>
+                                    <option value="paused">paused</option>
+                                    <option value="cancelled">cancelled</option>
+                                  </select>
+                                </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Brought by (partner code)
+                                  <input
+                                    defaultValue={v.partnerCode ?? ''}
+                                    placeholder="none"
+                                    onBlur={(e) => {
+                                      const code = e.target.value.trim().toUpperCase();
+                                      if (code !== (v.partnerCode ?? '')) void saveBilling(v, { partnerCode: code });
+                                    }}
+                                    className="mt-1 block w-40 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 font-mono text-sm uppercase text-white"
+                                  />
+                                </label>
+                                {v.billingStatus === 'active' && v.paidSince && (
+                                  <span className="pb-1 text-[10px] text-slate-600">since {v.paidSince}</span>
+                                )}
+                              </div>
 
-      {/* ---- New venue ---- */}
-      <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">
-        <h2 className="font-display text-lg font-semibold text-hero-gold">➕ New venue</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-xs text-slate-500">
-            Slug (URL: /loyalty/<b>slug</b>) — lowercase, dashes
-            <input
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="cafe-146"
-              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-            />
-          </label>
-          <label className="text-xs text-slate-500">
-            Display name
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="146 Specialty Coffee"
-              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-            />
-          </label>
-          <label className="text-xs text-slate-500">
-            Address (optional)
-            <input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Str. Ocnei 18, Sibiu"
-              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-slate-500">
-              Stamps
-              <input
-                type="number"
-                min={3}
-                max={30}
-                value={required}
-                onChange={(e) => setRequired(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-              />
-            </label>
-            <label className="text-xs text-slate-500">
-              Reward
-              <input
-                value={reward}
-                onChange={(e) => setReward(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-              />
-            </label>
-          </div>
-          <label className="text-xs text-slate-500">
-            GPS latitude (for the customer Map button)
-            <input
-              value={lat}
-              onChange={(e) => setLat(e.target.value)}
-              placeholder="45.7983"
-              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-            />
-          </label>
-          <label className="text-xs text-slate-500">
-            GPS longitude
-            <input
-              value={lng}
-              onChange={(e) => setLng(e.target.value)}
-              placeholder="24.1256"
-              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-            />
-          </label>
-        </div>
-        <p className="mt-2 text-[11px] text-slate-600">
-          GPS tip: open Google Maps, right-click the café → the first entry copies
-          “45.7983, 24.1256”.
-        </p>
-        <button
-          type="button"
-          disabled={busy || slug.trim().length < 2 || name.trim().length < 2}
-          onClick={() => void createVenue()}
-          className="mt-3 w-full rounded-full bg-hero-gold px-4 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
-        >
-          Create venue + setup code
-        </button>
-      </div>
+                              {v.setupCode && (
+                                <p className="mt-2 rounded-lg border border-hero-gold/40 bg-hero-gold/10 px-3 py-2 text-sm text-hero-gold">
+                                  Setup code: <b className="font-mono tracking-widest">{v.setupCode}</b> — the
+                                  café enters this once at /business
+                                </p>
+                              )}
 
-      <AdminPartners
-        onNotice={(kind, text) => setNotice({ kind, text })}
-      />
+                              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => void copy(customerUrl, `c-${v.slug}`)}
+                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                                >
+                                  {copied === `c-${v.slug}` ? 'Copied!' : 'Copy customer link (QR)'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void copy(businessUrl, `b-${v.slug}`)}
+                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                                >
+                                  {copied === `b-${v.slug}` ? 'Copied!' : 'Copy merchant link'}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => void resetCode(v, false)}
+                                  className="rounded-full border border-hero-gold/40 px-3 py-1 text-hero-gold transition hover:bg-hero-gold/10 disabled:opacity-40"
+                                >
+                                  New setup code
+                                </button>
+                                {v.claimed && (
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => void resetCode(v, true)}
+                                    className="rounded-full border border-red-400/40 px-3 py-1 text-red-300 transition hover:bg-red-400/10 disabled:opacity-40"
+                                  >
+                                    Detach merchant
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => void toggleActive(v)}
+                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-white hover:text-white disabled:opacity-40"
+                                >
+                                  {v.active ? 'Disable' : 'Enable'}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => void openAnalytics(v)}
+                                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
+                                >
+                                  {analyticsFor === v.slug ? 'Hide analytics' : '📊 Analytics'}
+                                </button>
+                              </div>
 
-      {/* ---- Venue list ---- */}
-      <h2 className="mt-8 font-display text-lg font-semibold text-white">Venues</h2>
-      <div className="mt-3 space-y-3">
-        {venues.map((v) => {
-          const customerUrl = `${PUBLIC_BASE}/loyalty/${v.slug}`;
-          const businessUrl = `${PUBLIC_BASE}/business?venue=${v.slug}`;
-          return (
-            <div
-              key={v.slug}
-              className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-4"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div>
-                  <p className="font-display font-semibold text-white">
-                    {v.name}{' '}
-                    <span className="font-mono text-xs text-slate-500">/{v.slug}</span>
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    {v.address ?? '—'} · {v.stampsRequired} stamps → {v.reward ?? 'reward'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-[11px]">
-                  <span
-                    className={`rounded-full border px-2 py-0.5 ${
-                      v.claimed
-                        ? 'border-solana-green/40 text-solana-green'
-                        : 'border-hero-gold/40 text-hero-gold'
-                    }`}
-                  >
-                    {v.claimed ? 'merchant linked' : 'awaiting setup'}
-                  </span>
-                  <span
-                    className={`rounded-full border px-2 py-0.5 ${
-                      v.active ? 'border-hero-cyan/40 text-hero-cyan' : 'border-red-400/40 text-red-300'
-                    }`}
-                  >
-                    {v.active ? 'active' : 'disabled'}
-                  </span>
-                </div>
+                              {/* ---- Per-venue deep dive ---- */}
+                              {analyticsFor === v.slug && (
+                                <div className="mt-4 border-t border-hero-blue/15 pt-4">
+                                  {!analytics ? (
+                                    <p className="text-sm text-slate-500">Loading…</p>
+                                  ) : (
+                                    <>
+                                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                        {[
+                                          { v: analytics.totals.stamps7d, l: 'Stamps · 7d' },
+                                          { v: analytics.totals.stamps30d, l: 'Stamps · 30d' },
+                                          {
+                                            v:
+                                              analytics.totals.customers > 0
+                                                ? `${Math.round(
+                                                    (analytics.totals.repeatCustomers /
+                                                      analytics.totals.customers) *
+                                                      100
+                                                  )}%`
+                                                : '—',
+                                            l: 'Repeat rate',
+                                          },
+                                          { v: analytics.totals.trophies, l: 'Trophies' },
+                                        ].map((t) => (
+                                          <div
+                                            key={t.l}
+                                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+                                          >
+                                            <p className="font-display text-xl font-bold text-hero-cyan">{t.v}</p>
+                                            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
+                                              {t.l}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+
+                                      {analytics.daily.length > 0 && (
+                                        <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
+                                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                                            Daily stamps ({analytics.daily.length} active days)
+                                          </p>
+                                          <div className="mt-2 flex h-16 items-end gap-1">
+                                            {analytics.daily.slice(-30).map((d) => {
+                                              const max = Math.max(...analytics.daily.map((x) => x.stamps));
+                                              return (
+                                                <div
+                                                  key={d.day}
+                                                  title={`${d.day}: ${d.stamps} stamps · ${d.customers} customers`}
+                                                  className="flex-1 rounded-t bg-gradient-to-t from-hero-blue to-hero-cyan"
+                                                  style={{ height: `${Math.max(8, (d.stamps / max) * 100)}%` }}
+                                                />
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      <p className="mt-4 text-[10px] uppercase tracking-wider text-slate-500">
+                                        Customers ({analytics.customers.length}) — by anonymous code
+                                      </p>
+                                      <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-hero-blue/15">
+                                        <table className="w-full text-left text-xs">
+                                          <thead className="sticky top-0 bg-hero-deep text-slate-500">
+                                            <tr>
+                                              <th className="px-3 py-2 font-medium">Code</th>
+                                              <th className="px-2 py-2 font-medium">Stamps</th>
+                                              <th className="px-2 py-2 font-medium">Visits</th>
+                                              <th className="px-2 py-2 font-medium">Card</th>
+                                              <th className="px-2 py-2 font-medium">🎁</th>
+                                              <th className="px-2 py-2 font-medium">Last</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {analytics.customers.map((c) => (
+                                              <tr key={c.code} className="border-t border-hero-blue/10">
+                                                <td className="px-3 py-1.5 font-mono text-hero-cyan">{c.code}</td>
+                                                <td className="px-2 py-1.5 text-slate-300">{c.stamps}</td>
+                                                <td className="px-2 py-1.5 text-slate-300">{c.visits}</td>
+                                                <td className="px-2 py-1.5 text-slate-400">
+                                                  {Math.min(c.current, analytics.venue.stampsRequired)}/
+                                                  {analytics.venue.stampsRequired}
+                                                </td>
+                                                <td className="px-2 py-1.5 text-solana-green">{c.rewards}</td>
+                                                <td className="px-2 py-1.5 text-slate-500">
+                                                  {shortDate(c.lastSeen)}
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                      <p className="mt-2 text-[10px] text-slate-600">
+                                        Anonymous codes only — no emails or wallets, here or anywhere else.
+                                        Stamps by source: {analytics.totals.bySource.merchant} counter ·{' '}
+                                        {analytics.totals.bySource.ntag} figurine tap.
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {venues.length === 0 && (
+                          <p className="text-sm text-slate-500">No venues yet — create the first one above.</p>
+                        )}
+                      </div>
               </div>
-
-              <p className="mt-2 text-xs text-slate-400">
-                ☕ {v.stats.stamps} stamps · 👤 {v.stats.customers} customers · 🎁{' '}
-                {v.stats.rewards} rewards · 👥 {v.staffActive}/{v.staffSeats} team
-                {v.staffPending > 0 && (
-                  <span className="text-hero-gold"> ({v.staffPending} not activated)</span>
-                )}
-              </p>
-              {/* Adoption, not vanity: a venue with no activity for days is a
-                  venue about to churn, and it is the only signal that arrives
-                  before the cancellation email. */}
-              <p className="mt-1 text-[11px]">
-                {(() => {
-                  if (!v.lastStampAt) {
-                    return <span className="text-slate-600">no activity yet</span>;
-                  }
-                  const days = Math.floor(
-                    (Date.now() - new Date(v.lastStampAt).getTime()) / 86400000
-                  );
-                  const tone =
-                    days <= 1 ? 'text-solana-green' : days <= 6 ? 'text-slate-400' : 'text-red-300';
-                  const label =
-                    days === 0 ? 'active today' : days === 1 ? 'active yesterday' : `quiet ${days} days`;
-                  return <span className={tone}>● {label}</span>;
-                })()}
-              </p>
-
-              {/* Billing + who brought this venue — the inputs to commission */}
-              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
-                <label className="text-[10px] uppercase tracking-wider text-slate-500">
-                  Fee / month
-                  <input
-                    type="number"
-                    min={0}
-                    defaultValue={v.monthlyFee}
-                    onBlur={(e) => {
-                      const n = Number(e.target.value);
-                      if (n !== v.monthlyFee) void saveBilling(v, { monthlyFee: n });
-                    }}
-                    className="mt-1 block w-24 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
-                  />
-                </label>
-                <label className="text-[10px] uppercase tracking-wider text-slate-500">
-                  Billing
-                  <select
-                    value={v.billingStatus}
-                    onChange={(e) => void saveBilling(v, { billingStatus: e.target.value })}
-                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
-                  >
-                    <option value="trial">trial (free)</option>
-                    <option value="active">active (paying)</option>
-                    <option value="paused">paused</option>
-                    <option value="cancelled">cancelled</option>
-                  </select>
-                </label>
-                <label className="text-[10px] uppercase tracking-wider text-slate-500">
-                  Brought by (partner code)
-                  <input
-                    defaultValue={v.partnerCode ?? ''}
-                    placeholder="none"
-                    onBlur={(e) => {
-                      const code = e.target.value.trim().toUpperCase();
-                      if (code !== (v.partnerCode ?? '')) void saveBilling(v, { partnerCode: code });
-                    }}
-                    className="mt-1 block w-40 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 font-mono text-sm uppercase text-white"
-                  />
-                </label>
-                {v.billingStatus === 'active' && v.paidSince && (
-                  <span className="pb-1 text-[10px] text-slate-600">since {v.paidSince}</span>
-                )}
+            ),
+          },
+          {
+            key: 'new',
+            icon: '➕',
+            label: 'New venue',
+            render: () => (
+              <div>
+                {/* ---- New venue ---- */}
+                      <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">
+                        <h2 className="font-display text-lg font-semibold text-hero-gold">➕ New venue</h2>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <label className="text-xs text-slate-500">
+                            Slug (URL: /loyalty/<b>slug</b>) — lowercase, dashes
+                            <input
+                              value={slug}
+                              onChange={(e) => setSlug(e.target.value)}
+                              placeholder="cafe-146"
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-xs text-slate-500">
+                            Display name
+                            <input
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              placeholder="146 Specialty Coffee"
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-xs text-slate-500">
+                            Address (optional)
+                            <input
+                              value={address}
+                              onChange={(e) => setAddress(e.target.value)}
+                              placeholder="Str. Ocnei 18, Sibiu"
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="text-xs text-slate-500">
+                              Stamps
+                              <input
+                                type="number"
+                                min={3}
+                                max={30}
+                                value={required}
+                                onChange={(e) => setRequired(e.target.value)}
+                                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              />
+                            </label>
+                            <label className="text-xs text-slate-500">
+                              Reward
+                              <input
+                                value={reward}
+                                onChange={(e) => setReward(e.target.value)}
+                                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              />
+                            </label>
+                          </div>
+                          <label className="text-xs text-slate-500">
+                            GPS latitude (for the customer Map button)
+                            <input
+                              value={lat}
+                              onChange={(e) => setLat(e.target.value)}
+                              placeholder="45.7983"
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-xs text-slate-500">
+                            GPS longitude
+                            <input
+                              value={lng}
+                              onChange={(e) => setLng(e.target.value)}
+                              placeholder="24.1256"
+                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            />
+                          </label>
+                        </div>
+                        <p className="mt-2 text-[11px] text-slate-600">
+                          GPS tip: open Google Maps, right-click the café → the first entry copies
+                          “45.7983, 24.1256”.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={busy || slug.trim().length < 2 || name.trim().length < 2}
+                          onClick={() => void createVenue()}
+                          className="mt-3 w-full rounded-full bg-hero-gold px-4 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+                        >
+                          Create venue + setup code
+                        </button>
+                      </div>
               </div>
-
-              {v.setupCode && (
-                <p className="mt-2 rounded-lg border border-hero-gold/40 bg-hero-gold/10 px-3 py-2 text-sm text-hero-gold">
-                  Setup code: <b className="font-mono tracking-widest">{v.setupCode}</b> — the
-                  café enters this once at /business
-                </p>
-              )}
-
-              <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => void copy(customerUrl, `c-${v.slug}`)}
-                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
-                >
-                  {copied === `c-${v.slug}` ? 'Copied!' : 'Copy customer link (QR)'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void copy(businessUrl, `b-${v.slug}`)}
-                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
-                >
-                  {copied === `b-${v.slug}` ? 'Copied!' : 'Copy merchant link'}
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void resetCode(v, false)}
-                  className="rounded-full border border-hero-gold/40 px-3 py-1 text-hero-gold transition hover:bg-hero-gold/10 disabled:opacity-40"
-                >
-                  New setup code
-                </button>
-                {v.claimed && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void resetCode(v, true)}
-                    className="rounded-full border border-red-400/40 px-3 py-1 text-red-300 transition hover:bg-red-400/10 disabled:opacity-40"
-                  >
-                    Detach merchant
-                  </button>
-                )}
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void toggleActive(v)}
-                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-white hover:text-white disabled:opacity-40"
-                >
-                  {v.active ? 'Disable' : 'Enable'}
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void openAnalytics(v)}
-                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
-                >
-                  {analyticsFor === v.slug ? 'Hide analytics' : '📊 Analytics'}
-                </button>
+            ),
+          },
+          {
+            key: 'partners',
+            icon: '🤝',
+            label: 'Partners',
+            render: () => (
+              <div>
+                <AdminPartners
+                        onNotice={(kind, text) => setNotice({ kind, text })}
+                      />
               </div>
-
-              {/* ---- Per-venue deep dive ---- */}
-              {analyticsFor === v.slug && (
-                <div className="mt-4 border-t border-hero-blue/15 pt-4">
-                  {!analytics ? (
-                    <p className="text-sm text-slate-500">Loading…</p>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {[
-                          { v: analytics.totals.stamps7d, l: 'Stamps · 7d' },
-                          { v: analytics.totals.stamps30d, l: 'Stamps · 30d' },
-                          {
-                            v:
-                              analytics.totals.customers > 0
-                                ? `${Math.round(
-                                    (analytics.totals.repeatCustomers /
-                                      analytics.totals.customers) *
-                                      100
-                                  )}%`
-                                : '—',
-                            l: 'Repeat rate',
-                          },
-                          { v: analytics.totals.trophies, l: 'Trophies' },
-                        ].map((t) => (
-                          <div
-                            key={t.l}
-                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+            ),
+          },
+          {
+            key: 'support',
+            icon: '🛟',
+            label: 'Support / GDPR',
+            render: () => (
+              <div>
+                {/* ---- Support / GDPR desk ---- */}
+                      <div className="mt-8 rounded-2xl border border-solana-purple/30 bg-hero-deep/50 p-5">
+                        <h2 className="font-display text-lg font-semibold text-solana-purple">
+                          🔎 Support &amp; GDPR desk
+                        </h2>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                          Resolve a customer code to the real person — for support, data export
+                          (Art. 20) or erasure (Art. 17). <b>Every lookup is written to the audit
+                          log</b>, so keep the reason accurate.
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-[160px_1fr_auto]">
+                          <input
+                            value={supportCode}
+                            onChange={(e) => setSupportCode(e.target.value.toUpperCase())}
+                            maxLength={6}
+                            placeholder="J7JBXR"
+                            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-solana-purple focus:outline-none"
+                          />
+                          <input
+                            value={supportReason}
+                            onChange={(e) => setSupportReason(e.target.value)}
+                            maxLength={120}
+                            placeholder="Reason (e.g. customer asked for their data)"
+                            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-solana-purple focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            disabled={busy || supportCode.trim().length !== 6}
+                            onClick={() => void lookupSubject()}
+                            className="rounded-full bg-solana-purple px-5 py-2 text-sm font-semibold text-white transition hover:bg-solana-purple-deep disabled:opacity-40"
                           >
-                            <p className="font-display text-xl font-bold text-hero-cyan">{t.v}</p>
-                            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
-                              {t.l}
+                            Look up
+                          </button>
+                        </div>
+
+                        {subject && (
+                          <div className="mt-4 rounded-xl border border-hero-blue/20 bg-hero-deep/70 p-4">
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <p className="text-sm">
+                                <span className="text-slate-500">Email:</span>{' '}
+                                <span className="text-slate-100">{subject.email ?? '— (not available)'}</span>
+                              </p>
+                              <p className="text-sm">
+                                <span className="text-slate-500">Code:</span>{' '}
+                                <span className="font-mono text-hero-cyan">{subject.code}</span>
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                Account created:{' '}
+                                {subject.accountCreated ? shortDate(subject.accountCreated) : '—'}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                Newsletter consent:{' '}
+                                {subject.marketingConsent ? (
+                                  <span className="text-solana-green">
+                                    yes
+                                    {subject.marketingConsentAt
+                                      ? ` · ${shortDate(subject.marketingConsentAt)}`
+                                      : ''}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-500">no</span>
+                                )}
+                              </p>
+                            </div>
+                            <p className="mt-2 text-xs text-slate-400">
+                              ☕ {subject.counts.stamps} stamps · 🎁 {subject.counts.rewards} rewards · ⚡{' '}
+                              {subject.counts.bitsTransactions} BITS entries · 🦸 {subject.counts.claims} claims
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() => void exportSubject()}
+                                className="rounded-full border border-hero-cyan/40 px-4 py-1.5 text-xs text-hero-cyan transition hover:bg-hero-cyan/10 disabled:opacity-40"
+                              >
+                                ⬇ Export data (JSON)
+                              </button>
+                              <input
+                                value={eraseConfirm}
+                                onChange={(e) => setEraseConfirm(e.target.value.toUpperCase())}
+                                maxLength={6}
+                                placeholder="type code"
+                                className="w-28 rounded-lg border border-red-400/40 bg-hero-deep/80 px-2 py-1.5 text-center font-mono text-xs text-red-200 focus:border-red-400 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                disabled={busy || eraseConfirm !== subject.code}
+                                onClick={() => void eraseSubject()}
+                                className="rounded-full border border-red-400/50 px-4 py-1.5 text-xs text-red-300 transition hover:bg-red-400/10 disabled:opacity-30"
+                              >
+                                🗑 Erase all data
+                              </button>
+                            </div>
+                            <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
+                              Erasure removes stamps, rewards, BITS and claims permanently. Afterwards
+                              also delete the user in the Privy dashboard (account email). On-chain
+                              collectibles are public and cannot be deleted.
                             </p>
                           </div>
-                        ))}
+                        )}
                       </div>
+              </div>
+            ),
+          },
+        ]}
+      />
 
-                      {analytics.daily.length > 0 && (
-                        <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
-                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                            Daily stamps ({analytics.daily.length} active days)
-                          </p>
-                          <div className="mt-2 flex h-16 items-end gap-1">
-                            {analytics.daily.slice(-30).map((d) => {
-                              const max = Math.max(...analytics.daily.map((x) => x.stamps));
-                              return (
-                                <div
-                                  key={d.day}
-                                  title={`${d.day}: ${d.stamps} stamps · ${d.customers} customers`}
-                                  className="flex-1 rounded-t bg-gradient-to-t from-hero-blue to-hero-cyan"
-                                  style={{ height: `${Math.max(8, (d.stamps / max) * 100)}%` }}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      <p className="mt-4 text-[10px] uppercase tracking-wider text-slate-500">
-                        Customers ({analytics.customers.length}) — by anonymous code
-                      </p>
-                      <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-hero-blue/15">
-                        <table className="w-full text-left text-xs">
-                          <thead className="sticky top-0 bg-hero-deep text-slate-500">
-                            <tr>
-                              <th className="px-3 py-2 font-medium">Code</th>
-                              <th className="px-2 py-2 font-medium">Stamps</th>
-                              <th className="px-2 py-2 font-medium">Visits</th>
-                              <th className="px-2 py-2 font-medium">Card</th>
-                              <th className="px-2 py-2 font-medium">🎁</th>
-                              <th className="px-2 py-2 font-medium">Last</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {analytics.customers.map((c) => (
-                              <tr key={c.code} className="border-t border-hero-blue/10">
-                                <td className="px-3 py-1.5 font-mono text-hero-cyan">{c.code}</td>
-                                <td className="px-2 py-1.5 text-slate-300">{c.stamps}</td>
-                                <td className="px-2 py-1.5 text-slate-300">{c.visits}</td>
-                                <td className="px-2 py-1.5 text-slate-400">
-                                  {Math.min(c.current, analytics.venue.stampsRequired)}/
-                                  {analytics.venue.stampsRequired}
-                                </td>
-                                <td className="px-2 py-1.5 text-solana-green">{c.rewards}</td>
-                                <td className="px-2 py-1.5 text-slate-500">
-                                  {shortDate(c.lastSeen)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <p className="mt-2 text-[10px] text-slate-600">
-                        Anonymous codes only — no emails or wallets, here or anywhere else.
-                        Stamps by source: {analytics.totals.bySource.merchant} counter ·{' '}
-                        {analytics.totals.bySource.ntag} figurine tap.
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {venues.length === 0 && (
-          <p className="text-sm text-slate-500">No venues yet — create the first one above.</p>
-        )}
-      </div>
     </section>
   );
 }

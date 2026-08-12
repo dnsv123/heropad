@@ -245,7 +245,9 @@ export async function getVenueProgress(
     .from('stamps')
     .select('id', { count: 'exact', head: true })
     .eq('user_identity_id', identityId)
-    .eq('venue_id', venueId);
+    .eq('venue_id', venueId)
+    // Revoked stamps are marked, not deleted, so every balance excludes them.
+    .is('revoked_at', null);
   if (stampErr) throw new Error(`[Supabase] progress stamps: ${stampErr.message}`);
 
   const { data: rewards, error: rewErr } = await supa
@@ -275,16 +277,60 @@ export async function getVenueProgress(
  * so trophies/day stays small even at high volume. A merchant farming fake
  * accounts, by contrast, shows up immediately.
  */
+/**
+ * Trophy mints in the last 24h at this venue, counted by ATTEMPT.
+ *
+ * It used to count completions — rows with an asset id, which is written only
+ * after a confirmed Solana transaction returns. That takes seconds, so every
+ * redemption arriving inside the window read the same stale number and minted
+ * anyway; the ceiling only held against strictly sequential traffic. Counting
+ * reservations means spend already in flight is spend already counted.
+ */
 export async function countTrophiesToday(venueId: string): Promise<number> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { count, error } = await getSupabaseAdmin()
     .from('rewards_redeemed')
     .select('id', { count: 'exact', head: true })
     .eq('venue_id', venueId)
-    .not('trophy_asset_id', 'is', null)
-    .gt('redeemed_at', since);
+    .not('trophy_attempted_at', 'is', null)
+    .gt('trophy_attempted_at', since);
   if (error) throw new Error(`[Supabase] countTrophiesToday: ${error.message}`);
   return count ?? 0;
+}
+
+/**
+ * The same count across EVERY venue — the number that actually bounds what the
+ * admin keypair can spend in a day. Per-venue ceilings multiply by however many
+ * cafés exist, which is not a budget.
+ */
+export async function countTrophiesTodayGlobal(): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await getSupabaseAdmin()
+    .from('rewards_redeemed')
+    .select('id', { count: 'exact', head: true })
+    .not('trophy_attempted_at', 'is', null)
+    .gt('trophy_attempted_at', since);
+  if (error) throw new Error(`[Supabase] countTrophiesTodayGlobal: ${error.message}`);
+  return count ?? 0;
+}
+
+/**
+ * Reserves the mint for one reward before any SOL is spent.
+ *
+ * Conditional on nothing having reserved it yet, so a retry or a concurrent
+ * request cannot pay twice for the same reward — which is exactly how the
+ * retro-mint script could previously mint a second trophy for a redemption
+ * whose asset id failed to save.
+ */
+export async function reserveTrophyMint(rewardId: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('rewards_redeemed')
+    .update({ trophy_attempted_at: new Date().toISOString() })
+    .eq('id', rewardId)
+    .is('trophy_attempted_at', null)
+    .select('id');
+  if (error) throw new Error(`[Supabase] reserveTrophyMint: ${error.message}`);
+  return (data?.length ?? 0) > 0;
 }
 
 /** Stamps granted to this user at this venue today (UTC) — soft anti-abuse cap. */
@@ -298,7 +344,8 @@ export async function countStampsToday(
     .select('id', { count: 'exact', head: true })
     .eq('user_identity_id', identityId)
     .eq('venue_id', venueId)
-    .eq('stamp_day', today);
+    .eq('stamp_day', today)
+    .is('revoked_at', null);
   if (error) throw new Error(`[Supabase] countStampsToday: ${error.message}`);
   return count ?? 0;
 }
@@ -330,9 +377,19 @@ export async function grantStamps(input: {
  * nothing from today to remove. Full soft-delete audit arrives with the
  * merchant dashboard phase; for the pilot the API log is the trail.
  */
+/**
+ * Marks the most recent live stamp from today as revoked, recording who did it.
+ *
+ * This used to DELETE the row. With one account per venue that was self-harm;
+ * with staff seats it became a way for a disgruntled barista to erase a day —
+ * deleted rows vanish from the owner's history too, so the shift simply looks
+ * quieter. Marking keeps the act visible and attributable, which is the entire
+ * reason staff seats exist.
+ */
 export async function revokeLatestStampToday(
   identityId: string,
-  venueId: string
+  venueId: string,
+  revokedBy: string | null
 ): Promise<boolean> {
   const supa = getSupabaseAdmin();
   const today = new Date().toISOString().slice(0, 10);
@@ -342,17 +399,22 @@ export async function revokeLatestStampToday(
     .eq('user_identity_id', identityId)
     .eq('venue_id', venueId)
     .eq('stamp_day', today)
+    .is('revoked_at', null)
     .order('created_at', { ascending: false })
     .limit(1);
   if (error) throw new Error(`[Supabase] revokeLatestStamp find: ${error.message}`);
   if (!data || data.length === 0) return false;
 
-  const { error: delErr } = await supa
+  // Conditional on it still being live, so two simultaneous corrections cannot
+  // both claim the same stamp and quietly remove two.
+  const { data: updated, error: updErr } = await supa
     .from('stamps')
-    .delete()
-    .eq('id', (data[0]).id);
-  if (delErr) throw new Error(`[Supabase] revokeLatestStamp delete: ${delErr.message}`);
-  return true;
+    .update({ revoked_at: new Date().toISOString(), revoked_by: revokedBy })
+    .eq('id', data[0].id)
+    .is('revoked_at', null)
+    .select('id');
+  if (updErr) throw new Error(`[Supabase] revokeLatestStamp: ${updErr.message}`);
+  return (updated?.length ?? 0) > 0;
 }
 
 export async function redeemReward(input: {
@@ -597,7 +659,8 @@ export async function getVenueAnalytics(
       supa
         .from('stamps')
         .select('user_identity_id, stamp_day, created_at')
-        .eq('venue_id', venueId),
+        .eq('venue_id', venueId)
+        .is('revoked_at', null),
       supa
         .from('rewards_redeemed')
         .select('user_identity_id, stamps_consumed, trophy_asset_id')
@@ -724,7 +787,11 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
 
   const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
     await Promise.all([
-      supa.from('stamps').select('venue_id').eq('user_identity_id', identityId),
+      supa
+        .from('stamps')
+        .select('venue_id')
+        .eq('user_identity_id', identityId)
+        .is('revoked_at', null),
       supa
         .from('rewards_redeemed')
         .select('venue_id, stamps_consumed, trophy_asset_id, milestone_mint_tx, redeemed_at, reward_type')
@@ -841,13 +908,15 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
 // --- Merchant transaction history (per venue) -------------------------------
 
 export interface VenueHistoryEvent {
-  kind: 'stamp' | 'reward';
+  kind: 'stamp' | 'reward' | 'revoke';
   /** ISO timestamp of the event. */
   at: string;
   /** The customer's anonymous 6-char loyalty code — never a name or email. */
   code: string;
   /** Stamps only: how the stamp was granted. */
   source?: string;
+  /** Stamps only: whether this stamp was later corrected away. */
+  revoked?: boolean;
   /** Rewards only. */
   stampsConsumed?: number;
   trophyAssetId?: string | null;
@@ -900,7 +969,7 @@ export async function getVenueHistory(
 
   let stampQ = supa
     .from('stamps')
-    .select('user_identity_id, granted_by, source, created_at')
+    .select('user_identity_id, granted_by, source, created_at, revoked_at, revoked_by')
     .eq('venue_id', venueId)
     .order('created_at', { ascending: false })
     .limit(q.limit);
@@ -934,6 +1003,8 @@ export async function getVenueHistory(
     granted_by: string | null;
     source: string | null;
     created_at: string;
+    revoked_at: string | null;
+    revoked_by: string | null;
   }>;
   const rewards = (rewardRows ?? []) as Array<{
     user_identity_id: string;
@@ -949,6 +1020,7 @@ export async function getVenueHistory(
   for (const s of stamps) {
     ids.add(s.user_identity_id);
     if (s.granted_by) granterIds.add(s.granted_by);
+    if (s.revoked_by) granterIds.add(s.revoked_by);
   }
   for (const r of rewards) ids.add(r.user_identity_id);
 
@@ -997,7 +1069,18 @@ export async function getVenueHistory(
       code: codeById.get(s.user_identity_id) ?? UNKNOWN_CODE,
       source: s.source ?? undefined,
       grantedBy: granterLabel(s.granted_by),
+      revoked: Boolean(s.revoked_at),
     })),
+    // A correction is an event in its own right, at the moment it happened —
+    // not the silent disappearance of the stamp it undid.
+    ...stamps
+      .filter((s) => s.revoked_at)
+      .map((s) => ({
+        kind: 'revoke' as const,
+        at: s.revoked_at as string,
+        code: codeById.get(s.user_identity_id) ?? UNKNOWN_CODE,
+        grantedBy: granterLabel(s.revoked_by),
+      })),
     ...rewards.map((r) => ({
       kind: 'reward' as const,
       at: r.redeemed_at,
@@ -1038,6 +1121,7 @@ export async function getVenueToday(venueId: string, sinceIso: string): Promise<
         .from('stamps')
         .select('user_identity_id')
         .eq('venue_id', venueId)
+        .is('revoked_at', null)
         .gte('created_at', sinceIso),
       supa
         .from('rewards_redeemed')

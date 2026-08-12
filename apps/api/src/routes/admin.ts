@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   requireAuth,
   getPrivyUserContact,
+  getUserSolanaWallets,
   type AuthedRequest,
 } from '../middleware/auth.js';
 import { getSupabaseAdmin } from '../lib/supabase-admin.js';
@@ -553,9 +554,35 @@ async function audit(
 }
 
 /** Everything we hold about one identity, for export or review. */
-async function collectSubjectData(identityId: string, wallet: string | null) {
+/**
+ * Every Solana address belonging to this person.
+ *
+ * `user_identity.solana_wallet` is a cache, filled only when the loyalty page
+ * happens to send a wallet hint and the Privy lookup happens to succeed. A
+ * figurine claimed at an event writes rows keyed purely by wallet address with
+ * no identity link at all, so an erasure trusting that cached column reported
+ * "0 claims deleted" and left the address, device id and claim history in
+ * place forever. Ask Privy, then union.
+ */
+async function allWalletsFor(identity: {
+  privy_id: string;
+  solana_wallet: string | null;
+}): Promise<string[]> {
+  const set = new Set<string>();
+  if (identity.solana_wallet) set.add(identity.solana_wallet);
+  try {
+    for (const w of await getUserSolanaWallets(identity.privy_id)) set.add(w);
+  } catch {
+    // Privy unreachable: proceed with what we have rather than refusing to
+    // erase anything. The response reports how many wallets were covered.
+  }
+  return [...set];
+}
+
+async function collectSubjectData(identityId: string, wallets: string[]) {
   const supa = getSupabaseAdmin();
-  const [stamps, rewards, codes, bits, claims] = await Promise.all([
+  const hasWallet = wallets.length > 0;
+  const [stamps, rewards, codes, bits, claims, staff, partner, consent] = await Promise.all([
     supa
       .from('stamps')
       .select('venue_id, source, created_at')
@@ -568,12 +595,32 @@ async function collectSubjectData(identityId: string, wallet: string | null) {
       .from('redeem_codes')
       .select('venue_id, created_at, used_at')
       .eq('user_identity_id', identityId),
-    wallet
-      ? supa.from('bits_transactions').select('amount, reason, created_at').eq('wallet_address', wallet)
+    hasWallet
+      ? supa
+          .from('bits_transactions')
+          .select('amount, reason, created_at')
+          .in('wallet_address', wallets)
       : Promise.resolve({ data: [] as unknown[] }),
-    wallet
-      ? supa.from('claims').select('code, cnft_mint_address, claimed_at').eq('wallet_address', wallet)
+    hasWallet
+      ? supa
+          .from('claims')
+          .select('code, cnft_mint_address, claimed_at')
+          .in('wallet_address', wallets)
       : Promise.resolve({ data: [] as unknown[] }),
+    // Added since this function was written, and just as personal.
+    supa
+      .from('venue_staff')
+      .select('venue_id, display_name, role, active, created_at')
+      .eq('identity_id', identityId),
+    supa
+      .from('partners')
+      .select('code, display_name, city, email, commission_pct, created_at')
+      .eq('identity_id', identityId),
+    supa
+      .from('user_identity')
+      .select('marketing_consent, marketing_consent_at, marketing_consent_version, marketing_email')
+      .eq('id', identityId)
+      .maybeSingle(),
   ]);
   return {
     stamps: stamps.data ?? [],
@@ -581,6 +628,10 @@ async function collectSubjectData(identityId: string, wallet: string | null) {
     redeemCodes: codes.data ?? [],
     bitsTransactions: bits.data ?? [],
     claims: claims.data ?? [],
+    staffSeats: staff.data ?? [],
+    partnerRecord: partner.data ?? [],
+    marketingConsent: consent.data ?? null,
+    walletsCovered: wallets,
   };
 }
 
@@ -614,7 +665,7 @@ adminRouter.get('/support/:code', async (req: Request, res: Response) => {
       console.error('[admin.support] privy lookup failed:', (err as Error).message);
     }
 
-    const data = await collectSubjectData(identity.id, identity.solana_wallet);
+    const data = await collectSubjectData(identity.id, await allWalletsFor(identity));
     await audit(adminId, 'support_lookup', code, {
       reason: queryString(req.query.reason),
       // Hashed, not raw: the audit row outlives an erasure request, so storing
@@ -668,7 +719,7 @@ adminRouter.get('/support/:code/export', async (req: Request, res: Response) => 
     } catch {
       /* export still valid without it */
     }
-    const data = await collectSubjectData(identity.id, identity.solana_wallet);
+    const data = await collectSubjectData(identity.id, await allWalletsFor(identity));
     await audit(adminId, 'export', code, {
       privyIdHash: createHash('sha256').update(identity.privy_id).digest('hex'),
     });
@@ -716,14 +767,21 @@ adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => 
     }
 
     const supa = getSupabaseAdmin();
-    const before = await collectSubjectData(identity.id, identity.solana_wallet);
+    const wallets = await allWalletsFor(identity);
+    const before = await collectSubjectData(identity.id, wallets);
 
-    // Wallet-keyed tables first — they have no FK to user_identity.
-    if (identity.solana_wallet) {
-      await supa.from('bits_transactions').delete().eq('wallet_address', identity.solana_wallet);
-      await supa.from('bits_balance').delete().eq('wallet_address', identity.solana_wallet);
-      await supa.from('claims').delete().eq('wallet_address', identity.solana_wallet);
+    // Wallet-keyed tables first — they have no FK to user_identity, and there
+    // may be more than one address.
+    if (wallets.length > 0) {
+      await supa.from('bits_transactions').delete().in('wallet_address', wallets);
+      await supa.from('bits_balance').delete().in('wallet_address', wallets);
+      await supa.from('claims').delete().in('wallet_address', wallets);
     }
+
+    // Staff seats are ON DELETE SET NULL, so the row and its display name
+    // would survive the identity — an employment record about a named person
+    // outliving their deletion request.
+    await supa.from('venue_staff').delete().eq('identity_id', identity.id);
     // Identity delete cascades stamps / rewards_redeemed / redeem_codes.
     const { error: delErr } = await supa.from('user_identity').delete().eq('id', identity.id);
     if (delErr) throw new Error(delErr.message);
@@ -734,6 +792,8 @@ adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => 
       redeemCodes: before.redeemCodes.length,
       bitsTransactions: before.bitsTransactions.length,
       claims: before.claims.length,
+      staffSeats: before.staffSeats.length,
+      walletsCovered: wallets.length,
     };
     await supa.from('erasure_log').insert({
       privy_id_hash: createHash('sha256').update(identity.privy_id).digest('hex'),
@@ -742,9 +802,20 @@ adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => 
     });
     await audit(adminId, 'erase', code, rowsDeleted);
 
+    // A partner record is a commercial counterparty, retained on the contract
+    // basis (Art. 17(3)(b)). Saying so beats reporting a complete erasure that
+    // did not happen — the operator has to tell the person something true.
+    const retained =
+      before.partnerRecord.length > 0
+        ? [
+            'A referral-partner record (name, email, commission terms) was NOT deleted: it is retained for the commission contract. Deactivate the partner in the Partners panel and delete it once the contract is settled.',
+          ]
+        : [];
+
     return res.status(200).json({
       ok: true,
       erased: rowsDeleted,
+      retained,
       reminder:
         'Also delete the user in the Privy dashboard (account email) — and note that on-chain collectibles are public and permanent.',
     });
