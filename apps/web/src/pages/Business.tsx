@@ -7,6 +7,7 @@ import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
 import { useT } from '../i18n';
 import QrScanner from '../components/QrScanner';
+import VenueHistory from '../components/VenueHistory';
 
 // Business page — the barista / merchant device.
 // ---------------------------------------------------------------------------
@@ -810,6 +811,9 @@ export default function Business() {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* ---- Transaction history (this venue's own till) ---- */}
+              <VenueHistory slug={slug} />
             </>
           )}
         </div>

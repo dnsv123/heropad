@@ -49,7 +49,10 @@ const SECTIONS_EN: Section[] = [
     title: '4. What partner venues see — and what they never see',
     body: `Cafés and other partner venues using HeroPad NEVER see your email, name, wallet
     or any personal identifier. They see your anonymous 6-character code and aggregate
-    counts (how many customers, how many stamps, repeat rate). We are the data controller;
+    counts (how many customers, how many stamps, repeat rate). A venue can also review the
+    log of its OWN transactions — the stamps and rewards it gave, with the time and the
+    anonymous code — the way any till receipt history works. It is limited to that venue:
+    a venue never sees your activity at any other venue. We are the data controller;
     venues act only through our interface.`,
   },
   {
@@ -131,8 +134,11 @@ const SECTIONS_RO: Section[] = [
     body: `Cafenelele și celelalte localuri partenere care folosesc HeroPad NU văd
     niciodată emailul, numele, portofelul sau vreun alt identificator personal al tău. Ele
     văd doar codul tău anonim de 6 caractere și cifre agregate (câți clienți, câte
-    ștampile, rata de revenire). Noi suntem operatorul de date; localurile acționează
-    exclusiv prin interfața noastră.`,
+    ștampile, rata de revenire). Un local își poate consulta și registrul PROPRIILOR
+    tranzacții — ștampilele și recompensele pe care le-a acordat, cu ora și codul anonim —
+    la fel ca istoricul bonurilor de la orice casă de marcat. Acesta este limitat la
+    localul respectiv: un local nu vede niciodată activitatea ta la alte localuri. Noi
+    suntem operatorul de date; localurile acționează exclusiv prin interfața noastră.`,
   },
   {
     title: '5. Unde sunt stocate',

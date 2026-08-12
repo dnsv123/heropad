@@ -788,3 +788,156 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     venues,
   };
 }
+
+// --- Merchant transaction history (per venue) -------------------------------
+
+export interface VenueHistoryEvent {
+  kind: 'stamp' | 'reward';
+  /** ISO timestamp of the event. */
+  at: string;
+  /** The customer's anonymous 6-char loyalty code — never a name or email. */
+  code: string;
+  /** Stamps only: how the stamp was granted. */
+  source?: string;
+  /** Rewards only. */
+  stampsConsumed?: number;
+  trophyAssetId?: string | null;
+  /**
+   * Who granted it, as a label the owner can act on: 'owner' for the venue
+   * owner's own account, otherwise the staff member's loyalty code. Null for
+   * rows written before granted_by existed.
+   */
+  grantedBy: string | null;
+}
+
+export interface VenueHistoryQuery {
+  /** Inclusive lower bound, ISO date or timestamp. */
+  from?: string;
+  /** Exclusive upper bound, ISO date or timestamp. */
+  to?: string;
+  /** Restrict to a single customer's loyalty code. */
+  code?: string;
+  limit: number;
+  ownerIdentityId: string | null;
+}
+
+const UNKNOWN_CODE = '------';
+
+/**
+ * The venue's own transaction log: every stamp and every reward it handed out,
+ * newest first. This is the merchant's sales ledger, not a customer profile —
+ * people appear only as the anonymous code the staff already sees at the
+ * counter, and nothing from other venues is ever included.
+ *
+ * Merged in JS from two ordered queries. Each side is capped at `limit`, so the
+ * merged result is complete for the window whenever either side has fewer than
+ * `limit` rows in it — true for any real café day, and the UI narrows the range
+ * rather than paging.
+ */
+export async function getVenueHistory(
+  venueId: string,
+  q: VenueHistoryQuery
+): Promise<VenueHistoryEvent[]> {
+  const supa = getSupabaseAdmin();
+
+  // A code filter resolves to an identity first; an unknown code has no
+  // history rather than silently returning everything.
+  let onlyIdentityId: string | null = null;
+  if (q.code) {
+    const identity = await findIdentityByCode(q.code);
+    if (!identity) return [];
+    onlyIdentityId = identity.id;
+  }
+
+  let stampQ = supa
+    .from('stamps')
+    .select('user_identity_id, granted_by, source, created_at')
+    .eq('venue_id', venueId)
+    .order('created_at', { ascending: false })
+    .limit(q.limit);
+  let rewardQ = supa
+    .from('rewards_redeemed')
+    .select('user_identity_id, stamps_consumed, trophy_asset_id, redeemed_at')
+    .eq('venue_id', venueId)
+    .order('redeemed_at', { ascending: false })
+    .limit(q.limit);
+
+  if (q.from) {
+    stampQ = stampQ.gte('created_at', q.from);
+    rewardQ = rewardQ.gte('redeemed_at', q.from);
+  }
+  if (q.to) {
+    stampQ = stampQ.lt('created_at', q.to);
+    rewardQ = rewardQ.lt('redeemed_at', q.to);
+  }
+  if (onlyIdentityId) {
+    stampQ = stampQ.eq('user_identity_id', onlyIdentityId);
+    rewardQ = rewardQ.eq('user_identity_id', onlyIdentityId);
+  }
+
+  const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
+    await Promise.all([stampQ, rewardQ]);
+  if (sErr) throw new Error(`[Supabase] history stamps: ${sErr.message}`);
+  if (rErr) throw new Error(`[Supabase] history rewards: ${rErr.message}`);
+
+  const stamps = (stampRows ?? []) as Array<{
+    user_identity_id: string;
+    granted_by: string | null;
+    source: string | null;
+    created_at: string;
+  }>;
+  const rewards = (rewardRows ?? []) as Array<{
+    user_identity_id: string;
+    stamps_consumed: number;
+    trophy_asset_id: string | null;
+    redeemed_at: string;
+  }>;
+
+  // One lookup for every identity referenced, so the merge below never issues
+  // a query per row.
+  const ids = new Set<string>();
+  for (const s of stamps) {
+    ids.add(s.user_identity_id);
+    if (s.granted_by) ids.add(s.granted_by);
+  }
+  for (const r of rewards) ids.add(r.user_identity_id);
+
+  const codeById = new Map<string, string>();
+  if (ids.size > 0) {
+    const { data: idRows, error: iErr } = await supa
+      .from('user_identity')
+      .select('id, loyalty_code')
+      .in('id', [...ids]);
+    if (iErr) throw new Error(`[Supabase] history identities: ${iErr.message}`);
+    for (const row of (idRows ?? []) as Array<{ id: string; loyalty_code: string | null }>) {
+      codeById.set(row.id, row.loyalty_code ?? UNKNOWN_CODE);
+    }
+  }
+
+  const granterLabel = (id: string | null): string | null => {
+    if (!id) return null;
+    if (q.ownerIdentityId && id === q.ownerIdentityId) return 'owner';
+    return codeById.get(id) ?? UNKNOWN_CODE;
+  };
+
+  const events: VenueHistoryEvent[] = [
+    ...stamps.map((s) => ({
+      kind: 'stamp' as const,
+      at: s.created_at,
+      code: codeById.get(s.user_identity_id) ?? UNKNOWN_CODE,
+      source: s.source ?? undefined,
+      grantedBy: granterLabel(s.granted_by),
+    })),
+    ...rewards.map((r) => ({
+      kind: 'reward' as const,
+      at: r.redeemed_at,
+      code: codeById.get(r.user_identity_id) ?? UNKNOWN_CODE,
+      stampsConsumed: Number(r.stamps_consumed ?? 0),
+      trophyAssetId: r.trophy_asset_id,
+      grantedBy: null,
+    })),
+  ];
+
+  events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  return events.slice(0, q.limit);
+}

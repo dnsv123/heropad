@@ -27,6 +27,7 @@ import {
   markRedeemCodeUsed,
   getUserLoyaltyStats,
   getVenueAnalytics,
+  getVenueHistory,
   updateVenueSettings,
   setMarketingConsent,
   type VenueRow,
@@ -71,15 +72,17 @@ loyaltyRouter.use(
 // of turning into NaN, which would silently disable the cap entirely.
 const MAX_STAMPS_PER_DAY = (() => {
   const parsed = Number(process.env.LOYALTY_DAILY_CAP);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 15;
 })();
 
 // Trophy mints per venue per rolling 24h. Sized well above what a real café
 // produces (a customer completes a card every ~10 visits), so it only ever
 // trips on farming — the cost of which lands on OUR admin wallet on mainnet.
+// Hitting it never costs a customer their reward: the redemption completes and
+// only the on-chain mint waits, so the ceiling can afford to be generous.
 const MAX_TROPHIES_PER_VENUE_DAY = (() => {
   const parsed = Number(process.env.TROPHY_DAILY_CAP);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 })();
 
 // --- Happy Hour (Romania local time) -----------------------------------------
@@ -513,6 +516,58 @@ loyaltyRouter.get(
       return res.status(200).json({ ok: true, ...analytics });
     } catch (err) {
       return serverError(res, 'merchant-stats', err);
+    }
+  }
+);
+
+// GET /api/loyalty/merchant/:slug/history — the venue's own transaction log.
+// Every stamp and reward IT handed out, newest first, with the anonymous
+// customer code and who granted it. Query: ?from=&to=&code=&limit=
+//
+// Deliberately scoped to this venue: a merchant sees their own till, never a
+// customer's activity elsewhere.
+loyaltyRouter.get(
+  '/merchant/:slug/history',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      const code = typeof req.query.code === 'string' ? req.query.code.trim().toUpperCase() : '';
+      if (code && !CODE_RE.test(code)) {
+        return res.status(400).json({
+          ok: false,
+          error: 'bad_code',
+          message: 'Customer code must be 6 letters/digits.',
+        });
+      }
+
+      // Bounded so a wide date range can never pull the whole table into memory.
+      const rawLimit = Number(req.query.limit);
+      const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 1000) : 200;
+
+      const isDate = (v: unknown): v is string =>
+        typeof v === 'string' && v.length > 0 && !Number.isNaN(Date.parse(v));
+
+      const events = await getVenueHistory(owned.venue.id, {
+        from: isDate(req.query.from) ? req.query.from : undefined,
+        // A plain YYYY-MM-DD 'to' should include that whole day, so push the
+        // exclusive bound to the next midnight rather than dropping the day.
+        to: isDate(req.query.to)
+          ? /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)
+            ? new Date(Date.parse(`${req.query.to}T00:00:00Z`) + 86400000).toISOString()
+            : req.query.to
+          : undefined,
+        code: code || undefined,
+        limit,
+        ownerIdentityId: owned.venue.owner_identity_id ?? null,
+      });
+
+      return res.status(200).json({ ok: true, events, limit, truncated: events.length >= limit });
+    } catch (err) {
+      return serverError(res, 'merchant-history', err);
     }
   }
 );
