@@ -78,7 +78,8 @@ export default function Business() {
   const [claiming, setClaiming] = useState(false);
   const [role, setRole] = useState<'owner' | 'staff' | 'none' | null>(null);
   const [staffName, setStaffName] = useState<string | null>(null);
-  const isOwner = role === null ? null : role === 'owner';
+  /** Owner or staff: this account may work the counter here. */
+  const canServe = role === 'owner' || role === 'staff';
   const [setupCode, setSetupCode] = useState('');
   const [scanning, setScanning] = useState(false);
 
@@ -165,8 +166,8 @@ export default function Business() {
   }, [slug, getAccessToken]);
 
   useEffect(() => {
-    if (ready && authenticated && isOwner !== false) void loadToday();
-  }, [ready, authenticated, isOwner, loadToday]);
+    if (ready && authenticated && canServe) void loadToday();
+  }, [ready, authenticated, canServe, loadToday]);
 
   /**
    * One field for both kinds of code. An 8-character code makes you the owner,
@@ -507,7 +508,11 @@ export default function Business() {
                 {t('b.login.btn')}
               </button>
             </div>
-          ) : isOwner === false ? (
+          ) : role === null ? (
+            // Role still resolving. Without this the counter flashes into view
+            // for anyone, including someone who has no business at this venue.
+            <p className="py-10 text-center text-sm text-slate-500">{t('pt.loading')}</p>
+          ) : role === 'none' ? (
             <div className="text-center">
               <p className="mb-3 text-sm text-slate-400">
                 {t('b.notmerchant', { name: venue?.name ?? '…' })}
