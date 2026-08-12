@@ -20,6 +20,11 @@ export interface VenueRow {
   owner_identity_id: string | null;
   gps_lat: number | null;
   gps_lng: number | null;
+  /** Billing + referral attribution (migration 008). */
+  monthly_fee?: number | null;
+  billing_status?: string | null;
+  paid_since?: string | null;
+  referred_by?: string | null;
 }
 
 /** Happy-hour config stored in venues.branding.happyHour. */
@@ -54,7 +59,9 @@ export interface VenueProgress {
 export async function getVenueBySlug(slug: string): Promise<VenueRow | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('venues')
-    .select('id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng')
+    .select(
+      'id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by'
+    )
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getVenueBySlug: ${error.message}`);

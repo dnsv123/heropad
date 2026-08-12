@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
+import AdminPartners from '../components/AdminPartners';
 
 // /admin — the operator console (Valentin only; access is an allowlist of
 // Privy DIDs in ADMIN_PRIVY_IDS on the API).
@@ -21,6 +22,10 @@ interface VenueRow {
   setupCode: string | null;
   gpsLat: number | null;
   gpsLng: number | null;
+  monthlyFee: number;
+  billingStatus: string;
+  paidSince: string | null;
+  partnerCode: string | null;
   stats: { stamps: number; customers: number; rewards: number };
 }
 
@@ -168,6 +173,26 @@ export default function Admin() {
       setLat('');
       setLng('');
       await load();
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Billing + attribution for one venue. These three fields are the only
+   * inputs to every partner commission figure, so they live on the venue and
+   * are never retyped anywhere else.
+   */
+  async function saveBilling(v: VenueRow, patch: Record<string, unknown>) {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      await postJson(`/api/admin/venues/${v.slug}`, patch, token ?? undefined);
+      await load();
+      setNotice({ kind: 'ok', text: `Saved billing for ${v.name}.` });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as { message: string }).message });
     } finally {
@@ -593,6 +618,10 @@ export default function Admin() {
         </button>
       </div>
 
+      <AdminPartners
+        onNotice={(kind, text) => setNotice({ kind, text })}
+      />
+
       {/* ---- Venue list ---- */}
       <h2 className="mt-8 font-display text-lg font-semibold text-white">Venues</h2>
       <div className="mt-3 space-y-3">
@@ -638,6 +667,51 @@ export default function Admin() {
                 ☕ {v.stats.stamps} stamps · 👤 {v.stats.customers} customers · 🎁{' '}
                 {v.stats.rewards} rewards
               </p>
+
+              {/* Billing + who brought this venue — the inputs to commission */}
+              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
+                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                  Fee / month
+                  <input
+                    type="number"
+                    min={0}
+                    defaultValue={v.monthlyFee}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (n !== v.monthlyFee) void saveBilling(v, { monthlyFee: n });
+                    }}
+                    className="mt-1 block w-24 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                  />
+                </label>
+                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                  Billing
+                  <select
+                    value={v.billingStatus}
+                    onChange={(e) => void saveBilling(v, { billingStatus: e.target.value })}
+                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                  >
+                    <option value="trial">trial (free)</option>
+                    <option value="active">active (paying)</option>
+                    <option value="paused">paused</option>
+                    <option value="cancelled">cancelled</option>
+                  </select>
+                </label>
+                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                  Brought by (partner code)
+                  <input
+                    defaultValue={v.partnerCode ?? ''}
+                    placeholder="none"
+                    onBlur={(e) => {
+                      const code = e.target.value.trim().toUpperCase();
+                      if (code !== (v.partnerCode ?? '')) void saveBilling(v, { partnerCode: code });
+                    }}
+                    className="mt-1 block w-40 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 font-mono text-sm uppercase text-white"
+                  />
+                </label>
+                {v.billingStatus === 'active' && v.paidSince && (
+                  <span className="pb-1 text-[10px] text-slate-600">since {v.paidSince}</span>
+                )}
+              </div>
 
               {v.setupCode && (
                 <p className="mt-2 rounded-lg border border-hero-gold/40 bg-hero-gold/10 px-3 py-2 text-sm text-hero-gold">

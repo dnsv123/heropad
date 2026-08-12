@@ -13,6 +13,7 @@ import Loyalty from './pages/Loyalty';
 // for on café cellular. Privy stays eager in main.tsx — only routes split.
 const Business = lazy(() => import('./pages/Business'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Partner = lazy(() => import('./pages/Partner'));
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/loyalty" element={<Loyalty />} />
           <Route path="/business" element={<Business />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/partner" element={<Partner />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           {/* Catch-all: send unknown paths back to the landing page. */}

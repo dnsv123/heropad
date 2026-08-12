@@ -11,6 +11,14 @@ import {
 } from '../middleware/auth.js';
 import { getSupabaseAdmin } from '../lib/supabase-admin.js';
 import { ensureIdentity, getVenueBySlug, findIdentityByCode } from '../lib/loyalty-db.js';
+import {
+  createPartner,
+  getPartnerByCode,
+  getPartnersOverview,
+  resetPartnerClaimToken,
+  suggestPartnerCode,
+  updatePartner,
+} from '../lib/partners-db.js';
 
 // Admin routes — the operator's control panel (Valentin only).
 // ---------------------------------------------------------------------------
@@ -89,7 +97,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     const { data: venues, error } = await supa
       .from('venues')
       .select(
-        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, created_at'
+        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, created_at'
       )
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -106,8 +114,24 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
       claim_token: string | null;
       gps_lat: number | null;
       gps_lng: number | null;
+      monthly_fee: number | string | null;
+      billing_status: string | null;
+      paid_since: string | null;
+      referred_by: string | null;
       created_at: string;
     }>;
+
+    // Referral attribution, resolved to the partner code the operator types.
+    const partnerCodeById = new Map<string, string>();
+    {
+      const ids = [...new Set(rows.map((r) => r.referred_by).filter(Boolean))] as string[];
+      if (ids.length > 0) {
+        const { data: ps } = await supa.from('partners').select('id, code').in('id', ids);
+        for (const p of (ps ?? []) as Array<{ id: string; code: string }>) {
+          partnerCodeById.set(p.id, p.code);
+        }
+      }
+    }
 
     // Per-venue activity — small volumes at pilot scale, counted in one pass.
     const [{ data: stamps }, { data: rewards }] = await Promise.all([
@@ -139,6 +163,10 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         setupCode: v.claim_token,
         gpsLat: v.gps_lat,
         gpsLng: v.gps_lng,
+        monthlyFee: Number(v.monthly_fee ?? 0),
+        billingStatus: v.billing_status ?? 'trial',
+        paidSince: v.paid_since,
+        partnerCode: v.referred_by ? (partnerCodeById.get(v.referred_by) ?? null) : null,
         createdAt: v.created_at,
         stats: {
           stamps: stampsBy.get(v.id) ?? 0,
@@ -212,6 +240,13 @@ const UpdateBody = z.object({
   gpsLat: z.number().min(-90).max(90).nullable().optional(),
   gpsLng: z.number().min(-180).max(180).nullable().optional(),
   active: z.boolean().optional(),
+  // Billing + attribution. A partner's commission is a percentage OF these,
+  // so they live on the venue rather than being retyped every month.
+  monthlyFee: z.number().min(0).max(100000).optional(),
+  billingStatus: z.enum(['trial', 'active', 'paused', 'cancelled']).optional(),
+  paidSince: z.string().trim().max(20).nullable().optional(),
+  /** Referral code of the partner who brought this venue; '' clears it. */
+  partnerCode: z.string().trim().max(40).nullable().optional(),
 });
 
 // POST /api/admin/venues/:slug — edit venue details (incl. GPS for the map).
@@ -239,6 +274,31 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     if (i.active !== undefined) patch.active = i.active;
     if (i.reward !== undefined) {
       patch.branding = { ...(venue.branding ?? {}), reward: i.reward };
+    }
+    if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
+    if (i.billingStatus !== undefined) {
+      patch.billing_status = i.billingStatus;
+      // Stamp the start of billing the first time it goes active, so the
+      // clawback window has a date without anyone remembering to set one.
+      if (i.billingStatus === 'active' && !venue.paid_since && i.paidSince === undefined) {
+        patch.paid_since = new Date().toISOString().slice(0, 10);
+      }
+    }
+    if (i.paidSince !== undefined) patch.paid_since = i.paidSince || null;
+    if (i.partnerCode !== undefined) {
+      if (!i.partnerCode) {
+        patch.referred_by = null;
+      } else {
+        const partner = await getPartnerByCode(i.partnerCode.toUpperCase());
+        if (!partner) {
+          return res.status(404).json({
+            ok: false,
+            error: 'unknown_partner',
+            message: `No partner with code ${i.partnerCode}.`,
+          });
+        }
+        patch.referred_by = partner.id;
+      }
     }
     if (Object.keys(patch).length === 0) {
       return res.status(400).json({ ok: false, error: 'nothing', message: 'Nothing to update.' });
@@ -675,6 +735,133 @@ adminRouter.get('/audit', async (_req: Request, res: Response) => {
     return res.status(200).json({ ok: true, entries: data ?? [] });
   } catch (err) {
     return serverError(res, 'audit', err);
+  }
+});
+
+// --- Partners ---------------------------------------------------------------
+//
+// A partner brings cafés and earns a share of what those cafés pay. Everything
+// the operator needs for the monthly payout run lives here: who brought what,
+// which of those venues are actually paying, and how much is owed.
+
+// GET /api/admin/partners — every partner with their venues and totals.
+adminRouter.get('/partners', async (_req: Request, res: Response) => {
+  try {
+    return res.status(200).json({ ok: true, partners: await getPartnersOverview() });
+  } catch (err) {
+    return serverError(res, 'partners', err);
+  }
+});
+
+const CreatePartnerBody = z.object({
+  displayName: z.string().trim().min(2).max(80),
+  code: z.string().trim().min(2).max(40).optional(),
+  city: z.string().trim().max(60).optional(),
+  email: z.string().trim().email().max(120).optional(),
+  commissionPct: z.number().min(0).max(100).default(25),
+  exclusiveCity: z.boolean().default(false),
+  exclusiveUntil: z.string().trim().max(20).optional(),
+  notes: z.string().trim().max(500).optional(),
+});
+
+// POST /api/admin/partners — create a partner + their one-time activation code.
+adminRouter.post('/partners', async (req: Request, res: Response) => {
+  try {
+    const parsed = CreatePartnerBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+      });
+    }
+    const i = parsed.data;
+    const code = (i.code || suggestPartnerCode(i.displayName, i.city ?? null)).toUpperCase();
+    if (await getPartnerByCode(code)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'code_taken',
+        message: `Partner code ${code} already exists.`,
+      });
+    }
+    const { partner, claimToken } = await createPartner({
+      code,
+      displayName: i.displayName,
+      city: i.city ?? null,
+      email: i.email ?? null,
+      commissionPct: i.commissionPct,
+      exclusiveCity: i.exclusiveCity,
+      exclusiveUntil: i.exclusiveUntil || null,
+      notes: i.notes ?? null,
+    });
+    return res.status(201).json({ ok: true, code: partner.code, activationCode: claimToken });
+  } catch (err) {
+    return serverError(res, 'partner-create', err);
+  }
+});
+
+const UpdatePartnerBody = z.object({
+  displayName: z.string().trim().min(2).max(80).optional(),
+  city: z.string().trim().max(60).optional(),
+  email: z.string().trim().email().max(120).optional(),
+  commissionPct: z.number().min(0).max(100).optional(),
+  exclusiveCity: z.boolean().optional(),
+  exclusiveUntil: z.string().trim().max(20).nullable().optional(),
+  active: z.boolean().optional(),
+  notes: z.string().trim().max(500).optional(),
+});
+
+// POST /api/admin/partners/:code — edit terms (commission, exclusivity, …).
+adminRouter.post('/partners/:code', async (req: Request, res: Response) => {
+  try {
+    const partner = await getPartnerByCode(req.params.code.toUpperCase());
+    if (!partner) {
+      return res
+        .status(404)
+        .json({ ok: false, error: 'unknown_partner', message: 'No such partner.' });
+    }
+    const parsed = UpdatePartnerBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => i.message).join('; '),
+      });
+    }
+    const i = parsed.data;
+    const patch: Record<string, unknown> = {};
+    if (i.displayName !== undefined) patch.display_name = i.displayName;
+    if (i.city !== undefined) patch.city = i.city;
+    if (i.email !== undefined) patch.email = i.email;
+    if (i.commissionPct !== undefined) patch.commission_pct = i.commissionPct;
+    if (i.exclusiveCity !== undefined) patch.exclusive_city = i.exclusiveCity;
+    if (i.exclusiveUntil !== undefined) patch.exclusive_until = i.exclusiveUntil || null;
+    if (i.active !== undefined) patch.active = i.active;
+    if (i.notes !== undefined) patch.notes = i.notes;
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ ok: false, error: 'nothing', message: 'Nothing to update.' });
+    }
+    await updatePartner(partner.id, patch);
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return serverError(res, 'partner-update', err);
+  }
+});
+
+// POST /api/admin/partners/:code/reset-code — new activation code; unlinks the
+// current account so a partner who lost access can be re-onboarded.
+adminRouter.post('/partners/:code/reset-code', async (req: Request, res: Response) => {
+  try {
+    const partner = await getPartnerByCode(req.params.code.toUpperCase());
+    if (!partner) {
+      return res
+        .status(404)
+        .json({ ok: false, error: 'unknown_partner', message: 'No such partner.' });
+    }
+    const token = await resetPartnerClaimToken(partner.id);
+    return res.status(200).json({ ok: true, activationCode: token });
+  } catch (err) {
+    return serverError(res, 'partner-reset', err);
   }
 });
 

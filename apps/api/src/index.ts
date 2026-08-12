@@ -15,6 +15,7 @@ import helmet from 'helmet';
 
 import { adminRouter } from './routes/admin.js';
 import { claimRouter } from './routes/claim.js';
+import { partnerRouter } from './routes/partner.js';
 import { loyaltyRouter } from './routes/loyalty.js';
 import { mintRouter } from './routes/mint.js';
 import { userRouter } from './routes/user.js';
@@ -105,6 +106,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/claim', claimRouter);
 app.use('/api/loyalty', loyaltyRouter);
 app.use('/api/mint', mintRouter);
+app.use('/api/partner', partnerRouter);
 app.use('/api/user', userRouter);
 
 // 404 fallback.
