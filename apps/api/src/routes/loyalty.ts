@@ -8,11 +8,22 @@ import {
   type AuthedRequest,
 } from '../middleware/auth.js';
 import { queryString } from '../lib/query.js';
+import {
+  addStaff,
+  claimStaffSeat,
+  countActiveStaff,
+  getStaffSeat,
+  listStaff,
+  removeStaff,
+  resetStaffToken,
+  updateStaff,
+} from '../lib/staff-db.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
 import { creditBits } from '../lib/supabase-admin.js';
 import { claimVenueWithToken, claimVenueByCodeOnly } from './admin.js';
 import {
   getVenueBySlug,
+  getVenueById,
   ensureIdentity,
   findIdentityByCode,
   getIdentityById,
@@ -196,6 +207,38 @@ async function loadOwnedVenue(
     return null;
   }
   return { venue, merchantIdentityId: identity.id };
+}
+
+/**
+ * Loads the venue for COUNTER work and resolves who is acting.
+ *
+ * The owner and any active staff member both pass; the returned identity is
+ * whoever actually pressed the button, which is what lands in
+ * stamps.granted_by and therefore in the owner's transaction history. Reading
+ * the venue's numbers is a different question and stays with loadOwnedVenue.
+ */
+async function loadCounterVenue(
+  slug: string,
+  privyId: string,
+  res: Response
+): Promise<{ venue: VenueRow; merchantIdentityId: string; isOwner: boolean } | null> {
+  const venue = await loadActiveVenue(slug, res);
+  if (!venue) return null;
+  const identity = await ensureIdentity(privyId);
+
+  if (venue.owner_identity_id && venue.owner_identity_id === identity.id) {
+    return { venue, merchantIdentityId: identity.id, isOwner: true };
+  }
+  const seat = await getStaffSeat(venue.id, identity.id);
+  if (seat) {
+    return { venue, merchantIdentityId: identity.id, isOwner: false };
+  }
+  res.status(403).json({
+    ok: false,
+    error: 'not_merchant',
+    message: 'Your account cannot serve this venue.',
+  });
+  return null;
 }
 
 function serverError(res: Response, scope: string, err: unknown): void {
@@ -519,6 +562,197 @@ loyaltyRouter.get(
   }
 );
 
+// --- Staff (venue team) ------------------------------------------------------
+//
+// Owner-only management, because the transaction history is partly a record of
+// the staff and an employee cannot be the one deciding who has a seat.
+
+// GET /api/loyalty/merchant/:slug/staff — the team + seats left on the plan.
+loyaltyRouter.get(
+  '/merchant/:slug/staff',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const staff = await listStaff(owned.venue.id);
+      const seats = Number(owned.venue.staff_seats ?? 2);
+      return res.status(200).json({
+        ok: true,
+        seats,
+        used: staff.filter((s) => s.active).length,
+        staff: staff.map((s) => ({
+          id: s.id,
+          displayName: s.display_name,
+          role: s.role,
+          active: s.active,
+          linked: Boolean(s.identity_id),
+          activationCode: s.claim_token,
+          createdAt: s.created_at,
+        })),
+      });
+    } catch (err) {
+      return serverError(res, 'staff-list', err);
+    }
+  }
+);
+
+const AddStaffBody = z.object({
+  displayName: z.string().trim().min(2).max(40),
+  role: z.enum(['staff', 'manager']).default('staff'),
+});
+
+// POST /api/loyalty/merchant/:slug/staff — add a member + activation code.
+loyaltyRouter.post(
+  '/merchant/:slug/staff',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      const parsed = AddStaffBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'invalid_body',
+          message: 'Give the team member a name (2-40 characters).',
+        });
+      }
+
+      // Seat limit is the plan boundary. Refusing here rather than in the UI
+      // means it holds however the request arrives.
+      const seats = Number(owned.venue.staff_seats ?? 2);
+      if ((await countActiveStaff(owned.venue.id)) >= seats) {
+        return res.status(409).json({
+          ok: false,
+          error: 'no_seats',
+          message: `Your plan includes ${seats} team accounts. Upgrade for more.`,
+        });
+      }
+
+      const { staff, claimToken } = await addStaff(
+        owned.venue.id,
+        parsed.data.displayName,
+        parsed.data.role
+      );
+      return res.status(201).json({
+        ok: true,
+        id: staff.id,
+        displayName: staff.display_name,
+        activationCode: claimToken,
+      });
+    } catch (err) {
+      return serverError(res, 'staff-add', err);
+    }
+  }
+);
+
+const StaffPatchBody = z.object({
+  action: z.enum(['deactivate', 'activate', 'remove', 'reset-code']),
+});
+
+// POST /api/loyalty/merchant/:slug/staff/:id — deactivate / remove / re-issue.
+loyaltyRouter.post(
+  '/merchant/:slug/staff/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      const parsed = StaffPatchBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ ok: false, error: 'invalid_body', message: 'Unknown action.' });
+      }
+      const id = req.params.id;
+
+      if (parsed.data.action === 'remove') {
+        // The stamps they granted keep pointing at their identity row, so
+        // removing someone never rewrites history.
+        const gone = await removeStaff(id, owned.venue.id);
+        if (!gone) {
+          return res
+            .status(404)
+            .json({ ok: false, error: 'unknown_staff', message: 'No such team member.' });
+        }
+        return res.status(200).json({ ok: true });
+      }
+
+      if (parsed.data.action === 'reset-code') {
+        const token = await resetStaffToken(id, owned.venue.id);
+        if (!token) {
+          return res
+            .status(404)
+            .json({ ok: false, error: 'unknown_staff', message: 'No such team member.' });
+        }
+        return res.status(200).json({ ok: true, activationCode: token });
+      }
+
+      const active = parsed.data.action === 'activate';
+      if (active) {
+        const seats = Number(owned.venue.staff_seats ?? 2);
+        if ((await countActiveStaff(owned.venue.id)) >= seats) {
+          return res.status(409).json({
+            ok: false,
+            error: 'no_seats',
+            message: `Your plan includes ${seats} team accounts.`,
+          });
+        }
+      }
+      const row = await updateStaff(id, owned.venue.id, { active });
+      if (!row) {
+        return res
+          .status(404)
+          .json({ ok: false, error: 'unknown_staff', message: 'No such team member.' });
+      }
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      return serverError(res, 'staff-patch', err);
+    }
+  }
+);
+
+const StaffClaimBody = z.object({ code: z.string().trim().min(4).max(12) });
+
+// POST /api/loyalty/staff/claim — a team member activates their seat.
+loyaltyRouter.post('/staff/claim', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const parsed = StaffClaimBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: 'Enter the code your manager gave you.',
+      });
+    }
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    const seat = await claimStaffSeat(parsed.data.code, identity.id);
+    if (!seat) {
+      return res.status(404).json({
+        ok: false,
+        error: 'bad_code',
+        message: 'This code is not valid, or it has already been used.',
+      });
+    }
+    const venue = await getVenueById(seat.venue_id);
+    return res.status(200).json({
+      ok: true,
+      venueSlug: venue?.slug ?? null,
+      venueName: venue?.name ?? null,
+      displayName: seat.display_name,
+    });
+  } catch (err) {
+    return serverError(res, 'staff-claim', err);
+  }
+});
+
 // GET /api/loyalty/merchant/:slug/history — the venue's own transaction log.
 // Every stamp and reward IT handed out, newest first, with the anonymous
 // customer code and who granted it. Query: ?from=&to=&code=&limit=
@@ -579,7 +813,7 @@ loyaltyRouter.get(
   async (req: Request, res: Response) => {
     try {
       const privyId = (req as AuthedRequest).privyId as string;
-      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
       if (!owned) return;
 
       if (!CODE_RE.test(req.params.code)) {
@@ -625,7 +859,7 @@ loyaltyRouter.post(
   async (req: Request, res: Response) => {
     try {
       const privyId = (req as AuthedRequest).privyId as string;
-      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
       if (!owned) return;
 
       const parsed = GrantBody.safeParse(req.body);
@@ -708,7 +942,7 @@ loyaltyRouter.post(
   async (req: Request, res: Response) => {
     try {
       const privyId = (req as AuthedRequest).privyId as string;
-      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
       if (!owned) return;
 
       const parsed = RevokeBody.safeParse(req.body);
@@ -774,7 +1008,7 @@ loyaltyRouter.post(
   async (req: Request, res: Response) => {
     try {
       const privyId = (req as AuthedRequest).privyId as string;
-      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
       if (!owned) return;
 
       const parsed = RedeemBody.safeParse(req.body);

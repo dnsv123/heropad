@@ -60,12 +60,19 @@ function rangeForPreset(p: Preset): { from: string; to: string } {
   }
 }
 
-export default function VenueHistory({ slug }: { slug: string }) {
+export default function VenueHistory({
+  slug,
+  embedded = false,
+}: {
+  slug: string;
+  /** Inside a folder tab the panel is already visible; drop its own toggle. */
+  embedded?: boolean;
+}) {
   const { getAccessToken } = usePrivy();
   const { t, lang } = useT();
   const locale = lang === 'ro' ? 'ro-RO' : 'en-GB';
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [events, setEvents] = useState<HistoryEvent[] | null>(null);
   const [truncated, setTruncated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -221,14 +228,16 @@ export default function VenueHistory({ slug }: { slug: string }) {
   ];
 
   return (
-    <div className="mt-4">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
-      >
-        {open ? t('b.hist.hide') : t('b.hist')}
-      </button>
+    <div className={embedded ? '' : 'mt-4'}>
+      {!embedded && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
+        >
+          {open ? t('b.hist.hide') : t('b.hist')}
+        </button>
+      )}
 
       <AnimatePresence>
         {open && (

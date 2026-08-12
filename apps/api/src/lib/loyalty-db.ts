@@ -25,6 +25,8 @@ export interface VenueRow {
   billing_status?: string | null;
   paid_since?: string | null;
   referred_by?: string | null;
+  /** Staff seats included by the plan (migration 009). */
+  staff_seats?: number | null;
 }
 
 /** Happy-hour config stored in venues.branding.happyHour. */
@@ -56,16 +58,30 @@ export interface VenueProgress {
 
 // --- Venues ------------------------------------------------------------------
 
+const VENUE_SELECT =
+  'id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats';
+
 export async function getVenueBySlug(slug: string): Promise<VenueRow | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('venues')
     .select(
-      'id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by'
+      VENUE_SELECT
     )
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getVenueBySlug: ${error.message}`);
   return (data) ?? null;
+}
+
+/** Same row, by id — used when a code resolves to a venue rather than a slug. */
+export async function getVenueById(id: string): Promise<VenueRow | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('venues')
+    .select(VENUE_SELECT)
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] getVenueById: ${error.message}`);
+  return data ?? null;
 }
 
 /**
