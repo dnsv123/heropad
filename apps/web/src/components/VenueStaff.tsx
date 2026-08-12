@@ -35,6 +35,9 @@ interface StaffResponse {
   staff: StaffMember[];
 }
 
+const PUBLIC_BASE =
+  typeof window !== 'undefined' ? window.location.origin : 'https://heropad.supervictoruniverse.com';
+
 export default function VenueStaff({
   slug,
   onInspect,
@@ -120,6 +123,21 @@ export default function VenueStaff({
     window.setTimeout(() => setCopied(null), 1600);
   }
 
+  /**
+   * The whole message, not just the code. An owner should not have to know the
+   * link, and a barista handed a bare code has nowhere to type it.
+   */
+  function copyInvite(who: string, code: string) {
+    void navigator.clipboard?.writeText(
+      t('b.staff.invite')
+        .replace('{name}', who)
+        .replace('{link}', `${PUBLIC_BASE}/business?venue=${slug}`)
+        .replace('{code}', code)
+    );
+    setCopied(`invite:${code}`);
+    window.setTimeout(() => setCopied(null), 1800);
+  }
+
   const seatsLeft = data ? data.seats - data.used : 0;
   const full = data ? seatsLeft <= 0 : false;
 
@@ -161,11 +179,20 @@ export default function VenueStaff({
               {justAdded.code}
             </button>
             <p className="mt-2 text-[11px] text-slate-400">{t('b.staff.codehint')}</p>
-            <div className="mt-3 flex justify-center gap-2">
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => copyInvite(justAdded.name, justAdded.code)}
+                className="rounded-full bg-hero-gold px-3 py-1 text-xs font-semibold text-hero-deep"
+              >
+                {copied === `invite:${justAdded.code}`
+                  ? t('b.staff.copied')
+                  : t('b.staff.copyinvite')}
+              </button>
               <button
                 type="button"
                 onClick={() => copy(justAdded.code)}
-                className="rounded-full bg-hero-gold px-3 py-1 text-xs font-semibold text-hero-deep"
+                className="rounded-full border border-hero-gold/40 px-3 py-1 text-xs text-hero-gold"
               >
                 {copied === justAdded.code ? t('b.staff.copied') : t('b.staff.copy')}
               </button>

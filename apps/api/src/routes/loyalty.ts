@@ -1143,6 +1143,8 @@ loyaltyRouter.post(
 
 const RevokeBody = z.object({
   code: z.string().regex(CODE_RE, 'Customer code must be 6 letters/digits'),
+  /** Corrections come in the same sizes as grants, so the pad reads evenly. */
+  count: z.number().int().min(1).max(2).default(1),
 });
 
 // POST /api/loyalty/merchant/:slug/revoke — barista correction: remove the
@@ -1172,7 +1174,20 @@ loyaltyRouter.post(
           message: 'No customer with this code.',
         });
       }
-      const removed = await revokeLatestStampToday(customer.id, owned.venue.id, owned.merchantIdentityId);
+      // Loop rather than a bulk delete: each call takes the newest live stamp
+      // under a conditional update, so two baristas correcting at once can
+      // never remove the same one twice.
+      let removedCount = 0;
+      for (let i = 0; i < parsed.data.count; i++) {
+        const ok = await revokeLatestStampToday(
+          customer.id,
+          owned.venue.id,
+          owned.merchantIdentityId
+        );
+        if (!ok) break;
+        removedCount += 1;
+      }
+      const removed = removedCount > 0;
       if (!removed) {
         return res.status(409).json({
           ok: false,

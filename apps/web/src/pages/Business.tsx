@@ -359,16 +359,20 @@ export default function Business() {
     setNotice({ kind: 'err', text: t('b.n.scan.unknown') });
   }
 
-  async function revokeOne() {
+  async function revokeOne(count = 1) {
     if (!customer) return;
     setBusy(true);
     setNotice(null);
     try {
       const token = await getAccessToken();
       const r = await postJson<
-        { code: string },
+        { code: string; count: number },
         { ok: true; stamps: number; canRedeem: boolean }
-      >(`/api/loyalty/merchant/${slug}/revoke`, { code: customer.code }, token ?? undefined);
+      >(
+        `/api/loyalty/merchant/${slug}/revoke`,
+        { code: customer.code, count },
+        token ?? undefined
+      );
       hapticTap(10);
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
       setNotice({
@@ -686,33 +690,49 @@ export default function Business() {
 
                     <div className="mt-4">
                       <p className="mb-2 text-xs text-slate-500">{t('b.coffees')}</p>
+                      {/* Symmetric on purpose: -2 -1 +1 +2 reads as one scale
+                          the eye can scan, where -1 +1 +2 +3 reads as three
+                          buttons and an odd one out. Dumitru's note from the
+                          counter, and he is right. */}
                       <div className="grid grid-cols-4 gap-2">
-                        {[1, 2, 3].map((n) => (
+                        {[-2, -1, 1, 2].map((n) => (
                           <button
                             key={n}
                             type="button"
                             disabled={busy}
                             onClick={() => {
-                              // Synchronously, inside the gesture: iOS will not
-                              // start audio later, once the fetch has begun.
                               primeAudio();
-                              void grant(n);
+                              if (n < 0) void revokeOne(-n);
+                              else void grant(n);
                             }}
-                            className="rounded-full border border-hero-cyan/40 py-2.5 font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
+                            title={
+                              n < 0
+                                ? 'Correction: removes the most recent stamps from today'
+                                : undefined
+                            }
+                            className={`rounded-full border py-2.5 font-semibold transition disabled:opacity-40 ${
+                              n < 0
+                                ? 'border-red-400/40 text-red-300 hover:border-red-400 hover:bg-red-400/10'
+                                : 'border-hero-cyan/40 text-hero-cyan hover:border-hero-cyan hover:bg-hero-cyan/10'
+                            }`}
                           >
-                            +{n}
+                            {n > 0 ? `+${n}` : `−${-n}`}
                           </button>
                         ))}
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void revokeOne()}
-                          title="Correction: remove the last stamp from today"
-                          className="rounded-full border border-red-400/40 py-2.5 font-semibold text-red-300 transition hover:border-red-400 hover:bg-red-400/10 disabled:opacity-40"
-                        >
-                          −1
-                        </button>
                       </div>
+                      {/* Three coffees at once still happens; +2 then +1 is two
+                          taps, and a fourth column would break the symmetry. */}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          primeAudio();
+                          void grant(3);
+                        }}
+                        className="mt-2 w-full rounded-full border border-hero-cyan/25 py-2 text-xs text-hero-cyan/80 transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
+                      >
+                        +3
+                      </button>
                       <p className="mt-1.5 text-[10px] text-slate-600">{t('b.minus.note')}</p>
                     </div>
 

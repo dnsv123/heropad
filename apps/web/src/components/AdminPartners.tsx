@@ -57,6 +57,27 @@ interface PartnerRow {
 
 const money = (n: number) => `${n.toLocaleString('ro-RO', { maximumFractionDigits: 2 })} lei`;
 
+const PUBLIC_BASE =
+  typeof window !== 'undefined' ? window.location.origin : 'https://heropad.supervictoruniverse.com';
+
+/**
+ * The whole message, not just the code.
+ *
+ * Handing someone an 8-character token and expecting them to find /partner is
+ * how an onboarding stalls. This is what actually gets pasted into WhatsApp.
+ */
+function partnerInvite(name: string, code: string): string {
+  return [
+    `Salut, ${name}! Contul tau de partener HeroPad e gata.`,
+    '',
+    `1. Intra pe ${PUBLIC_BASE}/partner`,
+    '2. Conecteaza-te cu emailul tau',
+    `3. Introdu codul: ${code}`,
+    '',
+    'Codul se foloseste o singura data si expira in 14 zile.',
+  ].join('\n');
+}
+
 export default function AdminPartners({
   onNotice,
   onPartners,
@@ -79,6 +100,7 @@ export default function AdminPartners({
   const [busy, setBusy] = useState(false);
   const [openCode, setOpenCode] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   // create form
   const [name, setName] = useState('');
@@ -128,9 +150,12 @@ export default function AdminPartners({
         },
         at ?? undefined
       );
+      // Put the sendable message straight on the clipboard: the next thing the
+      // operator does is paste it to the partner.
+      void navigator.clipboard?.writeText(partnerInvite(name.trim(), r.activationCode));
       onNotice(
         'ok',
-        `Partner ${r.code} created. Activation code: ${r.activationCode} — send it with the link /partner`
+        `Partner ${r.code} created — the full invite message is on your clipboard, ready to paste.`
       );
       setName('');
       setCity('');
@@ -345,10 +370,25 @@ export default function AdminPartners({
                         ✓ account activated
                       </span>
                     ) : p.claimToken ? (
-                      <span className="rounded-full border border-hero-gold/30 bg-hero-gold/10 px-2 py-0.5 text-hero-gold">
-                        one-time login code (send with /partner):{' '}
-                        <strong className="font-mono tracking-widest">{p.claimToken}</strong>
-                      </span>
+                      <>
+                        <span className="rounded-full border border-hero-gold/30 bg-hero-gold/10 px-2 py-0.5 text-hero-gold">
+                          login code:{' '}
+                          <strong className="font-mono tracking-widest">{p.claimToken}</strong>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard?.writeText(
+                              partnerInvite(p.partner.displayName, p.claimToken as string)
+                            );
+                            setCopied(p.id);
+                            window.setTimeout(() => setCopied(null), 1800);
+                          }}
+                          className="rounded-full bg-hero-gold px-3 py-0.5 font-semibold text-hero-deep transition hover:brightness-110"
+                        >
+                          {copied === p.id ? '✓ Copied' : '⧉ Copy invite message'}
+                        </button>
+                      </>
                     ) : (
                       <span className="text-slate-500">no code — reset to issue one</span>
                     )}
