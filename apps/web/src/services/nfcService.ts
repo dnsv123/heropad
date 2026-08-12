@@ -47,7 +47,7 @@ function decodeFirstUrl(message: NDEFMessageLike): string | null {
   for (const record of message.records) {
     if (record.recordType === 'url' || record.recordType === 'text') {
       try {
-        const text = new TextDecoder().decode(record.data as BufferSource);
+        const text = new TextDecoder().decode(record.data);
         if (text) return text;
       } catch {
         /* skip undecodable record */

@@ -97,7 +97,6 @@ export async function mintCnftToWallet(input: MintCnftInput): Promise<MintCnftRe
     const leaf = await parseLeafFromMintV1Transaction(umi, signature);
     assetId = leaf.id.toString();
   } catch (parseErr) {
-    // eslint-disable-next-line no-console
     console.warn(
       '[Bubblegum] parseLeafFromMintV1Transaction failed, deriving from tree state:',
       (parseErr as Error).message

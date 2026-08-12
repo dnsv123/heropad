@@ -157,7 +157,6 @@ claimRouter.post('/', async (req: Request, res: Response) => {
     try {
       await creditBits(walletAddress, BITS_REWARD_PER_CLAIM, 'claim', { code, assetId });
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('[claim] BITS credit failed (non-fatal):', err);
     }
 
@@ -169,7 +168,6 @@ claimRouter.post('/', async (req: Request, res: Response) => {
     });
   } catch (err) {
     const msg = (err as Error).message;
-    // eslint-disable-next-line no-console
     console.error('[claim] error:', msg);
 
     if (msg.includes('Invalid claim code signature')) {

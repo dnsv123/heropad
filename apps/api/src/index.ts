@@ -60,7 +60,6 @@ app.use(
       if (/^https:\/\/heropad-[a-z0-9-]+\.vercel\.app$/.test(origin)) {
         return cb(null, true);
       }
-      // eslint-disable-next-line no-console
       console.warn(`[CORS] Blocked origin: ${origin}`);
       // Deny without throwing: throwing surfaces as a 500 "server_error",
       // making blocked origins look like outages in monitoring.
@@ -116,7 +115,6 @@ app.use((_req, res) => {
 
 // Generic error handler — hides internals from clients.
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  // eslint-disable-next-line no-console
   console.error('[API error]', err);
   res.status(500).json({
     ok: false,
@@ -139,10 +137,7 @@ const allEnvOk = Object.values(envCheck).every(Boolean);
 
 const port = Number(process.env.PORT ?? 8787);
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log(`[heropad-api] listening on http://localhost:${port}`);
-  // eslint-disable-next-line no-console
   console.log('[heropad-api] env check:', envCheck, allEnvOk ? '✓ all good' : '✗ MISSING VARS');
-  // eslint-disable-next-line no-console
   console.log(`[heropad-api] CORS allowlist: ${allowedOrigins.join(', ')}`);
 });

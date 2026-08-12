@@ -7,6 +7,7 @@ import {
   getUserSolanaWallets,
   type AuthedRequest,
 } from '../middleware/auth.js';
+import { queryString } from '../lib/query.js';
 
 // GET /api/user/me?wallet=<address>
 // ---------------------------------
@@ -33,7 +34,7 @@ const cache = new Map<string, CacheEntry>();
 // 60_000+ for production scale once we add an explicit "refresh" button.
 const TTL_MS = 10_000;
 
-function getCached(key: string): unknown | null {
+function getCached(key: string): unknown {
   const entry = cache.get(key);
   if (!entry) return null;
   if (entry.expiresAt < Date.now()) {
@@ -57,7 +58,6 @@ userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
   try {
     wallets = await getUserSolanaWallets(privyId);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[user.me] privy lookup failed:', (err as Error).message);
     return res.status(502).json({
       ok: false,
@@ -68,7 +68,7 @@ userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
 
   // A caller may ask for a specific one of THEIR wallets; anything else is
   // rejected. With no hint we default to the first linked wallet.
-  const requested = String(req.query.wallet ?? '').trim();
+  const requested = queryString(req.query.wallet).trim();
   const wallet = requested || wallets[0];
   if (!wallet) {
     return res.status(404).json({
@@ -88,7 +88,7 @@ userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
   const cacheKey = `me:${wallet}`;
   const cached = getCached(cacheKey);
   if (cached) {
-    return res.status(200).json({ ok: true, ...(cached as object), cached: true });
+    return res.status(200).json({ ok: true, ...(cached), cached: true });
   }
 
   try {
@@ -107,7 +107,6 @@ userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
     setCached(cacheKey, payload);
     return res.status(200).json({ ok: true, ...payload, cached: false });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[user.me] error:', (err as Error).message);
     return res.status(500).json({
       ok: false,

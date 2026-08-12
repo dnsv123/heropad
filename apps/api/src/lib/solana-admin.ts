@@ -84,7 +84,6 @@ export function loadAdminKeypair(): Keypair {
 
   cachedKeypair = Keypair.fromSecretKey(secretBytes);
   // Sanity log — public key only, never the secret.
-  // eslint-disable-next-line no-console
   console.log(`[Solana] Admin keypair loaded: ${cachedKeypair.publicKey.toBase58()}`);
   return cachedKeypair;
 }

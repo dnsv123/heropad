@@ -80,7 +80,7 @@ export default function LoyaltyStats() {
   useEffect(() => {
     if (!ready || !authenticated) return;
     let active = true;
-    (async () => {
+    void (async () => {
       try {
         const token = await getAccessToken();
         if (!token) return;

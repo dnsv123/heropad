@@ -65,7 +65,7 @@ export async function getVenueBySlug(slug: string): Promise<VenueRow | null> {
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getVenueBySlug: ${error.message}`);
-  return (data as VenueRow) ?? null;
+  return (data) ?? null;
 }
 
 /**
@@ -128,7 +128,7 @@ export async function ensureIdentity(
   if (readErr) throw new Error(`[Supabase] ensureIdentity read: ${readErr.message}`);
 
   if (existing) {
-    const row = existing as IdentityRow;
+    const row = existing;
     // Backfill pieces that may be missing on older rows.
     const patch: Record<string, unknown> = {};
     if (!row.loyalty_code) patch.loyalty_code = randomLoyaltyCode();
@@ -141,7 +141,7 @@ export async function ensureIdentity(
         .select('id, privy_id, loyalty_code, solana_wallet')
         .single();
       if (updErr) throw new Error(`[Supabase] ensureIdentity update: ${updErr.message}`);
-      return updated as IdentityRow;
+      return updated;
     }
     return row;
   }
@@ -157,7 +157,7 @@ export async function ensureIdentity(
       })
       .select('id, privy_id, loyalty_code, solana_wallet')
       .single();
-    if (!insErr) return created as IdentityRow;
+    if (!insErr) return created;
     if (insErr.code !== '23505') {
       throw new Error(`[Supabase] ensureIdentity insert: ${insErr.message}`);
     }
@@ -167,7 +167,7 @@ export async function ensureIdentity(
       .select('id, privy_id, loyalty_code, solana_wallet')
       .eq('privy_id', privyId)
       .maybeSingle();
-    if (raced) return raced as IdentityRow;
+    if (raced) return raced;
   }
   throw new Error('[Supabase] ensureIdentity: could not allocate a loyalty code');
 }
@@ -179,7 +179,7 @@ export async function getIdentityById(id: string): Promise<IdentityRow | null> {
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getIdentityById: ${error.message}`);
-  return (data as IdentityRow) ?? null;
+  return (data) ?? null;
 }
 
 /**
@@ -214,7 +214,7 @@ export async function findIdentityByCode(code: string): Promise<IdentityRow | nu
     .eq('loyalty_code', normalized)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] findIdentityByCode: ${error.message}`);
-  return (data as IdentityRow) ?? null;
+  return (data) ?? null;
 }
 
 // --- Progress ----------------------------------------------------------------
@@ -240,7 +240,7 @@ export async function getVenueProgress(
   if (rewErr) throw new Error(`[Supabase] progress rewards: ${rewErr.message}`);
 
   const consumed = (rewards ?? []).reduce(
-    (sum, r) => sum + Number((r as { stamps_consumed: number }).stamps_consumed ?? 0),
+    (sum, r) => sum + Number((r).stamps_consumed ?? 0),
     0
   );
   const total = totalStamps ?? 0;
@@ -334,7 +334,7 @@ export async function revokeLatestStampToday(
   const { error: delErr } = await supa
     .from('stamps')
     .delete()
-    .eq('id', (data[0] as { id: string }).id);
+    .eq('id', (data[0]).id);
   if (delErr) throw new Error(`[Supabase] revokeLatestStamp delete: ${delErr.message}`);
   return true;
 }
@@ -356,7 +356,7 @@ export async function redeemReward(input: {
     .select('id')
     .single();
   if (error) throw new Error(`[Supabase] redeemReward: ${error.message}`);
-  return (data as { id: string }).id;
+  return (data).id;
 }
 
 /** Attaches the minted trophy cNFT to a redemption row. Best-effort caller. */
@@ -414,7 +414,7 @@ export async function createRedeemCode(
       })
       .select('id, user_identity_id, venue_id, code, expires_at')
       .single();
-    if (!error) return data as RedeemCodeRow;
+    if (!error) return data;
     if (error.code !== '23505') {
       throw new Error(`[Supabase] createRedeemCode: ${error.message}`);
     }
@@ -436,7 +436,7 @@ export async function findValidRedeemCode(
     .gt('expires_at', new Date().toISOString())
     .maybeSingle();
   if (error) throw new Error(`[Supabase] findValidRedeemCode: ${error.message}`);
-  return (data as RedeemCodeRow) ?? null;
+  return (data) ?? null;
 }
 
 /**
@@ -492,8 +492,8 @@ export async function updateVenueSettings(
       .eq('id', venueId)
       .single();
     if (error) throw new Error(`[Supabase] settings read: ${error.message}`);
-    const branding = ((data as { branding: Record<string, unknown> | null }).branding ??
-      {}) as Record<string, unknown>;
+    const branding = ((data).branding ??
+      {});
 
     if (input.rewardLabel !== undefined) branding.reward = input.rewardLabel;
     if (input.reviewUrl !== undefined) {
@@ -687,7 +687,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
 
   const stampsByVenue = new Map<string, number>();
   for (const row of stampRows ?? []) {
-    const v = (row as { venue_id: string }).venue_id;
+    const v = (row).venue_id;
     stampsByVenue.set(v, (stampsByVenue.get(v) ?? 0) + 1);
   }
   const consumedByVenue = new Map<string, number>();
@@ -707,14 +707,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     redeemedAt: string;
   }> = [];
   for (const row of rewardRows ?? []) {
-    const r = row as {
-      venue_id: string;
-      stamps_consumed: number;
-      trophy_asset_id: string | null;
-      milestone_mint_tx: string | null;
-      redeemed_at: string;
-      reward_type: string | null;
-    };
+    const r = row;
     rawRewards.push({
       venueId: r.venue_id,
       // 'free_item' is the pre-snapshot legacy default — not a real label.
@@ -755,7 +748,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
       .select('id, slug, name, stamps_required, branding')
       .in('id', venueIds);
     if (error) throw new Error(`[Supabase] stats venues: ${error.message}`);
-    venueRows = (data ?? []) as typeof venueRows;
+    venueRows = (data ?? []);
   }
 
   const venues = venueRows.map((v) => ({
@@ -766,7 +759,7 @@ export async function getUserLoyaltyStats(identityId: string): Promise<UserLoyal
     totalStamps: stampsByVenue.get(v.id) ?? 0,
     cardsCompleted: cardsByVenue.get(v.id) ?? 0,
     rewardLabel:
-      typeof v.branding?.reward === 'string' ? (v.branding.reward as string) : null,
+      typeof v.branding?.reward === 'string' ? (v.branding.reward) : null,
   }));
 
   const venueNameById = new Map(venueRows.map((v) => [v.id, v.name]));

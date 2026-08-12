@@ -10,6 +10,7 @@ import {
   type AuthedRequest,
 } from '../middleware/auth.js';
 import { getSupabaseAdmin } from '../lib/supabase-admin.js';
+import { queryString } from '../lib/query.js';
 import { ensureIdentity, getVenueBySlug, findIdentityByCode } from '../lib/loyalty-db.js';
 import {
   createPartner,
@@ -72,7 +73,6 @@ function requireAdmin(req: Request, res: Response, next: () => void): void {
 adminRouter.use(requireAuth, requireAdmin);
 
 function serverError(res: Response, scope: string, err: unknown): void {
-  // eslint-disable-next-line no-console
   console.error(`[admin.${scope}]`, (err as Error).message);
   res.status(500).json({ ok: false, error: 'server_error', message: 'Something went wrong.' });
 }
@@ -516,7 +516,6 @@ async function audit(
       detail,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[admin.audit] failed:', (err as Error).message);
   }
 }
@@ -568,7 +567,7 @@ adminRouter.get('/support/:code', async (req: Request, res: Response) => {
     const identity = await findIdentityByCode(code);
     if (!identity) {
       await audit(adminId, 'support_lookup_miss', code, {
-        reason: String(req.query.reason ?? ''),
+        reason: queryString(req.query.reason),
       });
       return res.status(404).json({ ok: false, error: 'unknown_code', message: 'No such code.' });
     }
@@ -580,13 +579,12 @@ adminRouter.get('/support/:code', async (req: Request, res: Response) => {
     try {
       contact = await getPrivyUserContact(identity.privy_id);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('[admin.support] privy lookup failed:', (err as Error).message);
     }
 
     const data = await collectSubjectData(identity.id, identity.solana_wallet);
     await audit(adminId, 'support_lookup', code, {
-      reason: String(req.query.reason ?? ''),
+      reason: queryString(req.query.reason),
       // Hashed, not raw: the audit row outlives an erasure request, so storing
       // the DID here would leave the person identifiable after Art. 17 deletion.
       privyIdHash: createHash('sha256').update(identity.privy_id).digest('hex'),
@@ -886,7 +884,7 @@ export async function claimVenueByCodeOnly(
   if (error) throw new Error(`[Supabase] claimVenueByCodeOnly: ${error.message}`);
   if (!match) return { ok: false };
 
-  const venue = match as { id: string; slug: string; name: string; active: boolean };
+  const venue = match;
   if (!venue.active) return { ok: false };
 
   const identity = await ensureIdentity(privyId);

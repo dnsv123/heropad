@@ -274,7 +274,7 @@ export default function Loyalty() {
               )}
               {typeof venue?.branding?.phone === 'string' && (
                 <a
-                  href={`tel:${venue.branding.phone as string}`}
+                  href={`tel:${venue.branding.phone}`}
                   className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
                 >
                   {t('loy.call')}

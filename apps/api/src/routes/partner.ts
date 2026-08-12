@@ -35,7 +35,6 @@ partnerRouter.use(
 );
 
 function serverError(res: Response, scope: string, err: unknown): Response {
-  // eslint-disable-next-line no-console
   console.error(`[partner.${scope}]`, (err as Error).message);
   return res.status(500).json({
     ok: false,

@@ -93,7 +93,7 @@ export async function listPartners(): Promise<PartnerRow[]> {
     .select(SELECT)
     .order('created_at', { ascending: false });
   if (error) throw new Error(`[Supabase] listPartners: ${error.message}`);
-  return (data ?? []) as PartnerRow[];
+  return (data ?? []);
 }
 
 export async function getPartnerByCode(code: string): Promise<PartnerRow | null> {
@@ -103,7 +103,7 @@ export async function getPartnerByCode(code: string): Promise<PartnerRow | null>
     .eq('code', code)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getPartnerByCode: ${error.message}`);
-  return (data as PartnerRow | null) ?? null;
+  return (data) ?? null;
 }
 
 export async function getPartnerByIdentity(identityId: string): Promise<PartnerRow | null> {
@@ -113,7 +113,7 @@ export async function getPartnerByIdentity(identityId: string): Promise<PartnerR
     .eq('identity_id', identityId)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] getPartnerByIdentity: ${error.message}`);
-  return (data as PartnerRow | null) ?? null;
+  return (data) ?? null;
 }
 
 export interface CreatePartnerInput {
@@ -148,7 +148,7 @@ export async function createPartner(
     .select(SELECT)
     .single();
   if (error) throw new Error(`[Supabase] createPartner: ${error.message}`);
-  return { partner: data as PartnerRow, claimToken };
+  return { partner: data, claimToken };
 }
 
 export async function updatePartner(
@@ -162,7 +162,7 @@ export async function updatePartner(
     .select(SELECT)
     .single();
   if (error) throw new Error(`[Supabase] updatePartner: ${error.message}`);
-  return data as PartnerRow;
+  return data;
 }
 
 export async function resetPartnerClaimToken(id: string): Promise<string> {
@@ -192,7 +192,7 @@ export async function claimPartnerWithToken(
     .select(SELECT)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] claimPartner: ${error.message}`);
-  return (data as PartnerRow | null) ?? null;
+  return (data) ?? null;
 }
 
 /**

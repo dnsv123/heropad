@@ -165,7 +165,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => {
-                  logout();
+                  void logout();
                   setMobileOpen(false);
                 }}
                 className="self-start text-xs text-slate-400 hover:text-white"
