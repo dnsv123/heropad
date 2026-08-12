@@ -38,6 +38,31 @@ function audioContext(): AudioContext | null {
   }
 }
 
+/**
+ * Wakes the audio context from inside a real tap.
+ *
+ * iOS refuses to start audio except in direct response to a user gesture, and
+ * "direct" means synchronously — the moment a handler awaits a network call,
+ * the gesture is spent. Our tones play after the grant returns, so on iPhone
+ * nothing was ever heard. Call this synchronously in the click handler; by the
+ * time the reply arrives the context is already running.
+ */
+export function primeAudio(): void {
+  if (isMuted()) return;
+  const ac = audioContext();
+  if (!ac) return;
+  // Some iOS builds only truly start after a buffer has been scheduled, so
+  // play an inaudible blip alongside the resume.
+  try {
+    const src = ac.createBufferSource();
+    src.buffer = ac.createBuffer(1, 1, 22050);
+    src.connect(ac.destination);
+    src.start(0);
+  } catch {
+    /* resume alone is enough on every other browser */
+  }
+}
+
 export function isMuted(): boolean {
   try {
     return window.localStorage.getItem(MUTE_KEY) === '1';

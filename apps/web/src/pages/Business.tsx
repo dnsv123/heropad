@@ -5,7 +5,14 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
-import { playGrant, playReward, playError, isMuted, setMuted } from '../services/soundService';
+import {
+  playGrant,
+  playReward,
+  playError,
+  primeAudio,
+  isMuted,
+  setMuted,
+} from '../services/soundService';
 import {
   enqueue,
   flush,
@@ -600,7 +607,10 @@ export default function Business() {
                     const next = !muted;
                     setMuted(next);
                     setMutedState(next);
-                    if (!next) playGrant();
+                    if (!next) {
+                      primeAudio();
+                      playGrant();
+                    }
                   }}
                   title={muted ? t('b.sound.on') : t('b.sound.off')}
                   className="shrink-0 rounded-full border border-hero-blue/25 px-2.5 py-1 text-sm text-slate-400 transition hover:border-hero-cyan hover:text-white"
@@ -682,7 +692,12 @@ export default function Business() {
                             key={n}
                             type="button"
                             disabled={busy}
-                            onClick={() => void grant(n)}
+                            onClick={() => {
+                              // Synchronously, inside the gesture: iOS will not
+                              // start audio later, once the fetch has begun.
+                              primeAudio();
+                              void grant(n);
+                            }}
                             className="rounded-full border border-hero-cyan/40 py-2.5 font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
                           >
                             +{n}
