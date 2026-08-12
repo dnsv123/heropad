@@ -325,6 +325,65 @@ loyaltyRouter.get('/me/stats', requireAuth, async (req: Request, res: Response) 
   }
 });
 
+// NOTE: every literal /me/... route MUST be registered above /me/:slug.
+// Express matches in order, so a later /me/roles is captured by the slug
+// route and answered as "no such venue" - which is exactly how this one
+// silently returned nothing the first time.
+// GET /api/loyalty/me/roles - every hat this account wears.
+//
+// Someone can be a customer, a barista at one cafe, the owner of another, and
+// a referral partner, all on one login. Without this the only way to discover
+// you had been added to a team was to be told, and the only way to reach the
+// right screen was to be sent a link.
+loyaltyRouter.get('/me/roles', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    const supa = getSupabaseAdmin();
+
+    const [seats, { data: owned, error: oErr }, partner] = await Promise.all([
+      getSeatsForIdentity(identity.id),
+      supa
+        .from('venues')
+        .select('slug, name')
+        .eq('owner_identity_id', identity.id)
+        .eq('active', true),
+      getPartnerByIdentity(identity.id),
+    ]);
+    if (oErr) throw new Error(oErr.message);
+
+    // Resolve the venues behind the seats in one query rather than per seat.
+    let staffAt: Array<{ slug: string; name: string; displayName: string }> = [];
+    if (seats.length > 0) {
+      const { data: venues, error: vErr } = await supa
+        .from('venues')
+        .select('id, slug, name')
+        .in('id', seats.map((x) => x.venueId));
+      if (vErr) throw new Error(vErr.message);
+      const byId = new Map(
+        ((venues ?? []) as Array<{ id: string; slug: string; name: string }>).map((v) => [v.id, v])
+      );
+      staffAt = seats
+        .map((seat) => {
+          const v = byId.get(seat.venueId);
+          return v ? { slug: v.slug, name: v.name, displayName: seat.displayName } : null;
+        })
+        .filter((x): x is { slug: string; name: string; displayName: string } => x !== null);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      merchantOf: (owned ?? []) as Array<{ slug: string; name: string }>,
+      staffAt,
+      partner: partner
+        ? { code: partner.code, displayName: partner.display_name, active: partner.active }
+        : null,
+    });
+  } catch (err) {
+    return serverError(res, 'me-roles', err);
+  }
+});
+
 // GET /api/loyalty/me/:slug — my code + my progress at this venue.
 // The client page polls this; it's the single source of truth for the meter.
 loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) => {
@@ -604,61 +663,6 @@ loyaltyRouter.get(
     }
   }
 );
-
-// GET /api/loyalty/me/roles - every hat this account wears.
-//
-// Someone can be a customer, a barista at one cafe, the owner of another, and
-// a referral partner, all on one login. Without this the only way to discover
-// you had been added to a team was to be told, and the only way to reach the
-// right screen was to be sent a link.
-loyaltyRouter.get('/me/roles', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const privyId = (req as AuthedRequest).privyId as string;
-    const identity = await ensureIdentity(privyId);
-    const supa = getSupabaseAdmin();
-
-    const [seats, { data: owned, error: oErr }, partner] = await Promise.all([
-      getSeatsForIdentity(identity.id),
-      supa
-        .from('venues')
-        .select('slug, name')
-        .eq('owner_identity_id', identity.id)
-        .eq('active', true),
-      getPartnerByIdentity(identity.id),
-    ]);
-    if (oErr) throw new Error(oErr.message);
-
-    // Resolve the venues behind the seats in one query rather than per seat.
-    let staffAt: Array<{ slug: string; name: string; displayName: string }> = [];
-    if (seats.length > 0) {
-      const { data: venues, error: vErr } = await supa
-        .from('venues')
-        .select('id, slug, name')
-        .in('id', seats.map((x) => x.venueId));
-      if (vErr) throw new Error(vErr.message);
-      const byId = new Map(
-        ((venues ?? []) as Array<{ id: string; slug: string; name: string }>).map((v) => [v.id, v])
-      );
-      staffAt = seats
-        .map((seat) => {
-          const v = byId.get(seat.venueId);
-          return v ? { slug: v.slug, name: v.name, displayName: seat.displayName } : null;
-        })
-        .filter((x): x is { slug: string; name: string; displayName: string } => x !== null);
-    }
-
-    return res.status(200).json({
-      ok: true,
-      merchantOf: (owned ?? []) as Array<{ slug: string; name: string }>,
-      staffAt,
-      partner: partner
-        ? { code: partner.code, displayName: partner.display_name, active: partner.active }
-        : null,
-    });
-  } catch (err) {
-    return serverError(res, 'me-roles', err);
-  }
-});
 
 // GET /api/loyalty/merchant/:slug/me — what this account may do here.
 //

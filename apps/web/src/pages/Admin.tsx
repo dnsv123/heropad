@@ -95,6 +95,9 @@ export default function Admin() {
   const [myPrivyId, setMyPrivyId] = useState<string | null>(null);
   const [allowlistSet, setAllowlistSet] = useState(true);
   const [venues, setVenues] = useState<VenueRow[]>([]);
+  /** Referral codes for the venue picker. Typing one by hand invites pasting
+      the activation code instead, which looks equally code-shaped and fails. */
+  const [partnerCodes, setPartnerCodes] = useState<Array<{ code: string; name: string }>>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -544,16 +547,19 @@ export default function Admin() {
                                   </select>
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
-                                  Brought by (partner code)
-                                  <input
-                                    defaultValue={v.partnerCode ?? ''}
-                                    placeholder="none"
-                                    onBlur={(e) => {
-                                      const code = e.target.value.trim().toUpperCase();
-                                      if (code !== (v.partnerCode ?? '')) void saveBilling(v, { partnerCode: code });
-                                    }}
-                                    className="mt-1 block w-40 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 font-mono text-sm uppercase text-white"
-                                  />
+                                  Brought by
+                                  <select
+                                    value={v.partnerCode ?? ''}
+                                    onChange={(e) => void saveBilling(v, { partnerCode: e.target.value })}
+                                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                  >
+                                    <option value="">nobody (direct)</option>
+                                    {partnerCodes.map((pc) => (
+                                      <option key={pc.code} value={pc.code}>
+                                        {pc.name} ({pc.code})
+                                      </option>
+                                    ))}
+                                  </select>
                                 </label>
                                 {v.billingStatus === 'active' && v.paidSince && (
                                   <span className="pb-1 text-[10px] text-slate-600">since {v.paidSince}</span>
@@ -829,6 +835,7 @@ export default function Admin() {
               <div>
                 <AdminPartners
                         onNotice={(kind, text) => setNotice({ kind, text })}
+                        onPartners={setPartnerCodes}
                       />
               </div>
             ),

@@ -583,7 +583,7 @@ export default function VenueHistory({
                                             onClick={() => focusCustomer(e.code)}
                                             className="rounded-full border border-hero-cyan/40 px-3 py-1 text-[11px] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
                                           >
-                                            🔍 {t('b.hist.seeall')}
+                                            {t('b.hist.seeall')} →
                                           </button>
                                         </div>
                                       </dl>

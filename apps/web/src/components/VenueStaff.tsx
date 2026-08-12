@@ -262,9 +262,11 @@ export default function VenueStaff({
                   <button
                     type="button"
                     onClick={() => onInspect(s.displayName)}
-                    className="rounded-full border border-hero-cyan/40 px-2.5 py-1 text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                    // Words, not a magnifier. An icon here reads as "search
+                    // something" when what it does is open another folder.
+                    className="rounded-full border border-hero-cyan/40 px-3 py-1 font-medium text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
                   >
-                    🔍
+                    {t('b.staff.seehistory')} →
                   </button>
                 )}
                 {!s.linked && (

@@ -49,8 +49,11 @@ const money = (n: number) => `${n.toLocaleString('ro-RO', { maximumFractionDigit
 
 export default function AdminPartners({
   onNotice,
+  onPartners,
 }: {
   onNotice: (kind: 'ok' | 'err', text: string) => void;
+  /** Feeds the venue picker, so a referral code is chosen rather than typed. */
+  onPartners?: (list: Array<{ code: string; name: string }>) => void;
 }) {
   const { getAccessToken } = usePrivy();
   const [partners, setPartners] = useState<PartnerRow[] | null>(null);
@@ -74,12 +77,17 @@ export default function AdminPartners({
         at ?? undefined
       );
       setPartners(r.partners);
+      onPartners?.(
+        r.partners
+          .filter((p) => p.partner.active)
+          .map((p) => ({ code: p.partner.code, name: p.partner.displayName }))
+      );
     } catch (err) {
       onNotice('err', (err as ApiClientError).message);
     } finally {
       setBusy(false);
     }
-  }, [getAccessToken, onNotice]);
+  }, [getAccessToken, onNotice, onPartners]);
 
   useEffect(() => {
     void load();
@@ -242,7 +250,10 @@ export default function AdminPartners({
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-white">
                     {p.partner.displayName}{' '}
-                    <span className="font-mono text-xs tracking-widest text-hero-gold">
+                    <span
+                      title="Referral code — pick this in a venue's Brought by"
+                      className="font-mono text-xs tracking-widest text-hero-gold"
+                    >
                       {p.partner.code}
                     </span>
                     {!p.partner.active && (
@@ -273,7 +284,7 @@ export default function AdminPartners({
                       </span>
                     ) : p.claimToken ? (
                       <span className="rounded-full border border-hero-gold/30 bg-hero-gold/10 px-2 py-0.5 text-hero-gold">
-                        activation code:{' '}
+                        one-time login code (send with /partner):{' '}
                         <strong className="font-mono tracking-widest">{p.claimToken}</strong>
                       </span>
                     ) : (
@@ -373,9 +384,10 @@ export default function AdminPartners({
       </div>
 
       <p className="mt-4 text-[10px] leading-relaxed text-slate-600">
-        Commission counts only venues with billing status <strong>active</strong>. Set a venue's
-        fee, status and “Brought by” in its own card above — those three fields are what every
-        number here is computed from.
+        Two different codes, on purpose: the <strong>referral code</strong> (e.g. SI-VALENTIN)
+        is what you pick under a venue's “Brought by”, and the <strong>one-time login
+        code</strong> is what the partner types once at /partner to claim their account.
+        Commission counts only venues with billing status <strong>active</strong>.
       </p>
     </div>
   );
