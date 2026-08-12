@@ -97,7 +97,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     const { data: venues, error } = await supa
       .from('venues')
       .select(
-        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, created_at'
+        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats, created_at'
       )
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -118,6 +118,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
       billing_status: string | null;
       paid_since: string | null;
       referred_by: string | null;
+      staff_seats: number | null;
       created_at: string;
     }>;
 
@@ -134,16 +135,39 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     }
 
     // Per-venue activity — small volumes at pilot scale, counted in one pass.
-    const [{ data: stamps }, { data: rewards }] = await Promise.all([
-      supa.from('stamps').select('venue_id, user_identity_id'),
+    const [{ data: stamps }, { data: rewards }, { data: staffRows }] = await Promise.all([
+      supa.from('stamps').select('venue_id, user_identity_id, created_at'),
       supa.from('rewards_redeemed').select('venue_id'),
+      supa.from('venue_staff').select('venue_id, active, identity_id'),
     ]);
+
+    // How many team seats each venue actually uses, and how many are still
+    // waiting on their code — the two numbers that say whether a café has
+    // really adopted the tool or just signed for it.
+    const staffBy = new Map<string, { active: number; pending: number }>();
+    for (const st of (staffRows ?? []) as Array<{
+      venue_id: string;
+      active: boolean;
+      identity_id: string | null;
+    }>) {
+      const cur = staffBy.get(st.venue_id) ?? { active: 0, pending: 0 };
+      if (st.active) cur.active += 1;
+      if (!st.identity_id) cur.pending += 1;
+      staffBy.set(st.venue_id, cur);
+    }
+    const lastStampBy = new Map<string, string>();
     const stampsBy = new Map<string, number>();
     const customersBy = new Map<string, Set<string>>();
-    for (const s of (stamps ?? []) as Array<{ venue_id: string; user_identity_id: string }>) {
+    for (const s of (stamps ?? []) as Array<{
+      venue_id: string;
+      user_identity_id: string;
+      created_at: string;
+    }>) {
       stampsBy.set(s.venue_id, (stampsBy.get(s.venue_id) ?? 0) + 1);
       if (!customersBy.has(s.venue_id)) customersBy.set(s.venue_id, new Set());
       customersBy.get(s.venue_id)!.add(s.user_identity_id);
+      const prev = lastStampBy.get(s.venue_id);
+      if (!prev || s.created_at > prev) lastStampBy.set(s.venue_id, s.created_at);
     }
     const rewardsBy = new Map<string, number>();
     for (const r of (rewards ?? []) as Array<{ venue_id: string }>) {
@@ -168,6 +192,10 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         paidSince: v.paid_since,
         partnerCode: v.referred_by ? (partnerCodeById.get(v.referred_by) ?? null) : null,
         createdAt: v.created_at,
+        staffSeats: Number(v.staff_seats ?? 2),
+        staffActive: staffBy.get(v.id)?.active ?? 0,
+        staffPending: staffBy.get(v.id)?.pending ?? 0,
+        lastStampAt: lastStampBy.get(v.id) ?? null,
         stats: {
           stamps: stampsBy.get(v.id) ?? 0,
           customers: customersBy.get(v.id)?.size ?? 0,

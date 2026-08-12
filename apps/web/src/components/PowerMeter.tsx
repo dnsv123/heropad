@@ -31,6 +31,8 @@ export default function PowerMeter({
   const clamped = Math.min(Math.max(current, 0), required);
   const pct = required > 0 ? (clamped / required) * 100 : 0;
   const isFull = clamped >= required && required > 0;
+  /** The last stamp before a reward — the moment worth interrupting for. */
+  const oneLeft = !isFull && required - clamped === 1;
 
   // Level art: coffee-themed SuperVictor poses, one per progress level.
   // Files live at public/loyalty/levels/level-1.png … level-10.png. Progress is
@@ -140,7 +142,25 @@ export default function PowerMeter({
       </div>
 
       {/* ---- Energy bar ---- */}
-      <div className="relative mt-4 h-7 w-full overflow-hidden rounded-full border border-hero-blue/30 bg-hero-deep/80">
+      <motion.div
+        className="relative mt-4 h-7 w-full overflow-hidden rounded-full border bg-hero-deep/80"
+        // One stamp left is the moment that decides whether a second coffee
+        // happens today. The meter stops being a progress bar and starts
+        // asking for something.
+        animate={
+          oneLeft
+            ? {
+                borderColor: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,0.95)', 'rgba(245,200,66,0.35)'],
+                boxShadow: [
+                  '0 0 0px rgba(245,200,66,0)',
+                  '0 0 18px rgba(245,200,66,0.45)',
+                  '0 0 0px rgba(245,200,66,0)',
+                ],
+              }
+            : { borderColor: 'rgba(30,95,186,0.3)', boxShadow: '0 0 0px rgba(245,200,66,0)' }
+        }
+        transition={oneLeft ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
+      >
         <motion.div
           className="absolute inset-y-0 left-0"
           style={{ background: 'linear-gradient(90deg, #5DD3FF 0%, #3B9DDC 45%, #F5C842 100%)' }}
@@ -162,18 +182,20 @@ export default function PowerMeter({
             <div key={i} className="flex-1 border-r border-hero-deep/70 last:border-r-0" />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* ---- Status line ---- */}
       <div className="mt-3 text-center text-sm">
         {isFull ? (
           <span className="font-semibold text-hero-gold">{t('meter.full')}</span>
         ) : (
-          <span className="text-slate-400">
-            {required - clamped === 1
-              ? t('meter.more.one')
-              : t('meter.more.many', { n: required - clamped })}
-          </span>
+          <motion.span
+            className={oneLeft ? 'font-semibold text-hero-gold' : 'text-slate-400'}
+            animate={oneLeft ? { opacity: [0.75, 1, 0.75] } : { opacity: 1 }}
+            transition={oneLeft ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}
+          >
+            {oneLeft ? t('meter.more.one') : t('meter.more.many', { n: required - clamped })}
+          </motion.span>
         )}
       </div>
       <button

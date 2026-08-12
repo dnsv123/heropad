@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
+import { playGrant, playReward, playError, isMuted, setMuted } from '../services/soundService';
 import { useT } from '../i18n';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
@@ -77,6 +78,10 @@ export default function Business() {
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
   const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
+  const [today, setToday] = useState<{ stamps: number; rewards: number; customers: number } | null>(
+    null
+  );
+  const [muted, setMutedState] = useState(() => isMuted());
   const [setRequired, setSetRequired] = useState('');
   const [setReward, setSetReward] = useState('');
   const [setReview, setSetReview] = useState('');
@@ -118,6 +123,30 @@ export default function Business() {
   useEffect(() => {
     if (ready && authenticated) void probeOwnership();
   }, [ready, authenticated, probeOwnership]);
+
+  /**
+   * The shift summary. Sent with the device's local midnight, because a café's
+   * day ends when they close, not when UTC rolls over.
+   */
+  const loadToday = useCallback(async () => {
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const midnight = new Date();
+      midnight.setHours(0, 0, 0, 0);
+      const r = await getJson<{ ok: true; stamps: number; rewards: number; customers: number }>(
+        `/api/loyalty/merchant/${slug}/today?since=${encodeURIComponent(midnight.toISOString())}`,
+        token
+      );
+      setToday({ stamps: r.stamps, rewards: r.rewards, customers: r.customers });
+    } catch {
+      // A missing summary must never block the counter.
+    }
+  }, [slug, getAccessToken]);
+
+  useEffect(() => {
+    if (ready && authenticated && isOwner !== false) void loadToday();
+  }, [ready, authenticated, isOwner, loadToday]);
 
   async function handleClaimOwnership() {
     setClaiming(true);
@@ -181,7 +210,11 @@ export default function Business() {
         token ?? undefined
       );
       hapticTap(15);
+      // The card completing is the moment worth hearing across the bar.
+      if (r.canRedeem) playReward();
+      else playGrant();
       setCustomer({ ...customer, stamps: r.stamps, canRedeem: r.canRedeem });
+      void loadToday();
       setNotice({
         kind: 'ok',
         text:
@@ -189,6 +222,7 @@ export default function Business() {
           (r.happyHour ? ` ⚡ HAPPY HOUR x${r.happyHour}` : ''),
       });
     } catch (err) {
+      playError();
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
       setBusy(false);
@@ -416,6 +450,41 @@ export default function Business() {
             </div>
           ) : (
             <>
+              {/* Shift summary — the first thing an owner wants in the morning,
+                  and the running total a barista glances at during service. */}
+              <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-hero-blue/20 bg-hero-deep/60 px-4 py-2.5">
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="text-slate-500">{t('b.today')}</span>
+                  <span className="text-hero-cyan">
+                    <b className="font-display text-base">{today?.stamps ?? 0}</b>{' '}
+                    {t('b.today.stamps')}
+                  </span>
+                  <span className="text-hero-gold">
+                    <b className="font-display text-base">{today?.rewards ?? 0}</b>{' '}
+                    {t('b.today.rewards')}
+                  </span>
+                  <span className="hidden text-slate-400 sm:inline">
+                    <b className="font-display text-base">{today?.customers ?? 0}</b>{' '}
+                    {t('b.today.customers')}
+                  </span>
+                </div>
+                {/* A café that finds the tone annoying would otherwise mute the
+                    whole phone and lose the haptics with it. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !muted;
+                    setMuted(next);
+                    setMutedState(next);
+                    if (!next) playGrant();
+                  }}
+                  title={muted ? t('b.sound.on') : t('b.sound.off')}
+                  className="shrink-0 rounded-full border border-hero-blue/25 px-2.5 py-1 text-sm text-slate-400 transition hover:border-hero-cyan hover:text-white"
+                >
+                  {muted ? '🔇' : '🔊'}
+                </button>
+              </div>
+
               {/* Customer code entry */}
               <label htmlFor="code" className="text-xs uppercase tracking-wider text-slate-500">
                 {t('b.code.label')}

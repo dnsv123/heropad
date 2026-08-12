@@ -26,6 +26,10 @@ interface VenueRow {
   billingStatus: string;
   paidSince: string | null;
   partnerCode: string | null;
+  staffSeats: number;
+  staffActive: number;
+  staffPending: number;
+  lastStampAt: string | null;
   stats: { stamps: number; customers: number; rewards: number };
 }
 
@@ -665,7 +669,28 @@ export default function Admin() {
 
               <p className="mt-2 text-xs text-slate-400">
                 ☕ {v.stats.stamps} stamps · 👤 {v.stats.customers} customers · 🎁{' '}
-                {v.stats.rewards} rewards
+                {v.stats.rewards} rewards · 👥 {v.staffActive}/{v.staffSeats} team
+                {v.staffPending > 0 && (
+                  <span className="text-hero-gold"> ({v.staffPending} not activated)</span>
+                )}
+              </p>
+              {/* Adoption, not vanity: a venue with no activity for days is a
+                  venue about to churn, and it is the only signal that arrives
+                  before the cancellation email. */}
+              <p className="mt-1 text-[11px]">
+                {(() => {
+                  if (!v.lastStampAt) {
+                    return <span className="text-slate-600">no activity yet</span>;
+                  }
+                  const days = Math.floor(
+                    (Date.now() - new Date(v.lastStampAt).getTime()) / 86400000
+                  );
+                  const tone =
+                    days <= 1 ? 'text-solana-green' : days <= 6 ? 'text-slate-400' : 'text-red-300';
+                  const label =
+                    days === 0 ? 'active today' : days === 1 ? 'active yesterday' : `quiet ${days} days`;
+                  return <span className={tone}>● {label}</span>;
+                })()}
               </p>
 
               {/* Billing + who brought this venue — the inputs to commission */}

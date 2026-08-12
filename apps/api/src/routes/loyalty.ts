@@ -39,6 +39,7 @@ import {
   markRedeemCodeUsed,
   getUserLoyaltyStats,
   getVenueAnalytics,
+  getVenueToday,
   getVenueHistory,
   updateVenueSettings,
   setMarketingConsent,
@@ -558,6 +559,36 @@ loyaltyRouter.get(
       return res.status(200).json({ ok: true, ...analytics });
     } catch (err) {
       return serverError(res, 'merchant-stats', err);
+    }
+  }
+);
+
+// GET /api/loyalty/merchant/:slug/today — the shift summary above the counter.
+// Counter-level (owner OR staff): it is their shift too, and it is counts only.
+loyaltyRouter.get(
+  '/merchant/:slug/today',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+
+      // The café's day, not UTC's: the client sends its own local midnight.
+      const raw = queryString(req.query.since);
+      const parsed = raw && !Number.isNaN(Date.parse(raw)) ? new Date(raw) : null;
+      const now = Date.now();
+      // Clamp to the last 48h so a crafted value cannot turn this into a
+      // full-table scan dressed up as a shift summary.
+      const since =
+        parsed && now - parsed.getTime() < 48 * 3600_000 && parsed.getTime() <= now
+          ? parsed
+          : new Date(now - 24 * 3600_000);
+
+      const today = await getVenueToday(owned.venue.id, since.toISOString());
+      return res.status(200).json({ ok: true, ...today });
+    } catch (err) {
+      return serverError(res, 'merchant-today', err);
     }
   }
 );

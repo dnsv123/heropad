@@ -957,3 +957,48 @@ export async function getVenueHistory(
   events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
   return events.slice(0, q.limit);
 }
+
+// --- Shift summary (counter view) -------------------------------------------
+
+export interface VenueToday {
+  stamps: number;
+  rewards: number;
+  customers: number;
+  /** Local-day boundary the counts were taken from, ISO. */
+  since: string;
+}
+
+/**
+ * What happened at this venue today. Deliberately counts only — this is shown
+ * to staff as well as the owner, and a shift summary has no business carrying
+ * customer codes.
+ *
+ * `sinceIso` comes from the client's local midnight: a café's "today" ends
+ * when they close, not when UTC rolls over.
+ */
+export async function getVenueToday(venueId: string, sinceIso: string): Promise<VenueToday> {
+  const supa = getSupabaseAdmin();
+  const [{ data: stampRows, error: sErr }, { count: rewardCount, error: rErr }] =
+    await Promise.all([
+      supa
+        .from('stamps')
+        .select('user_identity_id')
+        .eq('venue_id', venueId)
+        .gte('created_at', sinceIso),
+      supa
+        .from('rewards_redeemed')
+        .select('id', { count: 'exact', head: true })
+        .eq('venue_id', venueId)
+        .gte('redeemed_at', sinceIso),
+    ]);
+  if (sErr) throw new Error(`[Supabase] venueToday stamps: ${sErr.message}`);
+  if (rErr) throw new Error(`[Supabase] venueToday rewards: ${rErr.message}`);
+
+  const rows = (stampRows ?? []) as Array<{ user_identity_id: string }>;
+  return {
+    stamps: rows.length,
+    rewards: rewardCount ?? 0,
+    customers: new Set(rows.map((r) => r.user_identity_id)).size,
+    since: sinceIso,
+  };
+}
