@@ -66,6 +66,8 @@ export interface PartnerSummary {
     venuesTrial: number;
     monthlyCommission: number;
   };
+  /** Recorded months — what was actually earned, and what is still owed. */
+  payouts: PayoutRow[];
 }
 
 const SELECT = `id, code, display_name, city, email, identity_id, claim_token,
@@ -261,7 +263,10 @@ export async function getPartnerSummary(partner: PartnerRow): Promise<PartnerSum
     };
   });
 
+  const payouts = await listPayouts(partner.id);
+
   return {
+    payouts,
     partner: {
       code: partner.code,
       displayName: partner.display_name,
@@ -303,4 +308,102 @@ export async function getPartnersOverview(): Promise<PartnerOverviewRow[]> {
     });
   }
   return out;
+}
+
+// --- Payout ledger -----------------------------------------------------------
+
+export interface PayoutRow {
+  id: string;
+  period: string;
+  amount: number;
+  venues: number;
+  paidAt: string | null;
+  note: string | null;
+}
+
+/**
+ * A payout is a statement, not a calculation.
+ *
+ * The live commission figure is derived from today's billing status, so a
+ * venue paused on the 28th would erase the month. Writing the month down when
+ * it closes is what makes the number something a partner can rely on — and
+ * what lets them see, months later, exactly what they were paid and for what.
+ */
+export async function listPayouts(partnerId: string): Promise<PayoutRow[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('partner_payouts')
+    .select('id, period, amount, venues, paid_at, note')
+    .eq('partner_id', partnerId)
+    .order('period', { ascending: false });
+  if (error) throw new Error(`[Supabase] listPayouts: ${error.message}`);
+  return ((data ?? []) as Array<{
+    id: string;
+    period: string;
+    amount: number | string;
+    venues: number;
+    paid_at: string | null;
+    note: string | null;
+  }>).map((r) => ({
+    id: r.id,
+    period: r.period,
+    amount: Number(r.amount ?? 0),
+    venues: r.venues,
+    paidAt: r.paid_at,
+    note: r.note,
+  }));
+}
+
+export interface UpsertPayoutInput {
+  partnerId: string;
+  period: string;
+  amount: number;
+  venues: number;
+  paidAt?: string | null;
+  note?: string | null;
+}
+
+/** Record or correct one month. Re-recording a month replaces that month. */
+export async function upsertPayout(input: UpsertPayoutInput): Promise<PayoutRow> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('partner_payouts')
+    .upsert(
+      {
+        partner_id: input.partnerId,
+        period: input.period,
+        amount: input.amount,
+        venues: input.venues,
+        paid_at: input.paidAt ?? null,
+        note: input.note ?? null,
+      },
+      { onConflict: 'partner_id,period' }
+    )
+    .select('id, period, amount, venues, paid_at, note')
+    .single();
+  if (error) throw new Error(`[Supabase] upsertPayout: ${error.message}`);
+  const r = data;
+  return {
+    id: r.id,
+    period: r.period,
+    amount: Number(r.amount ?? 0),
+    venues: r.venues,
+    paidAt: r.paid_at,
+    note: r.note,
+  };
+}
+
+export async function markPayoutPaid(
+  id: string,
+  partnerId: string,
+  paid: boolean
+): Promise<boolean> {
+  // partner_id in the filter as well as the id, so a payout belonging to
+  // someone else cannot be settled by mistake.
+  const { data, error } = await getSupabaseAdmin()
+    .from('partner_payouts')
+    .update({ paid_at: paid ? new Date().toISOString() : null })
+    .eq('id', id)
+    .eq('partner_id', partnerId)
+    .select('id');
+  if (error) throw new Error(`[Supabase] markPayoutPaid: ${error.message}`);
+  return (data?.length ?? 0) > 0;
 }

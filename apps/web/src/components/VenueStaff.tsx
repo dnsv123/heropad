@@ -307,6 +307,69 @@ export default function VenueStaff({
         </p>
       )}
 
+{/* Performance, compared. Bars rather than a pie or a gauge: the
+          question is "who did more, and by how much", and length is the one
+          encoding people read accurately at a glance. Same gradient as the
+          customer power meter, so the app keeps one visual language. */}
+      {(() => {
+        const active = (data?.staff ?? []).filter((x) => x.linked && x.activity);
+        if (active.length < 1) return null;
+        const max = Math.max(...active.map((x) => x.activity?.granted30d ?? 0), 1);
+        const total = active.reduce((n, x) => n + (x.activity?.granted30d ?? 0), 0);
+        if (total === 0) return null;
+        return (
+          <div className="mt-5 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 p-4">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('b.staff.chart')}
+              </p>
+              <p className="text-[10px] text-slate-600">{t('b.staff.chart.total').replace('{n}', String(total))}</p>
+            </div>
+            <div className="mt-3 space-y-2.5">
+              {active
+                .slice()
+                .sort((a, b) => (b.activity?.granted30d ?? 0) - (a.activity?.granted30d ?? 0))
+                .map((x) => {
+                  const n = x.activity?.granted30d ?? 0;
+                  const pct = Math.round((n / max) * 100);
+                  const share = Math.round((n / total) * 100);
+                  return (
+                    <div key={x.id}>
+                      <div className="flex items-baseline justify-between text-[11px]">
+                        <span className="truncate text-slate-300">{x.displayName}</span>
+                        <span className="ml-2 shrink-0 text-slate-500">
+                          <b className="font-display text-sm text-white">{n}</b>
+                          <span className="ml-1 text-slate-600">{share}%</span>
+                        </span>
+                      </div>
+                      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-hero-deep/80">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.max(3, pct)}%` }}
+                          transition={{ type: 'spring', stiffness: 90, damping: 18 }}
+                          className="h-full rounded-full"
+                          style={{
+                            background:
+                              'linear-gradient(90deg,#5DD3FF 0%,#3B9DDC 45%,#F5C842 100%)',
+                          }}
+                        />
+                      </div>
+                      {(x.activity?.revoked30d ?? 0) > 0 && (
+                        <p className="mt-0.5 text-[10px] text-red-300/70">
+                          {t('b.staff.revokes').replace('{n}', String(x.activity?.revoked30d))}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+            <p className="mt-3 text-[10px] leading-relaxed text-slate-600">
+              {t('b.staff.chart.note')}
+            </p>
+          </div>
+        );
+      })()}
+
       <p className="mt-4 text-[10px] leading-relaxed text-slate-600">{t('b.staff.note')}</p>
     </div>
   );

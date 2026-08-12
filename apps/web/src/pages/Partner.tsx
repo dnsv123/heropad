@@ -30,6 +30,15 @@ interface PartnerVenue {
   commission: number;
 }
 
+interface Payout {
+  id: string;
+  period: string;
+  amount: number;
+  venues: number;
+  paidAt: string | null;
+  note: string | null;
+}
+
 interface PartnerData {
   ok: true;
   isPartner: boolean;
@@ -49,6 +58,7 @@ interface PartnerData {
     venuesTrial: number;
     monthlyCommission: number;
   };
+  payouts?: Payout[];
 }
 
 const STATUS: Record<string, { ro: string; en: string; tone: string }> = {
@@ -300,6 +310,46 @@ export default function Partner() {
           );
         })}
       </ul>
+
+      {/* The ledger. The figure above is what this month is running at; these
+          rows are closed months that no longer move. */}
+      <h2 className="mt-8 font-display text-lg font-semibold text-white">{t('pt.payouts')}</h2>
+      <p className="mt-1 text-xs text-slate-500">{t('pt.payouts.rule')}</p>
+
+      {(data?.payouts ?? []).length === 0 ? (
+        <p className="mt-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-6 text-center text-xs text-slate-500">
+          {t('pt.payouts.empty')}
+        </p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {(data?.payouts ?? []).map((x) => (
+            <li
+              key={x.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-3"
+            >
+              <div>
+                <p className="font-mono text-sm text-white">{x.period}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {x.venues} {x.venues === 1 ? t('pt.venue.one') : t('pt.venue.many')}
+                  {x.note ? ` · ${x.note}` : ''}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-display font-bold text-hero-gold">{money(x.amount)}</p>
+                <p className="text-[10px]">
+                  {x.paidAt ? (
+                    <span className="text-solana-green">
+                      ✓ {t('pt.paid')} {x.paidAt.slice(0, 10)}
+                    </span>
+                  ) : (
+                    <span className="text-hero-gold/80">{t('pt.owed')}</span>
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {error && (
         <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">

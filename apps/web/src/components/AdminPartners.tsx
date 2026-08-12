@@ -22,6 +22,15 @@ interface PartnerVenue {
   commission: number;
 }
 
+interface Payout {
+  id: string;
+  period: string;
+  amount: number;
+  venues: number;
+  paidAt: string | null;
+  note: string | null;
+}
+
 interface PartnerRow {
   id: string;
   email: string | null;
@@ -43,6 +52,7 @@ interface PartnerRow {
     venuesTrial: number;
     monthlyCommission: number;
   };
+  payouts: Payout[];
 }
 
 const money = (n: number) => `${n.toLocaleString('ro-RO', { maximumFractionDigits: 2 })} lei`;
@@ -135,6 +145,49 @@ export default function AdminPartners({
         at ?? undefined
       );
       onNotice('ok', `New activation code for ${code}: ${r.activationCode}`);
+      await load();
+    } catch (err) {
+      onNotice('err', (err as ApiClientError).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** The month that just closed - what you settle on the 10th. */
+  function lastPeriod(): string {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  async function recordPayout(p: PartnerRow, period: string, amount: number, paid: boolean) {
+    setBusy(true);
+    try {
+      const at = await getAccessToken();
+      await postJson(
+        `/api/admin/partners/${p.partner.code}/payouts`,
+        { period, amount, venues: p.totals.venuesPaying, paid },
+        at ?? undefined
+      );
+      await load();
+      onNotice('ok', `${p.partner.code}: ${period} recorded (${money(amount)}).`);
+    } catch (err) {
+      onNotice('err', (err as ApiClientError).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function togglePaid(p: PartnerRow, payout: Payout) {
+    setBusy(true);
+    try {
+      const at = await getAccessToken();
+      await postJson(
+        `/api/admin/partners/${p.partner.code}/payouts/${payout.id}/paid`,
+        { paid: !payout.paidAt },
+        at ?? undefined
+      );
       await load();
     } catch (err) {
       onNotice('err', (err as ApiClientError).message);
@@ -376,6 +429,77 @@ export default function AdminPartners({
                       )}
                     </tbody>
                   </table>
+
+                  {/* Payout ledger. The live figure above moves with today's
+                      billing status; these rows are what was actually earned,
+                      and they stop moving once written. */}
+                  <div className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/50 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] uppercase tracking-wider text-slate-500">
+                        Payout ledger
+                      </p>
+                      {!p.payouts.some((x) => x.period === lastPeriod()) &&
+                        p.totals.monthlyCommission > 0 && (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              void recordPayout(
+                                p,
+                                lastPeriod(),
+                                p.totals.monthlyCommission,
+                                false
+                              )
+                            }
+                            className="rounded-full bg-hero-gold px-3 py-1 text-[11px] font-semibold text-hero-deep disabled:opacity-40"
+                          >
+                            Close {lastPeriod()} → {money(p.totals.monthlyCommission)}
+                          </button>
+                        )}
+                    </div>
+
+                    {p.payouts.length === 0 ? (
+                      <p className="mt-2 text-[11px] text-slate-600">
+                        Nothing recorded yet. Close a month here, pay by bank transfer, then
+                        tick it — the partner sees the same rows.
+                      </p>
+                    ) : (
+                      <ul className="mt-2 space-y-1">
+                        {p.payouts.map((x) => (
+                          <li
+                            key={x.id}
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hero-deep/60 px-3 py-2 text-xs"
+                          >
+                            <span className="text-slate-300">
+                              <b className="font-mono">{x.period}</b>
+                              <span className="ml-2 text-slate-500">
+                                {x.venues} venue{x.venues === 1 ? '' : 's'}
+                              </span>
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <span className="font-semibold text-hero-gold">
+                                {money(x.amount)}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() => void togglePaid(p, x)}
+                                className={`rounded-full border px-2.5 py-0.5 text-[10px] transition disabled:opacity-40 ${
+                                  x.paidAt
+                                    ? 'border-solana-green/40 bg-solana-green/10 text-solana-green'
+                                    : 'border-hero-gold/40 text-hero-gold hover:bg-hero-gold hover:text-hero-deep'
+                                }`}
+                              >
+                                {x.paidAt
+                                  ? `✓ paid ${x.paidAt.slice(0, 10)}`
+                                  : 'Mark paid'}
+                              </button>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

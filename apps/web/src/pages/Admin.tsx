@@ -502,6 +502,14 @@ export default function Admin() {
                               {/* Adoption, not vanity: a venue with no activity for days is a
                                   venue about to churn, and it is the only signal that arrives
                                   before the cancellation email. */}
+                              {v.claimed && v.staffActive === 0 && (
+                                // Signed, but nobody works the counter yet.
+                                // This is the adoption problem that looks fine
+                                // in every other number on the card.
+                                <p className="mt-2 rounded-lg border border-hero-gold/40 bg-hero-gold/10 px-3 py-1.5 text-[11px] text-hero-gold">
+                                  ⚠ No team account activated — the owner has not set up any staff.
+                                </p>
+                              )}
                               <p className="mt-1 text-[11px]">
                                 {(() => {
                                   if (!v.lastStampAt) {

@@ -18,8 +18,10 @@ import {
   getPartnerByCode,
   getPartnersOverview,
   resetPartnerClaimToken,
+  markPayoutPaid,
   suggestPartnerCode,
   updatePartner,
+  upsertPayout,
 } from '../lib/partners-db.js';
 
 // Admin routes — the operator's control panel (Valentin only).
@@ -963,6 +965,72 @@ adminRouter.post('/partners/:code/reset-code', async (req: Request, res: Respons
     return res.status(200).json({ ok: true, activationCode: token });
   } catch (err) {
     return serverError(res, 'partner-reset', err);
+  }
+});
+
+const PayoutBody = z.object({
+  period: z.string().regex(/^\d{4}-\d{2}$/, 'Period must be YYYY-MM'),
+  amount: z.number().min(0).max(1_000_000),
+  venues: z.number().int().min(0).max(10_000).default(0),
+  note: z.string().trim().max(200).optional(),
+  paid: z.boolean().default(false),
+});
+
+// POST /api/admin/partners/:code/payouts - record (or correct) one month.
+//
+// The live commission figure is derived from today's billing status; this is
+// the month written down. Defaulting the amount to what is currently owed
+// keeps the common case one click, while still allowing a correction.
+adminRouter.post('/partners/:code/payouts', async (req: Request, res: Response) => {
+  try {
+    const partner = await getPartnerByCode(req.params.code.toUpperCase());
+    if (!partner) {
+      return res
+        .status(404)
+        .json({ ok: false, error: 'unknown_partner', message: 'No such partner.' });
+    }
+    const parsed = PayoutBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => i.message).join('; '),
+      });
+    }
+    const i = parsed.data;
+    const row = await upsertPayout({
+      partnerId: partner.id,
+      period: i.period,
+      amount: i.amount,
+      venues: i.venues,
+      paidAt: i.paid ? new Date().toISOString() : null,
+      note: i.note ?? null,
+    });
+    return res.status(200).json({ ok: true, payout: row });
+  } catch (err) {
+    return serverError(res, 'payout-upsert', err);
+  }
+});
+
+// POST /api/admin/partners/:code/payouts/:id/paid - settle or un-settle.
+adminRouter.post('/partners/:code/payouts/:id/paid', async (req: Request, res: Response) => {
+  try {
+    const partner = await getPartnerByCode(req.params.code.toUpperCase());
+    if (!partner) {
+      return res
+        .status(404)
+        .json({ ok: false, error: 'unknown_partner', message: 'No such partner.' });
+    }
+    const paid = (req.body as { paid?: unknown })?.paid !== false;
+    const ok = await markPayoutPaid(req.params.id, partner.id, paid);
+    if (!ok) {
+      return res
+        .status(404)
+        .json({ ok: false, error: 'unknown_payout', message: 'No such payout.' });
+    }
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return serverError(res, 'payout-paid', err);
   }
 });
 
