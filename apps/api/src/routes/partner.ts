@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import { claimAttemptLimiter } from '../middleware/claim-limit.js';
 import { ensureIdentity } from '../lib/loyalty-db.js';
 import {
   claimPartnerWithToken,
@@ -72,7 +73,11 @@ const ClaimBody = z.object({
 });
 
 // POST /api/partner/claim — bind this logged-in account to a partner record.
-partnerRouter.post('/claim', requireAuth, async (req: Request, res: Response) => {
+partnerRouter.post(
+  '/claim',
+  requireAuth,
+  claimAttemptLimiter,
+  async (req: Request, res: Response) => {
   try {
     const parsed = ClaimBody.safeParse(req.body);
     if (!parsed.success) {
@@ -106,6 +111,7 @@ partnerRouter.post('/claim', requireAuth, async (req: Request, res: Response) =>
     const summary = await getPartnerSummary(partner);
     return res.status(200).json({ ok: true, isPartner: true, ...summary });
   } catch (err) {
-    return serverError(res, 'claim', err);
+      return serverError(res, 'claim', err);
+    }
   }
-});
+);

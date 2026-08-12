@@ -250,6 +250,7 @@ adminRouter.post('/venues', async (req: Request, res: Response) => {
         gps_lat: input.gpsLat ?? null,
         gps_lng: input.gpsLng ?? null,
         claim_token: code,
+        claim_expires_at: new Date(Date.now() + 14 * 24 * 3600_000).toISOString(),
         active: true,
       });
     if (error) throw new Error(error.message);
@@ -350,7 +351,10 @@ adminRouter.post('/venues/:slug/reset-setup-code', async (req: Request, res: Res
     }
     const detach = req.body?.detachOwner === true;
     const code = setupCode();
-    const patch: Record<string, unknown> = { claim_token: code };
+    const patch: Record<string, unknown> = {
+      claim_token: code,
+      claim_expires_at: new Date(Date.now() + 14 * 24 * 3600_000).toISOString(),
+    };
     if (detach) patch.owner_identity_id = null;
 
     const { error } = await getSupabaseAdmin().from('venues').update(patch).eq('id', venue.id);
@@ -908,6 +912,10 @@ export async function claimVenueByCodeOnly(
     .from('venues')
     .select('id, slug, name, active')
     .eq('claim_token', code)
+    // An owned venue is never transferable by code alone; an admin must
+    // explicitly detach the current merchant first.
+    .is('owner_identity_id', null)
+    .gt('claim_expires_at', new Date().toISOString())
     .maybeSingle();
   if (error) throw new Error(`[Supabase] claimVenueByCodeOnly: ${error.message}`);
   if (!match) return { ok: false };
@@ -919,7 +927,7 @@ export async function claimVenueByCodeOnly(
   // Atomic: only lands while the token still matches, and clears it.
   const { data, error: updErr } = await supa
     .from('venues')
-    .update({ owner_identity_id: identity.id, claim_token: null })
+    .update({ owner_identity_id: identity.id, claim_token: null, claim_expires_at: null })
     .eq('id', venue.id)
     .eq('claim_token', code)
     .select('id');
@@ -945,9 +953,11 @@ export async function claimVenueWithToken(
   // can never be used twice, and it's cleared in the same statement.
   const { data, error } = await supa
     .from('venues')
-    .update({ owner_identity_id: identity.id, claim_token: null })
+    .update({ owner_identity_id: identity.id, claim_token: null, claim_expires_at: null })
     .eq('id', venue.id)
     .eq('claim_token', token.trim().toUpperCase())
+    .is('owner_identity_id', null)
+    .gt('claim_expires_at', new Date().toISOString())
     .select('id');
   if (error) throw new Error(`[Supabase] claimVenueWithToken: ${error.message}`);
   return (data?.length ?? 0) > 0 ? 'ok' : 'bad_token';

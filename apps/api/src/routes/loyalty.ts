@@ -8,6 +8,7 @@ import {
   type AuthedRequest,
 } from '../middleware/auth.js';
 import { queryString } from '../lib/query.js';
+import { claimAttemptLimiter } from '../middleware/claim-limit.js';
 import {
   addStaff,
   claimStaffSeat,
@@ -94,6 +95,20 @@ const MAX_STAMPS_PER_DAY = (() => {
 // trips on farming — the cost of which lands on OUR admin wallet on mainnet.
 // Hitting it never costs a customer their reward: the redemption completes and
 // only the on-chain mint waits, so the ceiling can afford to be generous.
+// Hoisted and guarded for the same reason as the caps below: `Number('1,000')`
+// is NaN, and a NaN amount is serialised as null, rejected by the ledger, and
+// swallowed — BITS would silently stop being credited with only a log line.
+/** Seats included by the plan. Fails CLOSED — a bad value must not mean "no limit". */
+function seatLimit(raw: unknown): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 2;
+}
+
+const TROPHY_BITS_REWARD = (() => {
+  const parsed = Number(process.env.TROPHY_BITS_REWARD);
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 1000;
+})();
+
 const MAX_TROPHIES_PER_VENUE_DAY = (() => {
   const parsed = Number(process.env.TROPHY_DAILY_CAP);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
@@ -412,6 +427,7 @@ loyaltyRouter.post(
 loyaltyRouter.post(
   '/venue/:slug/claim-ownership',
   requireAuth,
+  claimAttemptLimiter,
   async (req: Request, res: Response) => {
     try {
       const privyId = (req as AuthedRequest).privyId as string;
@@ -588,12 +604,10 @@ loyaltyRouter.get(
           .status(200)
           .json({ ok: true, role: 'staff', displayName: seat.display_name });
       }
-      return res.status(200).json({
-        ok: true,
-        role: 'none',
-        // Tells the UI whether to offer the owner setup code at all.
-        venueUnclaimed: !venue.owner_identity_id,
-      });
+      // Deliberately does NOT say whether the venue is unclaimed. The public
+      // endpoint withholds exactly that fact so nobody can enumerate which
+      // cafés are takeable, and a free email signup must not buy the answer.
+      return res.status(200).json({ ok: true, role: 'none' });
     } catch (err) {
       return serverError(res, 'merchant-me', err);
     }
@@ -645,7 +659,7 @@ loyaltyRouter.get(
       const owned = await loadOwnedVenue(req.params.slug, privyId, res);
       if (!owned) return;
       const staff = await listStaff(owned.venue.id);
-      const seats = Number(owned.venue.staff_seats ?? 2);
+      const seats = seatLimit(owned.venue.staff_seats);
       return res.status(200).json({
         ok: true,
         seats,
@@ -692,7 +706,7 @@ loyaltyRouter.post(
 
       // Seat limit is the plan boundary. Refusing here rather than in the UI
       // means it holds however the request arrives.
-      const seats = Number(owned.venue.staff_seats ?? 2);
+      const seats = seatLimit(owned.venue.staff_seats);
       if ((await countActiveStaff(owned.venue.id)) >= seats) {
         return res.status(409).json({
           ok: false,
@@ -764,7 +778,7 @@ loyaltyRouter.post(
 
       const active = parsed.data.action === 'activate';
       if (active) {
-        const seats = Number(owned.venue.staff_seats ?? 2);
+        const seats = seatLimit(owned.venue.staff_seats);
         if ((await countActiveStaff(owned.venue.id)) >= seats) {
           return res.status(409).json({
             ok: false,
@@ -789,7 +803,11 @@ loyaltyRouter.post(
 const StaffClaimBody = z.object({ code: z.string().trim().min(4).max(12) });
 
 // POST /api/loyalty/staff/claim — a team member activates their seat.
-loyaltyRouter.post('/staff/claim', requireAuth, async (req: Request, res: Response) => {
+loyaltyRouter.post(
+  '/staff/claim',
+  requireAuth,
+  claimAttemptLimiter,
+  async (req: Request, res: Response) => {
   try {
     const parsed = StaffClaimBody.safeParse(req.body);
     if (!parsed.success) {
@@ -817,9 +835,10 @@ loyaltyRouter.post('/staff/claim', requireAuth, async (req: Request, res: Respon
       displayName: seat.display_name,
     });
   } catch (err) {
-    return serverError(res, 'staff-claim', err);
+      return serverError(res, 'staff-claim', err);
+    }
   }
-});
+);
 
 // GET /api/loyalty/merchant/:slug/history — the venue's own transaction log.
 // Every stamp and reward IT handed out, newest first, with the anonymous
@@ -1210,13 +1229,12 @@ loyaltyRouter.post(
           // uses, so it rolls up into the Profile balance and, later, into
           // Hall of Heroes via the identity link. Best-effort.
           try {
-            const TROPHY_BITS = Number(process.env.TROPHY_BITS_REWARD ?? 1000);
-            await creditBits(wallet, TROPHY_BITS, 'loyalty_trophy', {
+            await creditBits(wallet, TROPHY_BITS_REWARD, 'loyalty_trophy', {
               venue: owned.venue.slug,
               assetId: minted.assetId,
               edition,
             });
-            bitsAwarded = TROPHY_BITS;
+            bitsAwarded = TROPHY_BITS_REWARD;
           } catch (bitsErr) {
             console.error('[loyalty.redeem] BITS credit failed:', bitsErr);
           }

@@ -30,9 +30,21 @@ export interface StaffRow {
 
 const SELECT = 'id, venue_id, identity_id, display_name, role, claim_token, active, created_at';
 
+/** How long an unused activation code stays valid. Bounds brute-force reach. */
+export const STAFF_CLAIM_TTL_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * Eight characters, not six.
+ *
+ * The audit measured the old code at 29.7 bits, matched against every venue at
+ * once — roughly nine million expected guesses across fifty pending seats.
+ * Eight characters is 39.6 bits, and combined with the 48h expiry and the
+ * per-account attempt limit it is no longer the weak link. Still short enough
+ * to read off a slip of paper.
+ */
 export function staffClaimToken(): string {
   let out = '';
-  for (let i = 0; i < 6; i++) out += TOKEN_ALPHABET[randomInt(TOKEN_ALPHABET.length)];
+  for (let i = 0; i < 8; i++) out += TOKEN_ALPHABET[randomInt(TOKEN_ALPHABET.length)];
   return out;
 }
 
@@ -70,6 +82,7 @@ export async function addStaff(
       display_name: displayName,
       role,
       claim_token: claimToken,
+      claim_expires_at: new Date(Date.now() + STAFF_CLAIM_TTL_MS).toISOString(),
       active: true,
     })
     .select(SELECT)
@@ -109,7 +122,11 @@ export async function removeStaff(id: string, venueId: string): Promise<boolean>
 
 export async function resetStaffToken(id: string, venueId: string): Promise<string | null> {
   const token = staffClaimToken();
-  const row = await updateStaff(id, venueId, { claim_token: token, identity_id: null });
+  const row = await updateStaff(id, venueId, {
+    claim_token: token,
+    claim_expires_at: new Date(Date.now() + STAFF_CLAIM_TTL_MS).toISOString(),
+    identity_id: null,
+  });
   return row ? token : null;
 }
 
@@ -125,9 +142,12 @@ export async function claimStaffSeat(
 ): Promise<StaffRow | null> {
   const { data, error } = await getSupabaseAdmin()
     .from('venue_staff')
-    .update({ identity_id: identityId, claim_token: null })
+    .update({ identity_id: identityId, claim_token: null, claim_expires_at: null })
     .eq('claim_token', token.trim().toUpperCase())
     .eq('active', true)
+    // Expiry is enforced in the same statement as the match, so an expired
+    // code cannot be raced through by a request that read the row earlier.
+    .gt('claim_expires_at', new Date().toISOString())
     .select(SELECT)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] claimStaffSeat: ${error.message}`);

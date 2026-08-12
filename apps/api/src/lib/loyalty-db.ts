@@ -405,19 +405,39 @@ export interface RedeemCodeRow {
  * Any previous unused codes for the same user+venue are deleted first so only
  * one code is live at a time. Retries on the rare active-code collision.
  */
+/**
+ * The customer's one live redeem code for this venue.
+ *
+ * Delete-then-insert was two statements, so two concurrent taps both found
+ * nothing to delete and both inserted. The old unique index covered the code
+ * string alone, which made two live codes for the same card entirely legal —
+ * and redeeming both consumed one full card twice: two free items, two mints
+ * off our own wallet, two BITS credits, no collision anywhere, because they
+ * were different rows.
+ *
+ * Migration 012 makes (customer, venue) unique among live codes. The insert
+ * now either wins or raises 23505, and a collision means a valid code already
+ * exists — so we hand that one back. A customer who taps twice gets the same
+ * code rather than a second card-worth of value.
+ */
 export async function createRedeemCode(
   identityId: string,
   venueId: string
 ): Promise<RedeemCodeRow> {
   const supa = getSupabaseAdmin();
+  const SELECT = 'id, user_identity_id, venue_id, code, expires_at';
 
-  const { error: delErr } = await supa
+  // Expire our own stale code first. Scoped to codes that are actually past
+  // their TTL, so it can never retire the live one a concurrent request just
+  // created.
+  const { error: expErr } = await supa
     .from('redeem_codes')
-    .delete()
+    .update({ used_at: new Date().toISOString() })
     .eq('user_identity_id', identityId)
     .eq('venue_id', venueId)
-    .is('used_at', null);
-  if (delErr) throw new Error(`[Supabase] createRedeemCode cleanup: ${delErr.message}`);
+    .is('used_at', null)
+    .lt('expires_at', new Date().toISOString());
+  if (expErr) throw new Error(`[Supabase] createRedeemCode expire: ${expErr.message}`);
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data, error } = await supa
@@ -428,12 +448,25 @@ export async function createRedeemCode(
         code: randomLoyaltyCode(),
         expires_at: new Date(Date.now() + REDEEM_TTL_MS).toISOString(),
       })
-      .select('id, user_identity_id, venue_id, code, expires_at')
+      .select(SELECT)
       .single();
     if (!error) return data;
     if (error.code !== '23505') {
       throw new Error(`[Supabase] createRedeemCode: ${error.message}`);
     }
+
+    // A unique violation is either a code-string collision (retry) or the
+    // card already having a live code (return it).
+    const { data: live, error: liveErr } = await supa
+      .from('redeem_codes')
+      .select(SELECT)
+      .eq('user_identity_id', identityId)
+      .eq('venue_id', venueId)
+      .is('used_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+    if (liveErr) throw new Error(`[Supabase] createRedeemCode read: ${liveErr.message}`);
+    if (live) return live;
   }
   throw new Error('[Supabase] createRedeemCode: could not allocate a code');
 }
@@ -912,9 +945,10 @@ export async function getVenueHistory(
   // One lookup for every identity referenced, so the merge below never issues
   // a query per row.
   const ids = new Set<string>();
+  const granterIds = new Set<string>();
   for (const s of stamps) {
     ids.add(s.user_identity_id);
-    if (s.granted_by) ids.add(s.granted_by);
+    if (s.granted_by) granterIds.add(s.granted_by);
   }
   for (const r of rewards) ids.add(r.user_identity_id);
 
@@ -930,10 +964,30 @@ export async function getVenueHistory(
     }
   }
 
+  // Who granted it, by their STAFF NAME — never by their personal loyalty
+  // code. A barista who also buys coffee here uses that code as a customer;
+  // printing it in the "by" column would let the owner paste it into the
+  // customer filter and read their own employee's purchase history. The
+  // pseudonym only works while nothing maps it back to a person.
+  const staffNameById = new Map<string, string>();
+  if (granterIds.size > 0) {
+    const { data: staffRows } = await supa
+      .from('venue_staff')
+      .select('identity_id, display_name')
+      .eq('venue_id', venueId)
+      .in('identity_id', [...granterIds]);
+    for (const row of (staffRows ?? []) as Array<{
+      identity_id: string | null;
+      display_name: string;
+    }>) {
+      if (row.identity_id) staffNameById.set(row.identity_id, row.display_name);
+    }
+  }
+
   const granterLabel = (id: string | null): string | null => {
     if (!id) return null;
     if (q.ownerIdentityId && id === q.ownerIdentityId) return 'owner';
-    return codeById.get(id) ?? UNKNOWN_CODE;
+    return staffNameById.get(id) ?? 'staff';
   };
 
   const events: VenueHistoryEvent[] = [

@@ -17,6 +17,9 @@ import { getSupabaseAdmin } from './supabase-admin.js';
 
 const TOKEN_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0, I/1
 
+/** A partner onboards on a human schedule, but not an unbounded one. */
+export const PARTNER_CLAIM_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
 export interface PartnerRow {
   id: string;
   code: string;
@@ -143,6 +146,7 @@ export async function createPartner(
       exclusive_until: input.exclusiveUntil ?? null,
       notes: input.notes ?? null,
       claim_token: claimToken,
+      claim_expires_at: new Date(Date.now() + PARTNER_CLAIM_TTL_MS).toISOString(),
       active: true,
     })
     .select(SELECT)
@@ -167,7 +171,11 @@ export async function updatePartner(
 
 export async function resetPartnerClaimToken(id: string): Promise<string> {
   const token = partnerClaimToken();
-  await updatePartner(id, { claim_token: token, identity_id: null });
+  await updatePartner(id, {
+    claim_token: token,
+    claim_expires_at: new Date(Date.now() + PARTNER_CLAIM_TTL_MS).toISOString(),
+    identity_id: null,
+  });
   return token;
 }
 
@@ -186,9 +194,10 @@ export async function claimPartnerWithToken(
   const clean = token.trim().toUpperCase();
   const { data, error } = await supa
     .from('partners')
-    .update({ identity_id: identityId, claim_token: null })
+    .update({ identity_id: identityId, claim_token: null, claim_expires_at: null })
     .eq('claim_token', clean)
     .eq('active', true)
+    .gt('claim_expires_at', new Date().toISOString())
     .select(SELECT)
     .maybeSingle();
   if (error) throw new Error(`[Supabase] claimPartner: ${error.message}`);
@@ -223,10 +232,22 @@ export async function getPartnerSummary(partner: PartnerRow): Promise<PartnerSum
     created_at: string;
   }>;
 
-  const pct = Number(partner.commission_pct ?? 0) / 100;
+  // Money in integer bani, not floats. Rounding each venue and then summing
+  // the rounded parts drifts from the exact total — three venues at 99.99 x
+  // 25% round to 25.00 each (75.00) where the true total is 74.99. This is
+  // the figure a partner is paid from, and the whole point of showing it is
+  // that it matches the invoice.
+  const rawPct = Number(partner.commission_pct ?? 0);
+  const pctBasisPoints = Number.isFinite(rawPct) ? Math.round(rawPct * 100) : 0;
+  let totalBani = 0;
+
   const venues: PartnerVenue[] = rows.map((v) => {
-    const fee = Number(v.monthly_fee ?? 0);
+    const rawFee = Number(v.monthly_fee ?? 0);
+    const feeBani = Number.isFinite(rawFee) ? Math.round(rawFee * 100) : 0;
+    const fee = feeBani / 100;
     const paying = v.billing_status === 'active';
+    const commissionBani = paying ? Math.round((feeBani * pctBasisPoints) / 10000) : 0;
+    totalBani += commissionBani;
     return {
       slug: v.slug,
       name: v.name,
@@ -236,7 +257,7 @@ export async function getPartnerSummary(partner: PartnerRow): Promise<PartnerSum
       paidSince: v.paid_since,
       claimed: Boolean(v.owner_identity_id),
       createdAt: v.created_at,
-      commission: paying ? Math.round(fee * pct * 100) / 100 : 0,
+      commission: commissionBani / 100,
     };
   });
 
@@ -255,8 +276,7 @@ export async function getPartnerSummary(partner: PartnerRow): Promise<PartnerSum
       venuesTotal: venues.length,
       venuesPaying: venues.filter((v) => v.billingStatus === 'active').length,
       venuesTrial: venues.filter((v) => v.billingStatus === 'trial').length,
-      monthlyCommission:
-        Math.round(venues.reduce((sum, v) => sum + v.commission, 0) * 100) / 100,
+      monthlyCommission: totalBani / 100,
     },
   };
 }
