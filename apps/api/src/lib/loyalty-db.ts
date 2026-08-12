@@ -935,6 +935,8 @@ export interface VenueHistoryQuery {
   to?: string;
   /** Restrict to a single customer's loyalty code. */
   code?: string;
+  /** Restrict to one team member, by the staff display name shown in the UI. */
+  by?: string;
   limit: number;
   ownerIdentityId: string | null;
 }
@@ -1062,8 +1064,16 @@ export async function getVenueHistory(
     return staffNameById.get(id) ?? 'staff';
   };
 
+  // Narrowing to one team member happens after labelling, because the label is
+  // the staff name the owner actually sees - filtering on an identity id would
+  // mean the UI passing around ids it has no business holding.
+  const matchesBy = (label: string | null): boolean =>
+    !q.by || (label !== null && label.toLowerCase() === q.by.toLowerCase());
+
   const events: VenueHistoryEvent[] = [
-    ...stamps.map((s) => ({
+    ...stamps
+      .filter((s) => matchesBy(granterLabel(s.granted_by)))
+      .map((s) => ({
       kind: 'stamp' as const,
       at: s.created_at,
       code: codeById.get(s.user_identity_id) ?? UNKNOWN_CODE,
@@ -1074,14 +1084,15 @@ export async function getVenueHistory(
     // A correction is an event in its own right, at the moment it happened —
     // not the silent disappearance of the stamp it undid.
     ...stamps
-      .filter((s) => s.revoked_at)
+      .filter((s) => s.revoked_at && matchesBy(granterLabel(s.revoked_by)))
       .map((s) => ({
         kind: 'revoke' as const,
         at: s.revoked_at as string,
         code: codeById.get(s.user_identity_id) ?? UNKNOWN_CODE,
         grantedBy: granterLabel(s.revoked_by),
       })),
-    ...rewards.map((r) => ({
+    // A reward has no granter, so a "by" filter excludes them by construction.
+    ...(q.by ? [] : rewards).map((r) => ({
       kind: 'reward' as const,
       at: r.redeemed_at,
       code: codeById.get(r.user_identity_id) ?? UNKNOWN_CODE,

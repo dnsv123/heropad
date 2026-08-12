@@ -64,10 +64,13 @@ function rangeForPreset(p: Preset): { from: string; to: string } {
 export default function VenueHistory({
   slug,
   embedded = false,
+  byStaff = '',
 }: {
   slug: string;
   /** Inside a folder tab the panel is already visible; drop its own toggle. */
   embedded?: boolean;
+  /** Set from the Team panel: show only what this person did. */
+  byStaff?: string;
 }) {
   const { getAccessToken } = usePrivy();
   const { t, lang } = useT();
@@ -87,9 +90,10 @@ export default function VenueHistory({
   const [codeInput, setCodeInput] = useState('');
   /** The code actually applied to the current result set (not what is typed). */
   const [activeCode, setActiveCode] = useState('');
+  const [activeBy, setActiveBy] = useState('');
 
   const load = useCallback(
-    async (f: string, tt: string, c: string) => {
+    async (f: string, tt: string, c: string, by = '') => {
       setLoading(true);
       setError(null);
       setExpanded(null);
@@ -98,6 +102,7 @@ export default function VenueHistory({
         if (f) qs.set('from', f);
         if (tt) qs.set('to', tt);
         if (c) qs.set('code', c);
+        if (by) qs.set('by', by);
         const token = await getAccessToken();
         const r = await getJson<HistoryResponse>(
           `/api/loyalty/merchant/${slug}/history?${qs.toString()}`,
@@ -106,6 +111,7 @@ export default function VenueHistory({
         setEvents(r.events);
         setTruncated(r.truncated);
         setActiveCode(c);
+        setActiveBy(by);
       } catch (err) {
         setError((err as ApiClientError).message);
         setEvents([]);
@@ -117,9 +123,20 @@ export default function VenueHistory({
   );
 
   useEffect(() => {
-    if (open && events === null) void load(from, to, '');
+    if (open && events === null) void load(from, to, '', byStaff);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // The Team panel picked someone: widen the range and show only their work.
+  useEffect(() => {
+    if (!byStaff) return;
+    setPreset('30d');
+    const r = rangeForPreset('30d');
+    setFrom(r.from);
+    setTo(r.to);
+    void load(r.from, r.to, '', byStaff);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byStaff]);
 
   function applyPreset(p: Preset) {
     const r = rangeForPreset(p);
@@ -318,6 +335,26 @@ export default function VenueHistory({
               {/* The applied customer filter, stated. Without this banner,
                   narrowing to one code looks like nothing happened. */}
               <AnimatePresence>
+                {activeBy && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hero-cyan/40 bg-hero-cyan/10 px-3 py-2"
+                  >
+                    <p className="text-xs text-slate-300">
+                      {t('b.hist.byfilter')}{' '}
+                      <span className="font-semibold text-hero-cyan">{activeBy}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void load(from, to, activeCode, '')}
+                      className="rounded-full border border-hero-cyan/40 px-3 py-0.5 text-[11px] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                    >
+                      ✕ {t('b.hist.clearcode')}
+                    </button>
+                  </motion.div>
+                )}
                 {activeCode && (
                   <motion.div
                     initial={{ opacity: 0, y: -6 }}

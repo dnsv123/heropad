@@ -2,6 +2,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { useT } from '../i18n';
 import AccountCard from '../components/AccountCard';
+import MyRoles from '../components/MyRoles';
 import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
 import CollectionCard from '../components/CollectionCard';
@@ -36,6 +37,11 @@ export default function Profile() {
             {/* Order: who you are → your daily value (Power Pass) → the
                 plumbing (wallets) → what you own (collection). */}
             <AccountCard />
+            {/* Renders nothing for a plain customer; sits high for the people
+                who do wear another hat, because it is why they opened this. */}
+            <div className="mt-8">
+              <MyRoles />
+            </div>
             <div className="mt-8">
               <LoyaltyStats />
             </div>

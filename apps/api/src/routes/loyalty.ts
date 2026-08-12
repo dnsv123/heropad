@@ -10,9 +10,13 @@ import {
 } from '../middleware/auth.js';
 import { queryString } from '../lib/query.js';
 import { claimAttemptLimiter } from '../middleware/claim-limit.js';
+import { getSupabaseAdmin } from '../lib/supabase-admin.js';
+import { getPartnerByIdentity } from '../lib/partners-db.js';
 import {
   addStaff,
   claimStaffSeat,
+  getSeatsForIdentity,
+  getStaffActivity,
   countActiveStaff,
   getStaffSeat,
   listStaff,
@@ -601,6 +605,61 @@ loyaltyRouter.get(
   }
 );
 
+// GET /api/loyalty/me/roles - every hat this account wears.
+//
+// Someone can be a customer, a barista at one cafe, the owner of another, and
+// a referral partner, all on one login. Without this the only way to discover
+// you had been added to a team was to be told, and the only way to reach the
+// right screen was to be sent a link.
+loyaltyRouter.get('/me/roles', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    const supa = getSupabaseAdmin();
+
+    const [seats, { data: owned, error: oErr }, partner] = await Promise.all([
+      getSeatsForIdentity(identity.id),
+      supa
+        .from('venues')
+        .select('slug, name')
+        .eq('owner_identity_id', identity.id)
+        .eq('active', true),
+      getPartnerByIdentity(identity.id),
+    ]);
+    if (oErr) throw new Error(oErr.message);
+
+    // Resolve the venues behind the seats in one query rather than per seat.
+    let staffAt: Array<{ slug: string; name: string; displayName: string }> = [];
+    if (seats.length > 0) {
+      const { data: venues, error: vErr } = await supa
+        .from('venues')
+        .select('id, slug, name')
+        .in('id', seats.map((x) => x.venueId));
+      if (vErr) throw new Error(vErr.message);
+      const byId = new Map(
+        ((venues ?? []) as Array<{ id: string; slug: string; name: string }>).map((v) => [v.id, v])
+      );
+      staffAt = seats
+        .map((seat) => {
+          const v = byId.get(seat.venueId);
+          return v ? { slug: v.slug, name: v.name, displayName: seat.displayName } : null;
+        })
+        .filter((x): x is { slug: string; name: string; displayName: string } => x !== null);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      merchantOf: (owned ?? []) as Array<{ slug: string; name: string }>,
+      staffAt,
+      partner: partner
+        ? { code: partner.code, displayName: partner.display_name, active: partner.active }
+        : null,
+    });
+  } catch (err) {
+    return serverError(res, 'me-roles', err);
+  }
+});
+
 // GET /api/loyalty/merchant/:slug/me — what this account may do here.
 //
 // Replaces probing a customer-lookup endpoint and reading the error code to
@@ -681,6 +740,10 @@ loyaltyRouter.get(
       if (!owned) return;
       const staff = await listStaff(owned.venue.id);
       const seats = seatLimit(owned.venue.staff_seats);
+      const activity = await getStaffActivity(
+        owned.venue.id,
+        staff.map((x) => x.identity_id).filter((x): x is string => Boolean(x))
+      );
       return res.status(200).json({
         ok: true,
         seats,
@@ -693,6 +756,9 @@ loyaltyRouter.get(
           linked: Boolean(s.identity_id),
           activationCode: s.claim_token,
           createdAt: s.created_at,
+          activity: s.identity_id
+            ? (activity.get(s.identity_id) ?? { granted30d: 0, revoked30d: 0, grantedToday: 0 })
+            : null,
         })),
       });
     } catch (err) {
@@ -892,7 +958,9 @@ loyaltyRouter.get(
       const isDate = (v: unknown): v is string =>
         typeof v === 'string' && v.length > 0 && !Number.isNaN(Date.parse(v));
 
+      const by = queryString(req.query.by).trim();
       const events = await getVenueHistory(owned.venue.id, {
+        by: by || undefined,
         from: isDate(req.query.from) ? req.query.from : undefined,
         // A plain YYYY-MM-DD 'to' should include that whole day, so push the
         // exclusive bound to the next midnight rather than dropping the day.

@@ -24,6 +24,8 @@ interface StaffMember {
   linked: boolean;
   activationCode: string | null;
   createdAt: string;
+  /** Null until they activate their seat. Counts only, never customers. */
+  activity: { granted30d: number; revoked30d: number; grantedToday: number } | null;
 }
 
 interface StaffResponse {
@@ -33,7 +35,15 @@ interface StaffResponse {
   staff: StaffMember[];
 }
 
-export default function VenueStaff({ slug }: { slug: string }) {
+export default function VenueStaff({
+  slug,
+  onInspect,
+}: {
+  slug: string;
+  /** Jump to the history filtered to this person. The numbers below say how
+      much someone did; the history says exactly what. */
+  onInspect?: (displayName: string) => void;
+}) {
   const { getAccessToken } = usePrivy();
   const { t } = useT();
 
@@ -231,8 +241,32 @@ export default function VenueStaff({ slug }: { slug: string }) {
                   )}
                   {!s.active && ` · ${t('b.staff.off')}`}
                 </p>
+                {s.linked && s.activity && (
+                  <p className="mt-1 flex flex-wrap gap-x-3 text-[10px] text-slate-500">
+                    <span className="text-hero-cyan">
+                      {t('b.staff.act').replace('{n}', String(s.activity.granted30d))}
+                    </span>
+                    {s.activity.grantedToday > 0 && (
+                      <span>{t('b.staff.acttoday').replace('{n}', String(s.activity.grantedToday))}</span>
+                    )}
+                    {s.activity.revoked30d > 0 && (
+                      <span className="text-red-300/80">
+                        {t('b.staff.revokes').replace('{n}', String(s.activity.revoked30d))}
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
               <div className="flex shrink-0 gap-1.5 text-[11px]">
+                {s.linked && onInspect && (
+                  <button
+                    type="button"
+                    onClick={() => onInspect(s.displayName)}
+                    className="rounded-full border border-hero-cyan/40 px-2.5 py-1 text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                  >
+                    🔍
+                  </button>
+                )}
                 {!s.linked && (
                   <button
                     type="button"

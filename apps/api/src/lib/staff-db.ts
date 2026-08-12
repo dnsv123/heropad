@@ -180,3 +180,74 @@ export async function findStaffVenues(identityId: string): Promise<string[]> {
   if (error) throw new Error(`[Supabase] findStaffVenues: ${error.message}`);
   return ((data ?? []) as Array<{ venue_id: string }>).map((r) => r.venue_id);
 }
+
+/**
+ * Per-person activity at one venue, for the owner's Team panel.
+ *
+ * The point of staff seats is that the owner can see what each person did.
+ * Counts only — grants, corrections — never which customers.
+ */
+export interface StaffActivity {
+  granted30d: number;
+  revoked30d: number;
+  grantedToday: number;
+}
+
+export async function getStaffActivity(
+  venueId: string,
+  identityIds: string[]
+): Promise<Map<string, StaffActivity>> {
+  const out = new Map<string, StaffActivity>();
+  if (identityIds.length === 0) return out;
+  const supa = getSupabaseAdmin();
+  const since30 = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+  const midnight = new Date();
+  midnight.setUTCHours(0, 0, 0, 0);
+
+  const [{ data: granted, error: gErr }, { data: revoked, error: rErr }] = await Promise.all([
+    supa
+      .from('stamps')
+      .select('granted_by, created_at')
+      .eq('venue_id', venueId)
+      .in('granted_by', identityIds)
+      .gte('created_at', since30),
+    supa
+      .from('stamps')
+      .select('revoked_by')
+      .eq('venue_id', venueId)
+      .in('revoked_by', identityIds)
+      .gte('revoked_at', since30),
+  ]);
+  if (gErr) throw new Error(`[Supabase] staffActivity grants: ${gErr.message}`);
+  if (rErr) throw new Error(`[Supabase] staffActivity revokes: ${rErr.message}`);
+
+  const blank = (): StaffActivity => ({ granted30d: 0, revoked30d: 0, grantedToday: 0 });
+  const todayIso = midnight.toISOString();
+  for (const row of (granted ?? []) as Array<{ granted_by: string; created_at: string }>) {
+    const cur = out.get(row.granted_by) ?? blank();
+    cur.granted30d += 1;
+    if (row.created_at >= todayIso) cur.grantedToday += 1;
+    out.set(row.granted_by, cur);
+  }
+  for (const row of (revoked ?? []) as Array<{ revoked_by: string }>) {
+    const cur = out.get(row.revoked_by) ?? blank();
+    cur.revoked30d += 1;
+    out.set(row.revoked_by, cur);
+  }
+  return out;
+}
+
+/** Venue ids + the person's label, for the "where do I work" list. */
+export async function getSeatsForIdentity(
+  identityId: string
+): Promise<Array<{ venueId: string; displayName: string; role: StaffRole }>> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('venue_staff')
+    .select('venue_id, display_name, role')
+    .eq('identity_id', identityId)
+    .eq('active', true);
+  if (error) throw new Error(`[Supabase] getSeatsForIdentity: ${error.message}`);
+  return ((data ?? []) as Array<{ venue_id: string; display_name: string; role: StaffRole }>).map(
+    (r) => ({ venueId: r.venue_id, displayName: r.display_name, role: r.role })
+  );
+}

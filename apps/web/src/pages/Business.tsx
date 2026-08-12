@@ -94,6 +94,9 @@ export default function Business() {
   );
   const [muted, setMutedState] = useState(() => isMuted());
   const [queued, setQueued] = useState<QueuedGrant[]>([]);
+  /** Set from the Team folder; opens History narrowed to that person. */
+  const [inspectStaff, setInspectStaff] = useState('');
+  const [folderTab, setFolderTab] = useState('team');
   const [setRequired, setSetRequired] = useState('');
   const [setReward, setSetReward] = useState('');
   const [setReview, setSetReview] = useState('');
@@ -746,8 +749,9 @@ export default function Business() {
               )}
               {role === 'owner' && (
               <FolderTabs
-                initial="team"
+                active={folderTab}
                 onOpen={(k) => {
+                  setFolderTab(k);
                   // Stats are a network call; fetch them the first time the
                   // folder is actually opened rather than on page load.
                   if (k === 'stats' && !analytics) void toggleStats();
@@ -757,7 +761,15 @@ export default function Business() {
                     key: 'team',
                     icon: '👥',
                     label: t('b.tab.team'),
-                    render: () => <VenueStaff slug={slug} />,
+                    render: () => (
+                      <VenueStaff
+                        slug={slug}
+                        onInspect={(name) => {
+                          setInspectStaff(name);
+                          setFolderTab('history');
+                        }}
+                      />
+                    ),
                   },
                   {
                     key: 'stats',
@@ -856,7 +868,9 @@ export default function Business() {
                     key: 'history',
                     icon: '🧾',
                     label: t('b.tab.hist'),
-                    render: () => <VenueHistory slug={slug} embedded />,
+                    render: () => (
+                      <VenueHistory slug={slug} embedded byStaff={inspectStaff} />
+                    ),
                   },
                   {
                     key: 'settings',

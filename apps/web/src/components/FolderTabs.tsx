@@ -24,19 +24,23 @@ export interface FolderTab {
 export default function FolderTabs({
   tabs,
   initial,
+  active: controlled,
   onOpen,
 }: {
   tabs: FolderTab[];
   initial?: string;
+  /** Drive the open folder from the parent — lets one panel send you to another. */
+  active?: string;
   /** Fired when a tab becomes active — lets a panel lazy-load its data. */
   onOpen?: (key: string) => void;
 }) {
-  const [active, setActive] = useState<string>(initial ?? tabs[0]?.key ?? '');
+  const [own, setOwn] = useState<string>(initial ?? tabs[0]?.key ?? '');
+  const active = controlled ?? own;
   const current = tabs.find((t) => t.key === active) ?? tabs[0];
 
   function select(key: string) {
     if (key === active) return;
-    setActive(key);
+    setOwn(key);
     onOpen?.(key);
   }
 
