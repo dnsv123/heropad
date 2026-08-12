@@ -563,6 +563,42 @@ loyaltyRouter.get(
   }
 );
 
+// GET /api/loyalty/merchant/:slug/me — what this account may do here.
+//
+// Replaces probing a customer-lookup endpoint and reading the error code to
+// infer ownership: with staff seats that probe cannot tell an owner from a
+// barista, and the UI would offer owner-only folders that then 403.
+loyaltyRouter.get(
+  '/merchant/:slug/me',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const venue = await loadActiveVenue(req.params.slug, res);
+      if (!venue) return;
+      const identity = await ensureIdentity(privyId);
+
+      if (venue.owner_identity_id && venue.owner_identity_id === identity.id) {
+        return res.status(200).json({ ok: true, role: 'owner', displayName: null });
+      }
+      const seat = await getStaffSeat(venue.id, identity.id);
+      if (seat) {
+        return res
+          .status(200)
+          .json({ ok: true, role: 'staff', displayName: seat.display_name });
+      }
+      return res.status(200).json({
+        ok: true,
+        role: 'none',
+        // Tells the UI whether to offer the owner setup code at all.
+        venueUnclaimed: !venue.owner_identity_id,
+      });
+    } catch (err) {
+      return serverError(res, 'merchant-me', err);
+    }
+  }
+);
+
 // GET /api/loyalty/merchant/:slug/today — the shift summary above the counter.
 // Counter-level (owner OR staff): it is their shift too, and it is counts only.
 loyaltyRouter.get(

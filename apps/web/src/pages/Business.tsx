@@ -67,7 +67,9 @@ export default function Business() {
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [claiming, setClaiming] = useState(false);
-  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+  const [role, setRole] = useState<'owner' | 'staff' | 'none' | null>(null);
+  const [staffName, setStaffName] = useState<string | null>(null);
+  const isOwner = role === null ? null : role === 'owner';
   const [setupCode, setSetupCode] = useState('');
   const [scanning, setScanning] = useState(false);
 
@@ -106,17 +108,22 @@ export default function Business() {
     };
   }, [slug]);
 
-  // Probe ownership by hitting a merchant endpoint with a dummy-but-valid code.
-  // A 403 means "not your venue"; 404 means "you own it, code just unknown".
+  // What this account may do at this venue. Asked directly rather than
+  // inferred from an error code — with staff seats, "can look up a customer"
+  // no longer means "owns the place".
   const probeOwnership = useCallback(async () => {
     try {
       const token = await getAccessToken();
       if (!token) return;
-      await getJson(`/api/loyalty/merchant/${slug}/customer/ZZZZZZ`, token);
-      setIsOwner(true);
-    } catch (err) {
-      const e = err as ApiErr & { code?: string };
-      setIsOwner(e.code === 'unknown_code' ? true : e.code === 'not_merchant' ? false : null);
+      const r = await getJson<{
+        ok: true;
+        role: 'owner' | 'staff' | 'none';
+        displayName: string | null;
+      }>(`/api/loyalty/merchant/${slug}/me`, token);
+      setRole(r.role);
+      setStaffName(r.displayName);
+    } catch {
+      setRole(null);
     }
   }, [slug, getAccessToken]);
 
@@ -148,6 +155,43 @@ export default function Business() {
     if (ready && authenticated && isOwner !== false) void loadToday();
   }, [ready, authenticated, isOwner, loadToday]);
 
+  /**
+   * One field for both kinds of code. An 8-character code makes you the owner,
+   * a 6-character one puts you on the team — a distinction the person holding
+   * the code should not have to make, since they were simply given a code.
+   */
+  async function handleCode() {
+    const code = setupCode.trim().toUpperCase();
+    if (code.length === 6) return handleJoinStaff(code);
+    return handleClaimOwnership();
+  }
+
+  async function handleJoinStaff(code: string) {
+    setClaiming(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      const r = await postJson<
+        { code: string },
+        { ok: true; venueSlug: string | null; venueName: string | null; displayName: string }
+      >('/api/loyalty/staff/claim', { code }, token ?? undefined);
+      setSetupCode('');
+      // The code identifies its own venue — send them there rather than
+      // leaving them on a page for a café they are not on the team of.
+      if (r.venueSlug && r.venueSlug !== slug) {
+        window.location.href = `/business?venue=${r.venueSlug}`;
+        return;
+      }
+      setRole('staff');
+      setStaffName(r.displayName);
+      setNotice({ kind: 'ok', text: t('b.staffclaim.ok', { name: r.venueName ?? '' }) });
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as ApiErr).message });
+    } finally {
+      setClaiming(false);
+    }
+  }
+
   async function handleClaimOwnership() {
     setClaiming(true);
     setNotice(null);
@@ -168,7 +212,7 @@ export default function Business() {
         window.location.href = `/business?venue=${r.slug}`;
         return;
       }
-      setIsOwner(true);
+      setRole('owner');
       setNotice({ kind: 'ok', text: 'You are now the merchant of this venue. ☕' });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -418,6 +462,9 @@ export default function Business() {
               <p className="mb-3 text-sm text-slate-400">
                 {t('b.notmerchant', { name: venue?.name ?? '…' })}
               </p>
+              <p className="mb-3 text-xs text-slate-500">
+                {t('b.anycode.hint')}
+              </p>
               <div className="mx-auto mt-3 flex max-w-xs items-stretch gap-2">
                 <input
                   type="text"
@@ -432,11 +479,18 @@ export default function Business() {
                 />
                 <button
                   type="button"
-                  onClick={handleClaimOwnership}
-                  disabled={claiming || setupCode.trim().length !== 8}
+                  onClick={() => void handleCode()}
+                  disabled={
+                    claiming ||
+                    (setupCode.trim().length !== 8 && setupCode.trim().length !== 6)
+                  }
                   className="shrink-0 rounded-full bg-hero-gold px-5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
                 >
-                  {claiming ? t('b.claim.busy') : t('b.claim.btn')}
+                  {claiming
+                    ? t('b.claim.busy')
+                    : setupCode.trim().length === 6
+                      ? t('b.staffclaim.go')
+                      : t('b.claim.btn')}
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-slate-600">{t('b.setupcode.hint')}</p>
@@ -621,7 +675,14 @@ export default function Business() {
                 </p>
               )}
 
-              {/* ---- Merchant folders: team, stats, history, settings ---- */}
+              {/* Folders are the owner's. Staff get the counter and their
+                  shift summary; the history is partly a record OF them. */}
+              {role === 'staff' && (
+                <p className="mt-6 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-3 text-center text-xs text-slate-500">
+                  {t('b.staffmode', { name: staffName ?? '' })}
+                </p>
+              )}
+              {role === 'owner' && (
               <FolderTabs
                 initial="team"
                 onOpen={(k) => {
@@ -883,6 +944,7 @@ export default function Business() {
                   },
                 ]}
               />
+              )}
             </>
           )}
         </div>
