@@ -1002,3 +1002,23 @@ export async function getVenueToday(venueId: string, sinceIso: string): Promise<
     since: sinceIso,
   };
 }
+
+// --- Idempotency -------------------------------------------------------------
+
+/**
+ * Claims a request id for one logical operation. Returns true the first time
+ * and false for every replay.
+ *
+ * A café's wifi drops, the reply to a grant never arrives, the client retries.
+ * That retry is correct behaviour and must not produce a second stamp — the
+ * insert either wins or collides, and the collision is the answer.
+ */
+export async function claimRequestId(key: string, scope: string): Promise<boolean> {
+  const { error } = await getSupabaseAdmin()
+    .from('idempotency_keys')
+    .insert({ key, scope });
+  if (!error) return true;
+  // 23505 = unique violation: someone (probably this same tap) got here first.
+  if (error.code === '23505') return false;
+  throw new Error(`[Supabase] claimRequestId: ${error.message}`);
+}

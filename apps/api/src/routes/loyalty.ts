@@ -40,6 +40,7 @@ import {
   getUserLoyaltyStats,
   getVenueAnalytics,
   getVenueToday,
+  claimRequestId,
   getVenueHistory,
   updateVenueSettings,
   setMarketingConsent,
@@ -916,6 +917,12 @@ loyaltyRouter.get(
 const GrantBody = z.object({
   code: z.string().regex(CODE_RE, 'Customer code must be 6 letters/digits'),
   count: z.number().int().min(1).max(5),
+  /**
+   * Generated once per tap by the client and reused on every retry, so a
+   * grant whose response was lost to a dropped connection can be re-sent
+   * without producing a second stamp.
+   */
+  requestId: z.string().trim().min(8).max(64).optional(),
 });
 
 // POST /api/loyalty/merchant/:slug/grant — the barista action. One request per
@@ -946,6 +953,31 @@ loyaltyRouter.post(
           message: 'No customer with this code.',
         });
       }
+
+      // A replayed tap: report the state as it stands rather than granting
+      // again. Claimed before any write so a retry that races the original
+      // still loses.
+      if (parsed.data.requestId) {
+        const fresh = await claimRequestId(
+          `grant:${owned.venue.id}:${parsed.data.requestId}`,
+          'grant'
+        );
+        if (!fresh) {
+          const now = await getVenueProgress(customer.id, owned.venue.id);
+          return res.status(200).json({
+            ok: true,
+            duplicate: true,
+            granted: 0,
+            happyHour: null,
+            code: parsed.data.code,
+            stamps: now.current,
+            required: owned.venue.stamps_required,
+            cardsCompleted: now.cardsCompleted,
+            canRedeem: now.current >= owned.venue.stamps_required,
+          });
+        }
+      }
+
       // A merchant granting stamps to their own customer account is a free
       // trophy/BITS farm — block it on both grant and redeem.
       if (customer.id === owned.merchantIdentityId) {

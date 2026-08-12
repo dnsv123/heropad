@@ -6,6 +6,15 @@ import { usePrivy } from '@privy-io/react-auth';
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
 import { playGrant, playReward, playError, isMuted, setMuted } from '../services/soundService';
+import {
+  enqueue,
+  flush,
+  isNetworkFailure,
+  newRequestId,
+  subscribe,
+  watch,
+  type QueuedGrant,
+} from '../services/offlineQueue';
 import { useT } from '../i18n';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
@@ -84,6 +93,7 @@ export default function Business() {
     null
   );
   const [muted, setMutedState] = useState(() => isMuted());
+  const [queued, setQueued] = useState<QueuedGrant[]>([]);
   const [setRequired, setSetRequired] = useState('');
   const [setReward, setSetReward] = useState('');
   const [setReview, setSetReview] = useState('');
@@ -243,14 +253,17 @@ export default function Business() {
     if (!customer) return;
     setBusy(true);
     setNotice(null);
+    // One id per tap, reused by any retry, so a grant whose reply was lost to
+    // a dropped connection cannot become two stamps.
+    const requestId = newRequestId();
     try {
       const token = await getAccessToken();
       const r = await postJson<
-        { code: string; count: number },
+        { code: string; count: number; requestId: string },
         { ok: true; granted: number; happyHour: number | null } & CustomerInfo
       >(
         `/api/loyalty/merchant/${slug}/grant`,
-        { code: customer.code, count },
+        { code: customer.code, count, requestId },
         token ?? undefined
       );
       hapticTap(15);
@@ -266,12 +279,46 @@ export default function Business() {
           (r.happyHour ? ` ⚡ HAPPY HOUR x${r.happyHour}` : ''),
       });
     } catch (err) {
-      playError();
-      setNotice({ kind: 'err', text: (err as ApiErr).message });
+      if (isNetworkFailure(err)) {
+        // The request never reached the server. Hold it and tell the barista
+        // the customer is covered, because they are — it will be sent.
+        enqueue({ id: requestId, slug, code: customer.code, count });
+        playGrant();
+        hapticTap(15);
+        setNotice({ kind: 'ok', text: t('b.queued') });
+      } else {
+        playError();
+        setNotice({ kind: 'err', text: (err as ApiErr).message });
+      }
     } finally {
       setBusy(false);
     }
   }
+
+  /** Send whatever is waiting. Safe to call often — the server dedupes. */
+  const drainQueue = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const { sent } = await flush(async (entry) => {
+      await postJson(
+        `/api/loyalty/merchant/${entry.slug}/grant`,
+        { code: entry.code, count: entry.count, requestId: entry.id },
+        token
+      );
+    });
+    if (sent > 0) {
+      setNotice({ kind: 'ok', text: t('b.queued.sent', { n: sent }) });
+      void loadToday();
+    }
+  }, [getAccessToken, t, loadToday]);
+
+  useEffect(() => subscribe(setQueued), []);
+
+  useEffect(() => {
+    if (!ready || !authenticated) return;
+    void drainQueue();
+    return watch(() => void drainQueue());
+  }, [ready, authenticated, drainQueue]);
 
   /**
    * One scanner for both code kinds: HPC = the customer's permanent code
@@ -504,6 +551,21 @@ export default function Business() {
             </div>
           ) : (
             <>
+              {queued.length > 0 && (
+                <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-4 py-2.5">
+                  <p className="text-xs text-hero-gold">
+                    ⏳ {t('b.queued.n', { n: queued.length })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void drainQueue()}
+                    className="shrink-0 rounded-full border border-hero-gold/40 px-3 py-1 text-[11px] text-hero-gold transition hover:bg-hero-gold hover:text-hero-deep"
+                  >
+                    {t('b.queued.retry')}
+                  </button>
+                </div>
+              )}
+
               {/* Shift summary — the first thing an owner wants in the morning,
                   and the running total a barista glances at during service. */}
               <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-hero-blue/20 bg-hero-deep/60 px-4 py-2.5">
