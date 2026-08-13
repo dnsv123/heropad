@@ -584,7 +584,7 @@ async function allWalletsFor(identity: {
 async function collectSubjectData(identityId: string, wallets: string[]) {
   const supa = getSupabaseAdmin();
   const hasWallet = wallets.length > 0;
-  const [stamps, rewards, codes, bits, claims, staff, partner, consent] = await Promise.all([
+  const [stamps, rewards, codes, bits, claims, staff, partner, consent, passport] = await Promise.all([
     supa
       .from('stamps')
       .select('venue_id, source, created_at')
@@ -623,6 +623,10 @@ async function collectSubjectData(identityId: string, wallets: string[]) {
       .select('marketing_consent, marketing_consent_at, marketing_consent_version, marketing_email')
       .eq('id', identityId)
       .maybeSingle(),
+    supa
+      .from('passport_awards')
+      .select('tier, venue_count, bits_awarded, trophy_asset_id, created_at')
+      .eq('user_identity_id', identityId),
   ]);
   return {
     stamps: stamps.data ?? [],
@@ -633,6 +637,7 @@ async function collectSubjectData(identityId: string, wallets: string[]) {
     staffSeats: staff.data ?? [],
     partnerRecord: partner.data ?? [],
     marketingConsent: consent.data ?? null,
+    passportAwards: passport.data ?? [],
     walletsCovered: wallets,
   };
 }
@@ -795,6 +800,8 @@ adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => 
       bitsTransactions: before.bitsTransactions.length,
       claims: before.claims.length,
       staffSeats: before.staffSeats.length,
+      // Cascades with the identity row; counted so the erasure proof is complete.
+      passportAwards: before.passportAwards.length,
       walletsCovered: wallets.length,
     };
     await supa.from('erasure_log').insert({

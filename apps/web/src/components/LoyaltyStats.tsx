@@ -156,6 +156,17 @@ export default function LoyaltyStats() {
           </div>
           <p className="mt-2 text-center text-[11px] text-slate-600">{t('pp.taphint')}</p>
 
+          {/* The cross-venue passport: collect cafés, not just coffees. */}
+          <Link
+            to="/passport"
+            className="mt-3 flex items-center justify-between rounded-xl border border-hero-gold/25 bg-hero-gold/5 px-4 py-2.5 text-sm transition hover:border-hero-gold/50 hover:bg-hero-gold/10"
+          >
+            <span className="text-slate-200">🗺️ {t('pp.passport')}</span>
+            <span className="font-mono text-xs text-slate-400">
+              {stats.venues.length} <span className="text-hero-gold">→</span>
+            </span>
+          </Link>
+
           {/* Quick links: jump straight to each venue's loyalty page. */}
           {stats.venues.length > 0 && (
             <div className="mt-3 space-y-2">

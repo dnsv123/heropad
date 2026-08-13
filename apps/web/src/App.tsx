@@ -8,6 +8,7 @@ import Claim from './pages/Claim';
 import Profile from './pages/Profile';
 import Play from './pages/Play';
 import Loyalty from './pages/Loyalty';
+import Passport from './pages/Passport';
 // Merchant + admin screens load on demand: they pull in the QR scanner and
 // jsQR (~250 KB) which a CUSTOMER opening their loyalty card must never pay
 // for on café cellular. Privy stays eager in main.tsx — only routes split.
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/v-dash" element={<Play />} />
           <Route path="/loyalty/:slug" element={<Loyalty />} />
           <Route path="/loyalty" element={<Loyalty />} />
+          <Route path="/passport" element={<Passport />} />
           <Route path="/business" element={<Business />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/partner" element={<Partner />} />

@@ -303,17 +303,28 @@ export async function countTrophiesToday(venueId: string): Promise<number> {
 /**
  * The same count across EVERY venue — the number that actually bounds what the
  * admin keypair can spend in a day. Per-venue ceilings multiply by however many
- * cafés exist, which is not a budget.
+ * cafés exist, which is not a budget. Passport trophies (migration 016) spend
+ * from the same wallet, so they count into the same budget.
  */
 export async function countTrophiesTodayGlobal(): Promise<number> {
+  const supa = getSupabaseAdmin();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count, error } = await getSupabaseAdmin()
-    .from('rewards_redeemed')
-    .select('id', { count: 'exact', head: true })
-    .not('trophy_attempted_at', 'is', null)
-    .gt('trophy_attempted_at', since);
-  if (error) throw new Error(`[Supabase] countTrophiesTodayGlobal: ${error.message}`);
-  return count ?? 0;
+  const [cards, passport] = await Promise.all([
+    supa
+      .from('rewards_redeemed')
+      .select('id', { count: 'exact', head: true })
+      .not('trophy_attempted_at', 'is', null)
+      .gt('trophy_attempted_at', since),
+    supa
+      .from('passport_awards')
+      .select('id', { count: 'exact', head: true })
+      .gt('trophy_attempted_at', since),
+  ]);
+  if (cards.error) throw new Error(`[Supabase] countTrophiesTodayGlobal: ${cards.error.message}`);
+  if (passport.error) {
+    throw new Error(`[Supabase] countTrophiesTodayGlobal passport: ${passport.error.message}`);
+  }
+  return (cards.count ?? 0) + (passport.count ?? 0);
 }
 
 /**

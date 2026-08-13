@@ -53,7 +53,18 @@ import {
   updateVenueSettings,
   setMarketingConsent,
   type VenueRow,
+  type IdentityRow,
 } from '../lib/loyalty-db.js';
+import {
+  PASSPORT_TIERS,
+  countStampsByVenue,
+  getPassportAwards,
+  reservePassportAward,
+  reservePassportRetry,
+  setPassportTrophy,
+  listPassportVenues,
+  type PassportTierKey,
+} from '../lib/passport-db.js';
 
 // Loyalty routes — the café stamp engine (validation phase).
 // ---------------------------------------------------------------------------
@@ -128,6 +139,134 @@ const MAX_TROPHIES_PER_VENUE_DAY = (() => {
   const parsed = Number(process.env.TROPHY_DAILY_CAP);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 })();
+
+// --- Passport (cross-venue) --------------------------------------------------
+//
+// Visit 3 / 5 / 8 DIFFERENT venues → bronze / silver / gold trophy + BITS.
+// The trophy is deliberately NOT obtainable any other way: if collecting
+// coffees at one café could earn it, nobody would ever enter a second one —
+// the exclusivity of the threshold is the entire mechanism, and it is the
+// pitch to café #10 ("my customers will reach you too").
+//
+// BITS, not stamps: a stamp would cost a café a free coffee for a visit made
+// to a DIFFERENT venue, which would not be fair to anyone.
+
+/** Fails closed like every other cap: a bad env value means the default. */
+function passportBits(envKey: string, fallback: number): number {
+  const parsed = Number(process.env[envKey]);
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : fallback;
+}
+
+const PASSPORT_BITS: Record<PassportTierKey, number> = {
+  bronze: passportBits('PASSPORT_BITS_BRONZE', 250),
+  silver: passportBits('PASSPORT_BITS_SILVER', 500),
+  gold: passportBits('PASSPORT_BITS_GOLD', 1000),
+};
+
+const PASSPORT_LABEL: Record<PassportTierKey, string> = {
+  bronze: 'Bronze',
+  silver: 'Silver',
+  gold: 'Gold',
+};
+
+function passportUri(tier: PassportTierKey): string {
+  return (
+    process.env[`PASSPORT_METADATA_URI_${tier.toUpperCase()}`] ??
+    `https://heropad.vercel.app/cnft/passport-${tier}.json`
+  );
+}
+
+/**
+ * Checks every tier this person has earned and mints what is still owed.
+ * Safe to call from anywhere, any number of times: the UNIQUE (user, tier)
+ * reservation in passport_awards makes each tier pay out exactly once, and a
+ * reservation whose mint died is re-armed only after a cooldown.
+ *
+ * Runs after every grant (off the response path) and when the passport page
+ * opens (so a customer whose wallet arrived late self-heals by looking).
+ * Returns the identity, re-read if a wallet was bound along the way.
+ */
+async function runPassportAwards(identity: IdentityRow): Promise<IdentityRow> {
+  let who = identity;
+
+  // A customer who signed up before their embedded wallet finished
+  // provisioning has earned tiers with nowhere to mint them. Privy is the
+  // source of truth, so ask it — same self-heal the redeem flow relies on.
+  if (!who.solana_wallet) {
+    try {
+      const owned = await getUserSolanaWallets(who.privy_id);
+      if (owned.length > 0) who = await ensureIdentity(who.privy_id, owned[0]);
+    } catch (walletErr) {
+      console.warn('[loyalty.passport] wallet lookup skipped:', (walletErr as Error).message);
+    }
+  }
+  if (!who.solana_wallet) return who; // earned tiers wait; nothing is reserved
+
+  const visited = (await countStampsByVenue(who.id)).size;
+  const awards = await getPassportAwards(who.id);
+  const byTier = new Map(awards.map((a) => [a.tier, a]));
+
+  for (const tier of PASSPORT_TIERS) {
+    if (visited < tier.threshold) break; // thresholds are ascending
+
+    const existing = byTier.get(tier.threshold);
+    if (existing?.trophy_asset_id) continue; // paid in full
+
+    // Same global budget as card trophies — one admin wallet, one ceiling.
+    if ((await countTrophiesTodayGlobal()) >= MAX_TROPHIES_GLOBAL_DAY) {
+      console.error(
+        `[loyalty.passport] GLOBAL trophy budget hit (${MAX_TROPHIES_GLOBAL_DAY}/day) — tier ${tier.threshold} deferred`
+      );
+      break;
+    }
+
+    // Win the right to mint: a fresh insert for a new tier, a conditional
+    // re-arm for one whose earlier mint produced nothing. Losing either race
+    // means someone else is already paying — walk away.
+    const awardId = existing
+      ? (await reservePassportRetry(existing.id))
+        ? existing.id
+        : null
+      : await reservePassportAward(who.id, tier.threshold, visited);
+    if (!awardId) continue;
+
+    try {
+      const minted = await mintCnftToWallet({
+        recipient: who.solana_wallet,
+        name: `SV Passport — ${PASSPORT_LABEL[tier.key]}`,
+        symbol: 'SVPASS',
+        uri: passportUri(tier.key),
+      });
+      // BITS ride on the row: a retry that finds them already recorded must
+      // not credit twice.
+      const bits = existing?.bits_awarded ? 0 : PASSPORT_BITS[tier.key];
+      await setPassportTrophy(
+        awardId,
+        minted.assetId,
+        minted.signature,
+        bits > 0 ? bits : (existing?.bits_awarded ?? 0)
+      );
+      if (bits > 0) {
+        try {
+          await creditBits(who.solana_wallet, bits, 'passport_trophy', {
+            tier: tier.key,
+            threshold: tier.threshold,
+            assetId: minted.assetId,
+          });
+        } catch (bitsErr) {
+          console.error('[loyalty.passport] BITS credit failed:', bitsErr);
+        }
+      }
+    } catch (mintErr) {
+      // The reservation stays; the cooldown re-arms it on a later visit.
+      console.error(
+        `[loyalty.passport] tier ${tier.threshold} mint failed:`,
+        (mintErr as Error).message
+      );
+    }
+  }
+  return who;
+}
 
 // --- Happy Hour (Romania local time) -----------------------------------------
 
@@ -402,6 +541,65 @@ loyaltyRouter.get('/me/stats', requireAuth, async (req: Request, res: Response) 
     return res.status(200).json({ ok: true, ...stats });
   } catch (err) {
     return serverError(res, 'me-stats', err);
+  }
+});
+
+// GET /api/loyalty/me/passport — the cross-venue passport page: visited count,
+// tier progress, the full venue album, and any trophies owed get minted on the
+// spot. Literal route — MUST stay above /me/:slug.
+loyaltyRouter.get('/me/passport', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    let identity = await ensureIdentity(privyId);
+
+    // Opening the passport claims anything already earned — the mint happens
+    // right here so the trophy is on the page the customer is looking at.
+    // Best-effort: a mint-infrastructure hiccup must never blank the page.
+    try {
+      identity = await runPassportAwards(identity);
+    } catch (awardErr) {
+      console.error('[loyalty.passport] award pass failed:', (awardErr as Error).message);
+    }
+
+    const stampsByVenue = await countStampsByVenue(identity.id);
+    const visited = stampsByVenue.size;
+    const [awards, venues] = await Promise.all([
+      getPassportAwards(identity.id),
+      listPassportVenues([...stampsByVenue.keys()]),
+    ]);
+    const byTier = new Map(awards.map((a) => [a.tier, a]));
+
+    return res.status(200).json({
+      ok: true,
+      visited,
+      walletLinked: Boolean(identity.solana_wallet),
+      tiers: PASSPORT_TIERS.map((t) => {
+        const award = byTier.get(t.threshold);
+        return {
+          threshold: t.threshold,
+          key: t.key,
+          earned: visited >= t.threshold,
+          // Earned but not yet on-chain: wallet missing, budget hit, or a
+          // mint mid-retry. The page says "on its way" instead of showing
+          // a hole where a trophy should be.
+          minted: Boolean(award?.trophy_asset_id),
+          assetId: award?.trophy_asset_id ?? null,
+          mintTx: award?.mint_tx ?? null,
+          bits: award?.bits_awarded ?? 0,
+          awardedAt: award?.created_at ?? null,
+        };
+      }),
+      venues: venues.map((v) => ({
+        slug: v.slug,
+        name: v.name,
+        address: v.address,
+        icon: typeof v.branding?.icon === 'string' ? v.branding.icon : null,
+        stamps: stampsByVenue.get(v.id) ?? 0,
+        visited: stampsByVenue.has(v.id),
+      })),
+    });
+  } catch (err) {
+    return serverError(res, 'passport', err);
   }
 });
 
@@ -1238,6 +1436,13 @@ loyaltyRouter.post(
         count: effectiveCount,
         grantedBy: owned.merchantIdentityId,
         source: 'merchant',
+      });
+
+      // The first stamp at a NEW venue may cross a passport threshold
+      // (3/5/8 distinct venues). Runs off the response path — the barista's
+      // confirmation must never wait on a Solana mint.
+      void runPassportAwards(customer).catch((passErr) => {
+        console.error('[loyalty.grant] passport check failed:', (passErr as Error).message);
       });
 
       const progress = await getVenueProgress(customer.id, owned.venue.id);

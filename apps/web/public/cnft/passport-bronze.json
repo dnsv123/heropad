@@ -1,0 +1,14 @@
+{
+  "name": "SuperVictor Passport — Bronze",
+  "symbol": "SVPASS",
+  "description": "Cross-café passport trophy from the SuperVictor Universe — earned by collecting stamps at 3 different HeroPad partner venues. This trophy can only be earned by visiting distinct venues; it is never sold or minted any other way.",
+  "image": "https://heropad.vercel.app/super-victor.png",
+  "external_url": "https://heropad.supervictoruniverse.com",
+  "attributes": [
+    { "trait_type": "Type", "value": "Passport Trophy" },
+    { "trait_type": "Tier", "value": "Bronze" },
+    { "trait_type": "Venues", "value": "3" },
+    { "trait_type": "Universe", "value": "SuperVictor" },
+    { "trait_type": "Season", "value": "Pilot 2026" }
+  ]
+}
