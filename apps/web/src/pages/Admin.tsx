@@ -105,6 +105,9 @@ export default function Admin() {
   const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
   const [analyticsFor, setAnalyticsFor] = useState<string | null>(null);
 
+  // Newsletter export (Substack)
+  const [nlSegment, setNlSegment] = useState('all');
+
   // Support / GDPR desk
   const [supportCode, setSupportCode] = useState('');
   const [supportReason, setSupportReason] = useState('');
@@ -242,6 +245,47 @@ export default function Admin() {
         token ?? undefined
       );
       setSubject(r);
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as { message: string }).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function exportNewsletter() {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      const r = await getJson<{
+        ok: true;
+        segment: string;
+        count: number;
+        subscribers: Array<{ email: string }>;
+      }>(
+        `/api/admin/marketing/export?segment=${encodeURIComponent(nlSegment)}`,
+        token ?? undefined
+      );
+      if (r.count === 0) {
+        setNotice({ kind: 'ok', text: 'No consented subscribers in this segment yet.' });
+        return;
+      }
+      // One email per line under a header — exactly what Substack's
+      // "Import email list" accepts.
+      const csv = ['email', ...r.subscribers.map((s) => s.email)].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `heropad-substack-${nlSegment.replace(':', '-')}-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setNotice({
+        kind: 'ok',
+        text: `${r.count} subscriber(s) exported — import the CSV in Substack, then send from there.`,
+      });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as { message: string }).message });
     } finally {
@@ -845,6 +889,60 @@ export default function Admin() {
                         onNotice={(kind, text) => setNotice({ kind, text })}
                         onPartners={setPartnerCodes}
                       />
+              </div>
+            ),
+          },
+          {
+            key: 'newsletter',
+            icon: '📣',
+            label: 'Newsletter',
+            render: () => (
+              <div>
+                {/* ---- Substack export ---- */}
+                <div className="mt-8 rounded-2xl border border-hero-cyan/30 bg-hero-deep/50 p-5">
+                  <h2 className="font-display text-lg font-semibold text-hero-cyan">
+                    📣 Newsletter export (Substack)
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Downloads a CSV of <b>consented emails only</b> (opt-in with stored
+                    timestamp + text version), sliced by segment. Import it in Substack
+                    → Settings → Import email list, then write and send from there.
+                    HeroPad never sends email itself. Every export is written to the
+                    audit log (segment + count, never the addresses).
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <select
+                      value={nlSegment}
+                      onChange={(e) => setNlSegment(e.target.value)}
+                      className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-cyan focus:outline-none"
+                    >
+                      <option value="all">Everyone with consent</option>
+                      <option value="trophies">Trophy holders (card + passport)</option>
+                      <option value="inactive30">Inactive 30+ days ("we miss you")</option>
+                      {venues.map((v) => (
+                        <option key={v.slug} value={`venue:${v.slug}`}>
+                          Customers of {v.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void exportNewsletter()}
+                      className="rounded-full bg-hero-cyan px-5 py-2 text-sm font-semibold text-hero-deep transition hover:bg-white disabled:opacity-40"
+                    >
+                      ⬇ Export CSV
+                    </button>
+                    <a
+                      href="https://supervictoruniverse.substack.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-slate-500 underline transition hover:text-hero-cyan"
+                    >
+                      Open Substack ↗
+                    </a>
+                  </div>
+                </div>
               </div>
             ),
           },

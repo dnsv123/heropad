@@ -835,6 +835,118 @@ adminRouter.post('/support/:code/erase', async (req: Request, res: Response) => 
   }
 });
 
+// --- Newsletter (Substack) ---------------------------------------------------
+//
+// We do not send email. The newsletter lives on Substack; HeroPad's job is to
+// hand the operator a clean, provably-consented recipient list, sliced the way
+// a café campaign actually needs. Export → import into Substack → send.
+
+const SEGMENT_RE = /^(all|trophies|inactive30|venue:[a-z0-9-]{2,60})$/;
+
+// GET /api/admin/marketing/export?segment=… — consented emails as JSON rows
+// (the panel turns them into the CSV Substack imports). Only identities with
+// marketing_consent=true AND a stored marketing_email ever leave this endpoint
+// — consent is the reason the email column exists at all. Every export lands
+// in the audit log with the segment and the count, never the addresses.
+adminRouter.get('/marketing/export', async (req: Request, res: Response) => {
+  try {
+    const adminId = (req as AuthedRequest).privyId as string;
+    const segment = queryString(req.query.segment).trim() || 'all';
+    if (!SEGMENT_RE.test(segment)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'bad_segment',
+        message: 'Unknown segment. Use all, trophies, inactive30 or venue:<slug>.',
+      });
+    }
+    const supa = getSupabaseAdmin();
+
+    const { data: consentedRows, error: cErr } = await supa
+      .from('user_identity')
+      .select('id, marketing_email, marketing_consent_at')
+      .eq('marketing_consent', true)
+      .not('marketing_email', 'is', null);
+    if (cErr) throw new Error(cErr.message);
+    let rows = (consentedRows ?? []) as Array<{
+      id: string;
+      marketing_email: string;
+      marketing_consent_at: string | null;
+    }>;
+    const ids = rows.map((r) => r.id);
+
+    if (rows.length > 0 && segment.startsWith('venue:')) {
+      const venue = await getVenueBySlug(segment.slice('venue:'.length));
+      if (!venue) {
+        return res
+          .status(404)
+          .json({ ok: false, error: 'unknown_venue', message: 'No such venue.' });
+      }
+      const { data: stampRows, error: sErr } = await supa
+        .from('stamps')
+        .select('user_identity_id')
+        .eq('venue_id', venue.id)
+        .is('revoked_at', null)
+        .in('user_identity_id', ids);
+      if (sErr) throw new Error(sErr.message);
+      const visited = new Set(
+        ((stampRows ?? []) as Array<{ user_identity_id: string }>).map(
+          (s) => s.user_identity_id
+        )
+      );
+      rows = rows.filter((r) => visited.has(r.id));
+    } else if (rows.length > 0 && segment === 'trophies') {
+      // Card trophies and passport trophies both count — a trophy is a trophy.
+      const [cards, passport] = await Promise.all([
+        supa
+          .from('rewards_redeemed')
+          .select('user_identity_id')
+          .not('trophy_asset_id', 'is', null)
+          .in('user_identity_id', ids),
+        supa
+          .from('passport_awards')
+          .select('user_identity_id')
+          .not('trophy_asset_id', 'is', null)
+          .in('user_identity_id', ids),
+      ]);
+      if (cards.error) throw new Error(cards.error.message);
+      if (passport.error) throw new Error(passport.error.message);
+      const has = new Set(
+        [...(cards.data ?? []), ...(passport.data ?? [])].map((s) => s.user_identity_id)
+      );
+      rows = rows.filter((r) => has.has(r.id));
+    } else if (rows.length > 0 && segment === 'inactive30') {
+      // "We miss you" list: nobody with a live stamp in the last 30 days.
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: recent, error: rErr } = await supa
+        .from('stamps')
+        .select('user_identity_id')
+        .gt('created_at', since)
+        .is('revoked_at', null)
+        .in('user_identity_id', ids);
+      if (rErr) throw new Error(rErr.message);
+      const active = new Set(
+        ((recent ?? []) as Array<{ user_identity_id: string }>).map(
+          (s) => s.user_identity_id
+        )
+      );
+      rows = rows.filter((r) => !active.has(r.id));
+    }
+
+    await audit(adminId, 'marketing_export', segment, { count: rows.length });
+    return res.status(200).json({
+      ok: true,
+      segment,
+      count: rows.length,
+      subscribers: rows.map((r) => ({
+        email: r.marketing_email,
+        consentedAt: r.marketing_consent_at,
+      })),
+    });
+  } catch (err) {
+    return serverError(res, 'marketing-export', err);
+  }
+});
+
 // GET /api/admin/audit — the accountability trail.
 adminRouter.get('/audit', async (_req: Request, res: Response) => {
   try {
