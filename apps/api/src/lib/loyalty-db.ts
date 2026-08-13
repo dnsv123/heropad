@@ -27,13 +27,15 @@ export interface VenueRow {
   referred_by?: string | null;
   /** Staff seats included by the plan (migration 009). */
   staff_seats?: number | null;
+  /** IANA zone the venue's own clock runs on (migration 015). */
+  timezone?: string | null;
 }
 
 /** Happy-hour config stored in venues.branding.happyHour. */
 export interface HappyHourConfig {
   /** Weekdays 0 (Sun) – 6 (Sat). */
   days: number[];
-  /** "HH:MM" 24h, Romania local time. */
+  /** "HH:MM" in 24h clock, read in the venue's own time zone. */
   start: string;
   end: string;
   /** Stamp multiplier while active (2 or 3). */
@@ -59,7 +61,7 @@ export interface VenueProgress {
 // --- Venues ------------------------------------------------------------------
 
 const VENUE_SELECT =
-  'id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats';
+  'id, slug, name, stamps_required, branding, active, owner_identity_id, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats, timezone';
 
 export async function getVenueBySlug(slug: string): Promise<VenueRow | null> {
   const { data, error } = await getSupabaseAdmin()
@@ -579,6 +581,8 @@ export async function updateVenueSettings(
     /** Empty string clears the value. */
     reviewUrl?: string;
     phone?: string;
+    /** IANA zone; Happy Hour is evaluated against it. */
+    timezone?: string;
     /** null clears the schedule. */
     happyHour?: HappyHourConfig | null;
   }
@@ -588,6 +592,11 @@ export async function updateVenueSettings(
 
   if (input.stampsRequired !== undefined) {
     patch.stamps_required = input.stampsRequired;
+  }
+  // A real column rather than branding JSON: Happy Hour is evaluated against
+  // it on every grant, and the row is already loaded there.
+  if (input.timezone !== undefined) {
+    patch.timezone = input.timezone;
   }
 
   const brandingKeysTouched =

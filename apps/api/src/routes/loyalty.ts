@@ -170,17 +170,37 @@ const GOOGLE_REVIEW_HOSTS = [
 ];
 
 /** Multiplier if happy hour is active RIGHT NOW in Romania, else null. */
-function happyHourMultNow(branding: Record<string, unknown> | null): number | null {
+/**
+ * Is this venue inside its Happy Hour right now?
+ *
+ * The zone used to be Europe/Bucharest, written into the code. A café in
+ * Calgary set a window for 12:48 and watched it never fire, because 12:48 in
+ * Bucharest is 03:48 where they stand. The setting saved, the panel showed it,
+ * and it was wrong nine hours a day — a confident wrong answer, which is worse
+ * than a missing feature. The zone belongs to the venue.
+ */
+function happyHourMultNow(
+  branding: Record<string, unknown> | null,
+  timeZone = 'Europe/Bucharest'
+): number | null {
   const hh = parseHappyHour(branding);
   if (!hh) return null;
   const now = new Date();
+  // An unknown zone would throw and take the whole grant down with it; a café
+  // losing its happy hour is better than a café unable to serve.
+  let zone = timeZone;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+  } catch {
+    zone = 'Europe/Bucharest';
+  }
   const dayName = now.toLocaleDateString('en-US', {
-    timeZone: 'Europe/Bucharest',
+    timeZone: zone,
     weekday: 'short',
   });
   const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(dayName);
   const time = now.toLocaleTimeString('en-GB', {
-    timeZone: 'Europe/Bucharest',
+    timeZone: zone,
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -289,7 +309,7 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
   try {
     const venue = await loadActiveVenue(req.params.slug, res);
     if (!venue) return;
-    const hhMult = happyHourMultNow(venue.branding);
+    const hhMult = happyHourMultNow(venue.branding, venue.timezone ?? undefined);
     return res.status(200).json({
       ok: true,
       venue: {
@@ -592,7 +612,22 @@ const SettingsBody = z.object({
     ])
     .optional(),
   phone: z
-    .union([z.string().trim().regex(/^[+0-9 ()\-.]{5,20}$/), z.literal('')])
+    // Length and characters, not a national format: a partner venue may be
+    // anywhere, and "+1 403 923 8127" is as valid as an 07xx number.
+    .union([z.string().trim().regex(/^[+0-9 ()\-.]{5,25}$/), z.literal('')])
+    .optional(),
+  timezone: z
+    .string()
+    .trim()
+    .max(64)
+    .refine((tz) => {
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'Unknown time zone')
     .optional(),
   happyHour: z
     .object({
@@ -1102,7 +1137,7 @@ loyaltyRouter.post(
 
       // Happy hour: purchases during the configured window earn multiplied
       // stamps. The multiplier is decided SERVER-side so it can't be spoofed.
-      const hhMult = happyHourMultNow(owned.venue.branding);
+      const hhMult = happyHourMultNow(owned.venue.branding, owned.venue.timezone ?? undefined);
       const effectiveCount = parsed.data.count * (hhMult ?? 1);
 
       // The cap bounds how many PURCHASES a day can be recorded, so it scales

@@ -114,6 +114,13 @@ export default function Business() {
   const [hhEnd, setHhEnd] = useState('');
   const [hhMult, setHhMult] = useState(2);
   const [hhTouched, setHhTouched] = useState(false);
+  /**
+   * The venue's own clock. Happy Hour used to be evaluated in Bucharest for
+   * everyone, so a café abroad set a window and watched it never fire.
+   * Defaults to the device's zone, which is right far more often than a
+   * hardcoded country was.
+   */
+  const [tz, setTz] = useState('');
 
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
@@ -397,12 +404,14 @@ export default function Business() {
         reviewUrl?: string;
         phone?: string;
         happyHour?: { days: number[]; start: string; end: string; mult: number } | null;
+        timezone?: string;
       } = {};
       const n = parseInt(setRequired, 10);
       if (!Number.isNaN(n)) body.stampsRequired = n;
       if (setReward.trim().length >= 2) body.rewardLabel = setReward.trim();
       if (setReview.trim().length > 0) body.reviewUrl = setReview.trim();
       if (setPhone.trim().length > 0) body.phone = setPhone.trim();
+      if (tz) body.timezone = tz;
       if (hhTouched) {
         body.happyHour =
           hhDays.length > 0 && hhStart && hhEnd
@@ -1043,6 +1052,40 @@ export default function Business() {
                         </div>
                         <p className="mt-1.5 text-[10px] text-slate-600">{t('b.set.hh.hint')}</p>
                       </div>
+
+                      {/* Happy Hour is read in this zone. Without it the
+                          window is evaluated in Romania for everyone, which is
+                          a confident wrong answer rather than a missing one. */}
+                      <label className="mt-4 block text-xs text-slate-500">
+                        {t('b.set.tz')}
+                        <select
+                          value={tz || Intl.DateTimeFormat().resolvedOptions().timeZone}
+                          onChange={(e) => setTz(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white"
+                        >
+                          {Array.from(
+                            new Set([
+                              Intl.DateTimeFormat().resolvedOptions().timeZone,
+                              'Europe/Bucharest',
+                              'Europe/London',
+                              'Europe/Madrid',
+                              'Europe/Berlin',
+                              'America/Toronto',
+                              'America/Edmonton',
+                              'America/New_York',
+                              'America/Los_Angeles',
+                              'Asia/Dubai',
+                            ])
+                          ).map((z) => (
+                            <option key={z} value={z}>
+                              {z.replace('_', ' ')}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="mt-1 block text-[10px] text-slate-600">
+                          {t('b.set.tz.hint')}
+                        </span>
+                      </label>
 
                       <button
                         type="button"
