@@ -4,6 +4,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { getJson, postJson } from '../services/apiClient';
 import AdminPartners from '../components/AdminPartners';
 import FolderTabs from '../components/FolderTabs';
+import InfoTip from '../components/InfoTip';
 
 // /admin — the operator console (Valentin only; access is an allowlist of
 // Privy DIDs in ADMIN_PRIVY_IDS on the API).
@@ -574,6 +575,7 @@ export default function Admin() {
                               <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Fee / month
+                                  <InfoTip text="What this café pays per month (RON). Feeds the partner commission math and the payout ledger." />
                                   <input
                                     type="number"
                                     min={0}
@@ -587,6 +589,7 @@ export default function Admin() {
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Billing
+                                  <InfoTip text="trial = free pilot · active = paying (starts the 'paid since' date and partner commission) · paused/cancelled stop commission. Never blocks the café's counter." />
                                   <select
                                     value={v.billingStatus}
                                     onChange={(e) => void saveBilling(v, { billingStatus: e.target.value })}
@@ -600,6 +603,7 @@ export default function Admin() {
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Brought by
+                                  <InfoTip text="The referral partner who brought this café. Their commission is a share of this venue's monthly fee, counted only while billing is 'active'." />
                                   <select
                                     value={v.partnerCode ?? ''}
                                     onChange={(e) => void saveBilling(v, { partnerCode: e.target.value })}
@@ -633,6 +637,7 @@ export default function Admin() {
                                 >
                                   {copied === `c-${v.slug}` ? 'Copied!' : 'Copy customer link (QR)'}
                                 </button>
+                                <InfoTip text="The public page customers scan — this exact URL goes on the printed QR sticker. Opens this venue's loyalty card." />
                                 <button
                                   type="button"
                                   onClick={() => void copy(businessUrl, `b-${v.slug}`)}
@@ -640,6 +645,7 @@ export default function Admin() {
                                 >
                                   {copied === `b-${v.slug}` ? 'Copied!' : 'Copy merchant link'}
                                 </button>
+                                <InfoTip text="The counter app for this café (/business). Send it to the owner together with the setup code; activated staff use the same page." />
                                 <button
                                   type="button"
                                   disabled={busy}
@@ -648,6 +654,7 @@ export default function Admin() {
                                 >
                                   New setup code
                                 </button>
+                                <InfoTip text="Issues a fresh one-time 8-character code the café types at /business to become the merchant. Any previous unused code stops working. Does nothing to an already-linked owner." />
                                 {v.claimed && (
                                   <button
                                     type="button"
@@ -658,6 +665,9 @@ export default function Admin() {
                                     Detach merchant
                                   </button>
                                 )}
+                                {v.claimed && (
+                                  <InfoTip text="Unlinks the current owner account and issues a new setup code — for when a café changes hands or the wrong account claimed it. Stamps, history and staff records stay." />
+                                )}
                                 <button
                                   type="button"
                                   disabled={busy}
@@ -666,6 +676,7 @@ export default function Admin() {
                                 >
                                   {v.active ? 'Disable' : 'Enable'}
                                 </button>
+                                <InfoTip text="Disable hides the venue from customers and blocks stamps/redeems immediately. Nothing is deleted — already-visited customers keep it in their passport. Enable brings it back." />
                                 <button
                                   type="button"
                                   disabled={busy}
@@ -674,6 +685,7 @@ export default function Admin() {
                                 >
                                   {analyticsFor === v.slug ? 'Hide analytics' : '📊 Analytics'}
                                 </button>
+                                <InfoTip text="This venue's numbers: stamps 7/30 days, repeat rate, trophies, daily chart and per-customer progress — anonymous codes only, never emails." />
                               </div>
 
                               {/* ---- Per-venue deep dive ---- */}
@@ -794,7 +806,10 @@ export default function Admin() {
               <div>
                 {/* ---- New venue ---- */}
                       <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">
-                        <h2 className="font-display text-lg font-semibold text-hero-gold">➕ New venue</h2>
+                        <h2 className="font-display text-lg font-semibold text-hero-gold">
+                          ➕ New venue
+                          <InfoTip text="Creates the café and its one-time setup code. Flow: create here → send the setup code + merchant link to the café → they enter it once at /business and become the merchant. GPS is optional and only powers the Map button." />
+                        </h2>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                           <label className="text-xs text-slate-500">
                             Slug (URL: /loyalty/<b>slug</b>) — lowercase, dashes
@@ -1030,6 +1045,7 @@ export default function Admin() {
                               >
                                 ⬇ Export data (JSON)
                               </button>
+                              <InfoTip text="GDPR Art. 20: downloads everything we hold about this person as one JSON file — send it to them directly. The export itself is written to the audit log." />
                               <input
                                 value={eraseConfirm}
                                 onChange={(e) => setEraseConfirm(e.target.value.toUpperCase())}
@@ -1045,6 +1061,7 @@ export default function Admin() {
                               >
                                 🗑 Erase all data
                               </button>
+                              <InfoTip text="GDPR Art. 17, permanent: deletes stamps, rewards, BITS, claims and staff seats. Type the customer's 6-char code in the small box to arm the button. Afterwards also delete the user in the Privy dashboard." />
                             </div>
                             <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
                               Erasure removes stamps, rewards, BITS and claims permanently. Afterwards

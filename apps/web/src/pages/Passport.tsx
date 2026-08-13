@@ -127,14 +127,23 @@ export default function Passport() {
               <p className="mt-0.5 font-display text-lg font-bold uppercase tracking-[0.3em] text-hero-gold">
                 {t('pass.booklet')}
               </p>
-              {/* Emblem — inline SVG, gold ink. */}
-              <svg
+              {/* Emblem — the SuperVictor silhouette as gold foil. The PNG is
+                 a 4 KB alpha mask; the colour comes from CSS, so switching
+                 gold ↔ white is a one-class change. */}
+              <span
                 aria-hidden
-                viewBox="0 0 24 24"
-                className="mx-auto mt-1.5 h-5 w-5 fill-hero-gold/80"
-              >
-                <path d="M12 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 7.8l6.1-.7L12 1.5z" />
-              </svg>
+                className="mx-auto mt-1.5 block h-10 w-10 bg-hero-gold/90"
+                style={{
+                  WebkitMaskImage: 'url(/passport-emblem.png)',
+                  maskImage: 'url(/passport-emblem.png)',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                }}
+              />
               <p className="mt-1 font-mono text-[9px] tracking-[0.2em] text-slate-500">
                 TIP/TYPE P · COD/CODE SVU
               </p>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson, type ApiClientError } from '../services/apiClient';
+import InfoTip from './InfoTip';
 
 // Admin → Partners. Everything the monthly payout run needs, on one screen:
 // who brought which venues, which of those are actually paying, and the sum
@@ -399,6 +400,7 @@ export default function AdminPartners({
                     >
                       ↻ new code
                     </button>
+                    <InfoTip text="Issues a fresh one-time login code for their /partner page. The old code stops working. Harmless once their account is already activated." />
                     <button
                       type="button"
                       onClick={() => void patch(p.partner.code, { active: !p.partner.active })}
@@ -406,6 +408,7 @@ export default function AdminPartners({
                     >
                       {p.partner.active ? 'Deactivate' : 'Reactivate'}
                     </button>
+                    <InfoTip text="Deactivate marks the partner inactive (shown on their card, excluded from new attributions). Their venues keep working and past payout rows stay. Reactivate anytime." />
                     {p.email && <span className="text-slate-600">{p.email}</span>}
                   </div>
 
@@ -486,6 +489,7 @@ export default function AdminPartners({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-[11px] uppercase tracking-wider text-slate-500">
                         Payout ledger
+                        <InfoTip text="The month closes at its end; payment goes out by the 10th of the next month. 'Close' writes the owed amount as a frozen row (today's live figure stops affecting it); after the bank transfer, tick 'Mark paid'. The partner sees the same rows on their page." />
                       </p>
                       {!p.payouts.some((x) => x.period === lastPeriod()) &&
                         p.totals.monthlyCommission > 0 && (
