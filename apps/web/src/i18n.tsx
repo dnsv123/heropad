@@ -315,6 +315,7 @@ const en = {
 
   // --- SuperVictor Passport (/passport) ---
   'pass.title': 'SuperVictor Passport',
+  'pass.booklet': 'Passport',
   'pass.sub': 'Collect cafés, not just coffees.',
   'pass.loading': 'Loading your passport…',
   'pass.error': 'Could not load your passport. Please try again.',
@@ -682,6 +683,7 @@ const ro: Record<TranslationKey, string> = {
 
   // --- Pașaportul SuperVictor (/passport) ---
   'pass.title': 'Pașaportul SuperVictor',
+  'pass.booklet': 'Pașaport',
   'pass.sub': 'Colecționezi cafenele, nu doar cafele.',
   'pass.loading': 'Se încarcă pașaportul tău…',
   'pass.error': 'Nu am putut încărca pașaportul. Încearcă din nou.',

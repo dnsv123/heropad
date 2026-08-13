@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson } from '../services/apiClient';
@@ -54,6 +55,9 @@ function shortHash(h: string): string {
 export default function Passport() {
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { t } = useT();
+  // One-shot decorative animations only; a visitor who asked their OS for less
+  // motion gets the stamps already settled.
+  const reduceMotion = useReducedMotion();
   const [data, setData] = useState<PassportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,7 +116,46 @@ export default function Passport() {
         ) : !data ? (
           <p className="text-sm text-slate-500">{t('pass.loading')}</p>
         ) : (
-          <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+          /* The booklet. All texture below is CSS gradients on single
+             elements — no images, no extra requests, one paint each. */
+          <div className="overflow-hidden rounded-[22px] border-2 border-hero-gold/40 bg-gradient-to-b from-[#0d2148] to-hero-deep shadow-2xl">
+            {/* Cover strip: the part of a passport you recognise from a metre away. */}
+            <div className="relative border-b border-hero-gold/30 bg-gradient-to-r from-hero-deep via-[#102a5c] to-hero-deep px-6 py-4 text-center">
+              <p className="text-[9px] uppercase tracking-[0.35em] text-hero-cyan/70">
+                SuperVictor Universe
+              </p>
+              <p className="mt-0.5 font-display text-lg font-bold uppercase tracking-[0.3em] text-hero-gold">
+                {t('pass.booklet')}
+              </p>
+              {/* Emblem — inline SVG, gold ink. */}
+              <svg
+                aria-hidden
+                viewBox="0 0 24 24"
+                className="mx-auto mt-1.5 h-5 w-5 fill-hero-gold/80"
+              >
+                <path d="M12 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 7.8l6.1-.7L12 1.5z" />
+              </svg>
+              <p className="mt-1 font-mono text-[9px] tracking-[0.2em] text-slate-500">
+                TIP/TYPE P · COD/CODE SVU
+              </p>
+            </div>
+
+            {/* Open page: binding stitch on the left, faint guilloche waves
+               like the real thing — a single repeating gradient at 4% opacity. */}
+            <div className="relative p-6">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.05]"
+                style={{
+                  backgroundImage:
+                    'repeating-radial-gradient(circle at 50% 130%, #5DD3FF 0, #5DD3FF 1px, transparent 1px, transparent 9px)',
+                }}
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute bottom-2 left-3 top-2 border-l-2 border-dashed border-hero-gold/20"
+              />
+              <div className="relative">
             {/* ---- Progress ring ---- */}
             <div className="flex items-center gap-5">
               <svg width="86" height="86" viewBox="0 0 86 86" className="shrink-0">
@@ -257,7 +300,7 @@ export default function Passport() {
 
             {/* ---- The album: visited venues stamped, the rest silhouettes ---- */}
             <div className="mt-6 grid grid-cols-3 gap-2.5">
-              {data.venues.map((v) => (
+              {data.venues.map((v, i) => (
                 <Link
                   key={v.slug}
                   to={`/loyalty/${v.slug}`}
@@ -268,9 +311,28 @@ export default function Passport() {
                   }`}
                 >
                   {v.visited && (
-                    <span className="absolute right-1.5 top-1.5 flex h-6 w-6 -rotate-12 items-center justify-center rounded-full bg-hero-gold text-[13px] font-black text-hero-deep shadow-hero-gold">
+                    /* Rubber-stamp seal, thumped into the page. One-shot
+                       spring on transform/opacity only — GPU-composited,
+                       nothing animates after settle. */
+                    <motion.span
+                      initial={
+                        reduceMotion ? false : { scale: 2, opacity: 0, rotate: 10 }
+                      }
+                      animate={{ scale: 1, opacity: 1, rotate: -12 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 500,
+                        damping: 26,
+                        delay: Math.min(i * 0.07, 0.6),
+                      }}
+                      className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-hero-gold/80 text-[12px] font-black text-hero-gold"
+                    >
+                      <span
+                        aria-hidden
+                        className="absolute inset-[3px] rounded-full border border-dashed border-hero-gold/50"
+                      />
                       ✓
-                    </span>
+                    </motion.span>
                   )}
                   <span
                     className={`text-3xl leading-none ${v.visited ? '' : 'opacity-40 grayscale'}`}
@@ -316,6 +378,22 @@ export default function Passport() {
                 </span>
               </Link>
             )}
+              </div>
+            </div>
+
+            {/* Machine-readable zone — the two OCR lines every passport ends
+               with. Pure flavour, pure CSS. */}
+            <div
+              aria-hidden
+              className="select-none border-t border-hero-gold/20 bg-hero-deep/80 px-6 py-2.5 font-mono text-[10px] leading-relaxed tracking-[0.18em] text-slate-600"
+            >
+              <p className="truncate">P&lt;SVUHEROPAD&lt;&lt;SUPERVICTOR&lt;PASSPORT&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
+              <p className="truncate">
+                {String(data.visited).padStart(2, '0')}OF
+                {String(data.venues.length).padStart(2, '0')}
+                &lt;&lt;VENUES&lt;COLLECTED&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+              </p>
+            </div>
           </div>
         )}
       </div>
