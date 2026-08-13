@@ -157,6 +157,63 @@ function parseHappyHour(branding: Record<string, unknown> | null): HappyHour | n
   };
 }
 
+/**
+ * Seconds until this venue's Happy Hour starts, or until it ends if it is
+ * running. Computed here rather than on the phone: the window belongs to the
+ * venue's time zone, and doing that arithmetic in a browser somewhere else is
+ * how the original bug happened.
+ *
+ * Returns null when no schedule exists or none is reachable within a week.
+ */
+function happyHourCountdown(
+  branding: Record<string, unknown> | null,
+  timeZone = 'Europe/Bucharest'
+): { state: 'active' | 'upcoming'; seconds: number; mult: number } | null {
+  const hh = parseHappyHour(branding);
+  if (!hh || hh.days.length === 0) return null;
+
+  let zone = timeZone;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+  } catch {
+    zone = 'Europe/Bucharest';
+  }
+
+  const now = new Date();
+  const active = happyHourMultNow(branding, zone);
+
+  // Walk forward a minute at a time would be simple but wasteful; instead read
+  // the venue's own wall clock and work in minutes-from-now.
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: zone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => parts.find((x) => x.type === t)?.value ?? '';
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
+  const nowMin = Number(get('hour')) * 60 + Number(get('minute'));
+  const toMin = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
+  const startMin = toMin(hh.start);
+  const endMin = toMin(hh.end);
+
+  if (active) {
+    // Minutes remaining until the end, wrapping past midnight if needed.
+    const left = endMin > nowMin ? endMin - nowMin : 24 * 60 - nowMin + endMin;
+    return { state: 'active', seconds: left * 60, mult: active };
+  }
+
+  // The next configured day whose start is still ahead of us.
+  for (let ahead = 0; ahead <= 7; ahead++) {
+    const d = (day + ahead) % 7;
+    if (!hh.days.includes(d)) continue;
+    const minutesAway = ahead * 24 * 60 + startMin - nowMin;
+    if (minutesAway > 0) return { state: 'upcoming', seconds: minutesAway * 60, mult: hh.mult };
+  }
+  return null;
+}
+
 /** Hosts a "Leave us a Google review" link is allowed to point at. */
 const GOOGLE_REVIEW_HOSTS = [
   'g.page',
@@ -323,6 +380,9 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
         gpsLat: venue.gps_lat,
         gpsLng: venue.gps_lng,
         happyHour: hhMult ? { active: true, mult: hhMult } : null,
+        // The schedule is a promotion: knowing when it runs is the point.
+        happyHourNext: happyHourCountdown(venue.branding, venue.timezone ?? undefined),
+        timezone: venue.timezone ?? 'Europe/Bucharest',
       },
     });
   } catch (err) {
@@ -615,6 +675,25 @@ const SettingsBody = z.object({
     // Length and characters, not a national format: a partner venue may be
     // anywhere, and "+1 403 923 8127" is as valid as an 07xx number.
     .union([z.string().trim().regex(/^[+0-9 ()\-.]{5,25}$/), z.literal('')])
+    .optional(),
+  email: z.union([z.string().trim().email().max(120), z.literal('')]).optional(),
+  instagram: z.union([z.string().trim().max(120), z.literal('')]).optional(),
+  facebook: z.union([z.string().trim().max(200), z.literal('')]).optional(),
+  website: z
+    .union([
+      z
+        .string()
+        .trim()
+        .max(200)
+        .refine((u) => {
+          try {
+            return ['http:', 'https:'].includes(new URL(u).protocol);
+          } catch {
+            return false;
+          }
+        }, 'Must be a http(s) address'),
+      z.literal(''),
+    ])
     .optional(),
   timezone: z
     .string()

@@ -581,6 +581,11 @@ export async function updateVenueSettings(
     /** Empty string clears the value. */
     reviewUrl?: string;
     phone?: string;
+    /** Public contact, shown to customers on the venue page. */
+    email?: string;
+    instagram?: string;
+    facebook?: string;
+    website?: string;
     /** IANA zone; Happy Hour is evaluated against it. */
     timezone?: string;
     /** null clears the schedule. */
@@ -603,6 +608,10 @@ export async function updateVenueSettings(
     input.rewardLabel !== undefined ||
     input.reviewUrl !== undefined ||
     input.phone !== undefined ||
+    input.email !== undefined ||
+    input.instagram !== undefined ||
+    input.facebook !== undefined ||
+    input.website !== undefined ||
     input.happyHour !== undefined;
 
   if (brandingKeysTouched) {
@@ -620,9 +629,13 @@ export async function updateVenueSettings(
       if (input.reviewUrl === '') delete branding.reviewUrl;
       else branding.reviewUrl = input.reviewUrl;
     }
-    if (input.phone !== undefined) {
-      if (input.phone === '') delete branding.phone;
-      else branding.phone = input.phone;
+    // Contact block. An empty string clears the field rather than storing "",
+    // so the customer page can simply test for presence.
+    for (const key of ['phone', 'email', 'instagram', 'facebook', 'website'] as const) {
+      const value = input[key];
+      if (value === undefined) continue;
+      if (value === '') delete branding[key];
+      else branding[key] = value;
     }
     if (input.happyHour !== undefined) {
       if (input.happyHour === null) delete branding.happyHour;

@@ -109,6 +109,10 @@ export default function Business() {
   const [setReward, setSetReward] = useState('');
   const [setReview, setSetReview] = useState('');
   const [setPhone, setSetPhone] = useState('');
+  const [setEmail, setSetEmail] = useState('');
+  const [setInsta, setSetInsta] = useState('');
+  const [setFb, setSetFb] = useState('');
+  const [setSite, setSetSite] = useState('');
   const [hhDays, setHhDays] = useState<number[]>([]);
   const [hhStart, setHhStart] = useState('');
   const [hhEnd, setHhEnd] = useState('');
@@ -405,12 +409,20 @@ export default function Business() {
         phone?: string;
         happyHour?: { days: number[]; start: string; end: string; mult: number } | null;
         timezone?: string;
+        email?: string;
+        instagram?: string;
+        facebook?: string;
+        website?: string;
       } = {};
       const n = parseInt(setRequired, 10);
       if (!Number.isNaN(n)) body.stampsRequired = n;
       if (setReward.trim().length >= 2) body.rewardLabel = setReward.trim();
       if (setReview.trim().length > 0) body.reviewUrl = setReview.trim();
       if (setPhone.trim().length > 0) body.phone = setPhone.trim();
+      if (setEmail.trim().length > 0) body.email = setEmail.trim();
+      if (setInsta.trim().length > 0) body.instagram = setInsta.trim();
+      if (setFb.trim().length > 0) body.facebook = setFb.trim();
+      if (setSite.trim().length > 0) body.website = setSite.trim();
       if (tz) body.timezone = tz;
       if (hhTouched) {
         body.happyHour =
@@ -1051,6 +1063,48 @@ export default function Business() {
                           </label>
                         </div>
                         <p className="mt-1.5 text-[10px] text-slate-600">{t('b.set.hh.hint')}</p>
+                      </div>
+
+                      {/* Contact, shown to customers on their card page. A
+                          loyalty page people already open is the cheapest place
+                          a café has to be findable. */}
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.email')}
+                          <input
+                            value={setEmail}
+                            onChange={(e) => setSetEmail(e.target.value)}
+                            placeholder="contact@cafenea.ro"
+                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.insta')}
+                          <input
+                            value={setInsta}
+                            onChange={(e) => setSetInsta(e.target.value)}
+                            placeholder="@cafeneaua_mea"
+                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.fb')}
+                          <input
+                            value={setFb}
+                            onChange={(e) => setSetFb(e.target.value)}
+                            placeholder="cafeneaua.mea"
+                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.site')}
+                          <input
+                            value={setSite}
+                            onChange={(e) => setSetSite(e.target.value)}
+                            placeholder="https://cafenea.ro"
+                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                          />
+                        </label>
                       </div>
 
                       {/* Happy Hour is read in this zone. Without it the

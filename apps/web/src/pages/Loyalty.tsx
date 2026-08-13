@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import PowerMeter from '../components/PowerMeter';
+import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
 import { getJson, postJson } from '../services/apiClient';
 import { hapticTap } from '../services/platformService';
@@ -28,6 +29,7 @@ interface VenueInfo {
   gpsLat?: number | null;
   gpsLng?: number | null;
   happyHour?: { active: boolean; mult: number } | null;
+  happyHourNext?: HappyHourNext | null;
 }
 
 interface MeResponse {
@@ -259,37 +261,26 @@ export default function Loyalty() {
             <p className="mt-2 text-sm text-red-300">{venueError}</p>
           )}
 
-          {/* Quick contact: map + call, only when the venue has the data. */}
-          {(venue?.gpsLat != null || typeof venue?.branding?.phone === 'string') && (
-            <div className="mt-3 flex justify-center gap-2">
-              {venue?.gpsLat != null && venue?.gpsLng != null && (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${Number(venue.gpsLat)},${Number(venue.gpsLng)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
-                >
-                  {t('loy.map')}
-                </a>
-              )}
-              {typeof venue?.branding?.phone === 'string' && (
-                <a
-                  href={`tel:${venue.branding.phone}`}
-                  className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
-                >
-                  {t('loy.call')}
-                </a>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Happy Hour — gold pulsing banner while the window is live. */}
+        {/* Happy Hour — gold pulsing banner while the window is live. The
+            countdown lives inside VenueContact below, where it can also say
+            when the NEXT one starts. */}
         {venue?.happyHour?.active && (
           <div className="mt-4 animate-pulse rounded-xl border-2 border-hero-gold bg-hero-gold/15 p-3 text-center text-sm font-bold text-hero-gold">
             {t('loy.hh.active', { m: venue.happyHour.mult })}
           </div>
         )}
+
+        {/* The venue's own details: a loyalty card is also a small storefront
+            for the café whose card it is. */}
+        <VenueContact
+          name={venue?.name ?? ''}
+          branding={(venue?.branding ?? null)}
+          gpsLat={venue?.gpsLat}
+          gpsLng={venue?.gpsLng}
+          happyHourNext={venue?.happyHourNext ?? null}
+        />
 
         {/* Celebration overlay when a card was just completed & redeemed */}
         <AnimatePresence>
