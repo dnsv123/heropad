@@ -54,6 +54,8 @@ interface CustomerInfo {
   required: number;
   cardsCompleted: number;
   canRedeem: boolean;
+  /** Computed server-side in the venue's time zone; the date never arrives. */
+  birthdayToday?: boolean;
 }
 
 interface ApiErr {
@@ -697,6 +699,11 @@ export default function Business() {
                     exit={{ opacity: 0 }}
                     className="mt-6 rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-5"
                   >
+                    {customer.birthdayToday && (
+                      <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
+                        🎂 {t('b.birthday')}
+                      </div>
+                    )}
                     <div className="flex items-baseline justify-between">
                       <p className="font-mono text-lg tracking-[0.25em] text-hero-cyan">
                         {customer.code}

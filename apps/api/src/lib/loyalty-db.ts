@@ -224,6 +224,42 @@ export async function setMarketingConsent(
   if (error) throw new Error(`[Supabase] setMarketingConsent: ${error.message}`);
 }
 
+/**
+ * Birthday: day + month only, never the year (migration 017). Providing it is
+ * the consent; clearing it removes both columns and the consent timestamp.
+ */
+export async function getBirthday(
+  identityId: string
+): Promise<{ day: number | null; month: number | null }> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .select('birthday_day, birthday_month')
+    .eq('id', identityId)
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] getBirthday: ${error.message}`);
+  return {
+    day: (data as { birthday_day: number | null } | null)?.birthday_day ?? null,
+    month: (data as { birthday_month: number | null } | null)?.birthday_month ?? null,
+  };
+}
+
+export async function setBirthday(
+  identityId: string,
+  day: number | null,
+  month: number | null
+): Promise<void> {
+  const clearing = day === null || month === null;
+  const { error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .update({
+      birthday_day: clearing ? null : day,
+      birthday_month: clearing ? null : month,
+      birthday_set_at: clearing ? null : new Date().toISOString(),
+    })
+    .eq('id', identityId);
+  if (error) throw new Error(`[Supabase] setBirthday: ${error.message}`);
+}
+
 export async function findIdentityByCode(code: string): Promise<IdentityRow | null> {
   const normalized = code.trim().toUpperCase();
   const { data, error } = await getSupabaseAdmin()

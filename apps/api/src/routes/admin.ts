@@ -620,7 +620,9 @@ async function collectSubjectData(identityId: string, wallets: string[]) {
       .eq('identity_id', identityId),
     supa
       .from('user_identity')
-      .select('marketing_consent, marketing_consent_at, marketing_consent_version, marketing_email')
+      .select(
+        'marketing_consent, marketing_consent_at, marketing_consent_version, marketing_email, birthday_day, birthday_month, birthday_set_at'
+      )
       .eq('id', identityId)
       .maybeSingle(),
     supa

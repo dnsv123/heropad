@@ -2,6 +2,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { useT } from '../i18n';
 import AccountCard from '../components/AccountCard';
+import BirthdayCard from '../components/BirthdayCard';
 import MyRoles from '../components/MyRoles';
 import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
@@ -44,6 +45,9 @@ export default function Profile() {
             </div>
             <div className="mt-8">
               <LoyaltyStats />
+            </div>
+            <div className="mt-8">
+              <BirthdayCard />
             </div>
             <div className="mt-8">
               <ProfileWallet />

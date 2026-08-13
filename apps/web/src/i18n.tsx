@@ -334,6 +334,20 @@ const en = {
   'pass.empty': 'Your passport is empty — your first stamp at any partner café starts the collection.',
   'pass.cta.title': 'Next stop: {name}',
   'pass.cta.hint': 'Your first stamp there counts toward the next trophy.',
+
+  // --- Birthday (Profile card + counter flag) ---
+  'bday.title': 'Your birthday',
+  'bday.explainer':
+    'Optional: tell us the day and month (never the year) and partner cafés will know to make your day a little nicer when you visit on it.',
+  'bday.day': 'Day',
+  'bday.month': 'Month',
+  'bday.save': 'Save',
+  'bday.remove': 'Remove',
+  'bday.saved': 'Saved — enjoy the day when it comes! 🎂',
+  'bday.removed': 'Removed. Your birthday is no longer stored.',
+  'bday.privacy':
+    'The café only sees "today is their birthday" — never the date itself. You can remove it anytime.',
+  'b.birthday': "It's this customer's birthday today — make it special!",
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -687,6 +701,20 @@ const ro: Record<TranslationKey, string> = {
   'pass.empty': 'Pașaportul tău e gol — primul bonus la orice local partener pornește colecția.',
   'pass.cta.title': 'Următoarea oprire: {name}',
   'pass.cta.hint': 'Primul bonus de acolo te apropie de următorul trofeu.',
+
+  // --- Ziua de naștere (card în Profil + semnal la tejghea) ---
+  'bday.title': 'Ziua ta de naștere',
+  'bday.explainer':
+    'Opțional: spune-ne ziua și luna (niciodată anul) și localurile partenere vor ști să-ți facă ziua puțin mai frumoasă când îi vizitezi de ziua ta.',
+  'bday.day': 'Ziua',
+  'bday.month': 'Luna',
+  'bday.save': 'Salvează',
+  'bday.remove': 'Șterge',
+  'bday.saved': 'Salvat — să fie o zi frumoasă când vine! 🎂',
+  'bday.removed': 'Șters. Ziua ta de naștere nu mai e stocată.',
+  'bday.privacy':
+    'Localul vede doar „azi e ziua clientului" — niciodată data în sine. O poți șterge oricând.',
+  'b.birthday': 'Azi e ziua clientului — fă-i o surpriză!',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

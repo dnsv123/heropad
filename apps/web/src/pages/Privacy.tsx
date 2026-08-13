@@ -32,7 +32,10 @@ const SECTIONS_EN: Section[] = [
     which partner venue gave you a stamp and when, rewards you redeemed, your 6-character
     loyalty code, and short-lived reward codes. This includes a record of which venues you
     visited and on which days. (c) BITS transactions and claim events (timestamp, code,
-    asset id). We never collect or see private keys — those stay in Privy's MPC custody or
+    asset id). (d) Optionally, if you choose to provide it in your Profile: your birthday
+    as day and month only — never the year. A venue you visit on that day sees only a
+    "today is their birthday" indicator, never the date; you can delete it at any time.
+    We never collect or see private keys — those stay in Privy's MPC custody or
     in your own wallet.`,
   },
   {

@@ -52,6 +52,8 @@ import {
   getVenueHistory,
   updateVenueSettings,
   setMarketingConsent,
+  getBirthday,
+  setBirthday,
   type VenueRow,
   type IdentityRow,
 } from '../lib/loyalty-db.js';
@@ -415,6 +417,37 @@ function happyHourMultNow(
 const SLUG_RE = /^[a-z0-9-]{2,60}$/;
 const CODE_RE = /^[A-Z2-9]{6}$/i;
 
+/**
+ * Is today this person's birthday, on the venue's own clock? Evaluated
+ * server-side so the counter only ever learns a boolean — the date itself
+ * never leaves the profile. A Feb-29 birthday celebrates on Feb 28 in
+ * non-leap years rather than silently never happening.
+ */
+function isBirthdayToday(day: number, month: number, timeZone = 'Europe/Bucharest'): boolean {
+  let zone = timeZone;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+  } catch {
+    zone = 'Europe/Bucharest';
+  }
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: zone,
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((x) => x.type === t)?.value ?? 0);
+  const d = get('day');
+  const m = get('month');
+  if (m === month && d === day) return true;
+  if (month === 2 && day === 29 && m === 2 && d === 28) {
+    const y = get('year');
+    const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+    return !leap;
+  }
+  return false;
+}
+
 // --- Shared helpers ----------------------------------------------------------
 
 async function loadActiveVenue(
@@ -600,6 +633,62 @@ loyaltyRouter.get('/me/passport', requireAuth, async (req: Request, res: Respons
     });
   } catch (err) {
     return serverError(res, 'passport', err);
+  }
+});
+
+// Day+month only — the year is age, and age is data we have no use for.
+// Upper bound per month so "31 February" cannot be stored; 29 Feb is allowed.
+const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const BirthdayBody = z
+  .union([
+    z.object({
+      day: z.number().int().min(1).max(31),
+      month: z.number().int().min(1).max(12),
+    }),
+    z.object({ clear: z.literal(true) }),
+  ])
+  .refine(
+    (b) => 'clear' in b || b.day <= DAYS_IN_MONTH[b.month - 1],
+    'That day does not exist in that month.'
+  );
+
+// GET /api/loyalty/me/birthday — what the profile currently holds.
+// Literal route — MUST stay above /me/:slug.
+loyaltyRouter.get('/me/birthday', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    const birthday = await getBirthday(identity.id);
+    return res.status(200).json({ ok: true, ...birthday });
+  } catch (err) {
+    return serverError(res, 'birthday-get', err);
+  }
+});
+
+// POST /api/loyalty/me/birthday — set or clear. Voluntary by design: the field
+// sits in the customer's own profile with the explanation next to it, and
+// clearing it deletes the data. The counter never sees the date — only the
+// computed "today is their day" flag on the customer lookup.
+loyaltyRouter.post('/me/birthday', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const parsed = BirthdayBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => i.message).join('; '),
+      });
+    }
+    const identity = await ensureIdentity(privyId);
+    if ('clear' in parsed.data) {
+      await setBirthday(identity.id, null, null);
+      return res.status(200).json({ ok: true, day: null, month: null });
+    }
+    await setBirthday(identity.id, parsed.data.day, parsed.data.month);
+    return res.status(200).json({ ok: true, day: parsed.data.day, month: parsed.data.month });
+  } catch (err) {
+    return serverError(res, 'birthday-set', err);
   }
 });
 
@@ -1324,6 +1413,13 @@ loyaltyRouter.get(
         });
       }
       const progress = await getVenueProgress(customer.id, owned.venue.id);
+      // The counter learns a boolean, never the date: enough for the barista
+      // to say "la mulți ani" and offer something nice, and nothing more.
+      const birthday = await getBirthday(customer.id);
+      const birthdayToday =
+        birthday.day !== null &&
+        birthday.month !== null &&
+        isBirthdayToday(birthday.day, birthday.month, owned.venue.timezone ?? undefined);
       return res.status(200).json({
         ok: true,
         code: customer.loyalty_code,
@@ -1331,6 +1427,7 @@ loyaltyRouter.get(
         required: owned.venue.stamps_required,
         cardsCompleted: progress.cardsCompleted,
         canRedeem: progress.current >= owned.venue.stamps_required,
+        birthdayToday,
       });
     } catch (err) {
       return serverError(res, 'customer', err);
