@@ -54,6 +54,10 @@ import {
   setMarketingConsent,
   getBirthday,
   setBirthday,
+  setReferredBy,
+  getReferralState,
+  consumeReferralReward,
+  countStampsTotal,
   type VenueRow,
   type IdentityRow,
 } from '../lib/loyalty-db.js';
@@ -164,6 +168,67 @@ const PASSPORT_BITS: Record<PassportTierKey, number> = {
   silver: passportBits('PASSPORT_BITS_SILVER', 500),
   gold: passportBits('PASSPORT_BITS_GOLD', 1000),
 };
+
+// --- Referral (Adu un prieten) ----------------------------------------------
+//
+// The friend's FIRST stamp — a real visit a barista validated — pays both
+// sides. Registration alone pays nothing, so ghost accounts are worthless.
+
+const REFERRAL_BITS_INVITER = (() => {
+  const parsed = Number(process.env.REFERRAL_BITS_INVITER);
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 300;
+})();
+
+const REFERRAL_BITS_FRIEND = (() => {
+  const parsed = Number(process.env.REFERRAL_BITS_FRIEND);
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 100;
+})();
+
+/**
+ * Pays the referral bonus if this customer was invited and their first stamp
+ * just landed. Safe to call on every grant: consumeReferralReward is a
+ * conditional update that only ever wins once, and until the friend has a
+ * wallet nothing is consumed, so the payout self-heals on a later visit.
+ */
+async function runReferralAward(customer: IdentityRow): Promise<void> {
+  const state = await getReferralState(customer.id);
+  if (!state.referredBy || state.rewardedAt) return;
+
+  let friend = customer;
+  if (!friend.solana_wallet) {
+    try {
+      const owned = await getUserSolanaWallets(friend.privy_id);
+      if (owned.length > 0) friend = await ensureIdentity(friend.privy_id, owned[0]);
+    } catch (walletErr) {
+      console.warn('[loyalty.referral] wallet lookup skipped:', (walletErr as Error).message);
+    }
+  }
+  if (!friend.solana_wallet) return;
+
+  const inviter = await getIdentityById(state.referredBy);
+  if (!(await consumeReferralReward(friend.id))) return; // someone else just paid it
+
+  try {
+    await creditBits(friend.solana_wallet, REFERRAL_BITS_FRIEND, 'referral_friend', {
+      inviterCode: inviter?.loyalty_code ?? null,
+    });
+  } catch (bitsErr) {
+    console.error('[loyalty.referral] friend credit failed:', bitsErr);
+  }
+  if (inviter?.solana_wallet) {
+    try {
+      await creditBits(inviter.solana_wallet, REFERRAL_BITS_INVITER, 'referral_inviter', {
+        friendCode: friend.loyalty_code,
+      });
+    } catch (bitsErr) {
+      console.error('[loyalty.referral] inviter credit failed:', bitsErr);
+    }
+  } else {
+    // Inviter erased their account or never linked a wallet — the friend's
+    // half still stands; there is simply nobody left to pay the other half to.
+    console.warn('[loyalty.referral] inviter wallet missing — inviter bonus skipped');
+  }
+}
 
 const PASSPORT_LABEL: Record<PassportTierKey, string> = {
   bronze: 'Bronze',
@@ -689,6 +754,42 @@ loyaltyRouter.post('/me/birthday', requireAuth, async (req: Request, res: Respon
     return res.status(200).json({ ok: true, day: parsed.data.day, month: parsed.data.month });
   } catch (err) {
     return serverError(res, 'birthday-set', err);
+  }
+});
+
+const ReferralBody = z.object({
+  code: z.string().regex(CODE_RE, 'Invite code must be 6 letters/digits'),
+});
+
+// POST /api/loyalty/me/referral — the friend followed an invite link
+// (?ref=CODE) and just logged in. Links the invitation ONLY while the account
+// is brand-new (zero stamps) and unlinked; first link wins, self is refused.
+// Deliberately never says WHY it did not link — the response would otherwise
+// be an oracle for probing which codes exist. Literal route — above /me/:slug.
+loyaltyRouter.post('/me/referral', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const parsed = ReferralBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: 'invalid_body',
+        message: parsed.error.issues.map((i) => i.message).join('; '),
+      });
+    }
+    const identity = await ensureIdentity(privyId);
+
+    if ((await countStampsTotal(identity.id)) > 0) {
+      return res.status(200).json({ ok: true, linked: false });
+    }
+    const inviter = await findIdentityByCode(parsed.data.code);
+    if (!inviter || inviter.id === identity.id) {
+      return res.status(200).json({ ok: true, linked: false });
+    }
+    const linked = await setReferredBy(identity.id, inviter.id);
+    return res.status(200).json({ ok: true, linked });
+  } catch (err) {
+    return serverError(res, 'referral', err);
   }
 });
 
@@ -1540,6 +1641,11 @@ loyaltyRouter.post(
       // confirmation must never wait on a Solana mint.
       void runPassportAwards(customer).catch((passErr) => {
         console.error('[loyalty.grant] passport check failed:', (passErr as Error).message);
+      });
+      // An invited friend's first stamp pays the referral bonus. Same rule:
+      // off the response path, pays exactly once.
+      void runReferralAward(customer).catch((refErr) => {
+        console.error('[loyalty.grant] referral check failed:', (refErr as Error).message);
       });
 
       const progress = await getVenueProgress(customer.id, owned.venue.id);

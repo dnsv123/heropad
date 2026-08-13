@@ -349,6 +349,15 @@ const en = {
   'bday.privacy':
     'The café only sees "today is their birthday" — never the date itself. You can remove it anytime.',
   'b.birthday': "It's this customer's birthday today — make it special!",
+
+  // --- Bring a friend (referral) ---
+  'ref.title': 'Bring a friend',
+  'ref.body':
+    'Send them your invite link. When they earn their first stamp at any partner café, you BOTH get BITS.',
+  'ref.btn': 'Share your invite',
+  'ref.copied': 'Link copied!',
+  'ref.hint': 'The link carries your code — the bonus arrives with their first stamp, not just the signup.',
+  'ref.share.text': 'Join me on the {venue} Power Pass — free rewards for every visit! 🦸',
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -717,6 +726,15 @@ const ro: Record<TranslationKey, string> = {
   'bday.privacy':
     'Localul vede doar „azi e ziua clientului" — niciodată data în sine. O poți șterge oricând.',
   'b.birthday': 'Azi e ziua clientului — fă-i o surpriză!',
+
+  // --- Adu un prieten (referral) ---
+  'ref.title': 'Adu un prieten',
+  'ref.body':
+    'Trimite-i linkul tău de invitație. Când ia primul lui bonus la orice local partener, primiți AMÂNDOI BITS.',
+  'ref.btn': 'Trimite invitația',
+  'ref.copied': 'Link copiat!',
+  'ref.hint': 'Linkul poartă codul tău — bonusul vine la primul lui bonus, nu doar la înscriere.',
+  'ref.share.text': 'Hai cu mine pe Power Pass la {venue} — recompense gratuite la fiecare vizită! 🦸',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

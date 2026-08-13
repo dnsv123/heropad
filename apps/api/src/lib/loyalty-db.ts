@@ -260,6 +260,72 @@ export async function setBirthday(
   if (error) throw new Error(`[Supabase] setBirthday: ${error.message}`);
 }
 
+// --- Referral (migration 018) ------------------------------------------------
+
+/**
+ * Records who invited this account. Guarded three ways: only while
+ * referred_by is still null (first link wins, no re-attribution), never
+ * self, and the caller checks the account has zero stamps — an invitation
+ * can only precede the relationship, not claim credit for an existing one.
+ */
+export async function setReferredBy(
+  identityId: string,
+  inviterId: string
+): Promise<boolean> {
+  if (identityId === inviterId) return false;
+  const { data, error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .update({ referred_by: inviterId, referred_at: new Date().toISOString() })
+    .eq('id', identityId)
+    .is('referred_by', null)
+    .select('id');
+  if (error) throw new Error(`[Supabase] setReferredBy: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
+export async function getReferralState(
+  identityId: string
+): Promise<{ referredBy: string | null; rewardedAt: string | null }> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .select('referred_by, referral_rewarded_at')
+    .eq('id', identityId)
+    .maybeSingle();
+  if (error) throw new Error(`[Supabase] getReferralState: ${error.message}`);
+  return {
+    referredBy: data?.referred_by ?? null,
+    rewardedAt: data?.referral_rewarded_at ?? null,
+  };
+}
+
+/**
+ * Claims the one-time referral payout for this friend. The conditional
+ * update is the single payment gate — two concurrent first-stamp grants
+ * cannot both win it.
+ */
+export async function consumeReferralReward(identityId: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('user_identity')
+    .update({ referral_rewarded_at: new Date().toISOString() })
+    .eq('id', identityId)
+    .not('referred_by', 'is', null)
+    .is('referral_rewarded_at', null)
+    .select('id');
+  if (error) throw new Error(`[Supabase] consumeReferralReward: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
+/** Live stamps across every venue — zero means "brand-new customer". */
+export async function countStampsTotal(identityId: string): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from('stamps')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_identity_id', identityId)
+    .is('revoked_at', null);
+  if (error) throw new Error(`[Supabase] countStampsTotal: ${error.message}`);
+  return count ?? 0;
+}
+
 export async function findIdentityByCode(code: string): Promise<IdentityRow | null> {
   const normalized = code.trim().toUpperCase();
   const { data, error } = await getSupabaseAdmin()

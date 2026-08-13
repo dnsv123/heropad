@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
@@ -9,6 +9,7 @@ import PowerMeter from '../components/PowerMeter';
 import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
 import { getJson, postJson } from '../services/apiClient';
+import { getItem, setItem, removeItem } from '../services/storageService';
 import { hapticTap } from '../services/platformService';
 import { useT } from '../i18n';
 
@@ -69,9 +70,12 @@ function safeSlug(value: string): string {
   return /^[a-z0-9-]{2,60}$/.test(value) ? value : 'cafe-victor';
 }
 
+const REF_RE = /^[A-Z2-9]{6}$/i;
+
 export default function Loyalty() {
   const { slug: rawSlug = 'cafe-victor' } = useParams();
   const slug = safeSlug(rawSlug);
+  const [searchParams] = useSearchParams();
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { wallets, ready: walletsReady, createWallet } = useSolanaWallets();
   const { t } = useT();
@@ -108,6 +112,63 @@ export default function Loyalty() {
     }
   }, [ready, authenticated, walletsReady, wallets.length, createWallet]);
   const walletMissing = ready && authenticated && walletsReady && wallets.length === 0;
+
+  // --- Referral ("Adu un prieten") -------------------------------------------
+  // A friend arriving via ?ref=CODE may still have to log in first, so the
+  // code is parked in storage and submitted once, after auth. The server
+  // decides whether it counts (brand-new account only, never self).
+  const [refShareState, setRefShareState] = useState<'idle' | 'copied'>('idle');
+  const refSubmitted = useRef(false);
+
+  useEffect(() => {
+    const ref = (searchParams.get('ref') ?? '').toUpperCase();
+    if (REF_RE.test(ref)) void setItem('pendingRef', ref);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!ready || !authenticated || refSubmitted.current) return;
+    refSubmitted.current = true;
+    void (async () => {
+      try {
+        const pending = await getItem<string>('pendingRef');
+        if (!pending || !REF_RE.test(pending)) return;
+        const token = await getAccessToken();
+        if (!token) return;
+        await postJson<{ code: string }, { ok: true; linked: boolean }>(
+          '/api/loyalty/me/referral',
+          { code: pending },
+          token
+        );
+        // One shot either way: linked or legitimately refused (existing
+        // customer, own code) — resubmitting would never change the answer.
+        await removeItem('pendingRef');
+      } catch {
+        // Network hiccup: keep the pending code; the next page open retries.
+        refSubmitted.current = false;
+      }
+    })();
+  }, [ready, authenticated, getAccessToken]);
+
+  async function shareInvite() {
+    if (!me?.code) return;
+    const url = `${window.location.origin}/loyalty/${slug}?ref=${me.code}`;
+    const text = t('ref.share.text', { venue: venue?.name ?? 'HeroPad' });
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, url });
+        return;
+      } catch {
+        /* dismissed — fall through to copy */
+      }
+    }
+    try {
+      await navigator.clipboard?.writeText(`${text} ${url}`);
+      setRefShareState('copied');
+      window.setTimeout(() => setRefShareState('idle'), 2000);
+    } catch {
+      /* clipboard blocked — nothing sensible left to do */
+    }
+  }
 
   // Public venue card — works logged-out, so the page always shows the café.
   useEffect(() => {
@@ -425,6 +486,26 @@ export default function Loyalty() {
             )}
           </div>
         </div>
+
+        {/* Bring a friend — the invite link carries the personal code. The
+            bonus lands on the friend's FIRST stamp, so only a real visit,
+            confirmed at a counter, ever pays out. */}
+        {me && (
+          <div className="mt-6 rounded-2xl border border-solana-green/25 bg-solana-green/5 p-5 text-center">
+            <p className="font-display font-semibold text-solana-green">
+              🤝 {t('ref.title')}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">{t('ref.body')}</p>
+            <button
+              type="button"
+              onClick={() => void shareInvite()}
+              className="mt-3 rounded-full bg-solana-green px-6 py-2.5 text-sm font-semibold text-hero-deep transition hover:brightness-110"
+            >
+              {refShareState === 'copied' ? t('ref.copied') : t('ref.btn')}
+            </button>
+            <p className="mt-2 text-[11px] text-slate-600">{t('ref.hint')}</p>
+          </div>
+        )}
 
         {/* Asked once, only after the customer has stamps worth coming back for. */}
         <ConsentPrompt show={Boolean(me && me.totalStamps >= 2)} />
