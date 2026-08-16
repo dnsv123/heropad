@@ -358,6 +358,11 @@ const en = {
   'ref.copied': 'Link copied!',
   'ref.hint': 'The link carries your code — the bonus arrives with their first stamp, not just the signup.',
   'ref.share.text': 'Join me on the {venue} Power Pass — free rewards for every visit! 🦸',
+
+  // --- Footer ---
+  'f.tagline': 'Digital loyalty for local venues.',
+  'f.privacy': 'Privacy',
+  'f.terms': 'Terms',
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -735,6 +740,11 @@ const ro: Record<TranslationKey, string> = {
   'ref.copied': 'Link copiat!',
   'ref.hint': 'Linkul poartă codul tău — bonusul vine la primul lui bonus, nu doar la înscriere.',
   'ref.share.text': 'Hai cu mine pe Power Pass la {venue} — recompense gratuite la fiecare vizită! 🦸',
+
+  // --- Footer ---
+  'f.tagline': 'Fidelizare digitală pentru localuri.',
+  'f.privacy': 'Confidențialitate',
+  'f.terms': 'Termeni',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

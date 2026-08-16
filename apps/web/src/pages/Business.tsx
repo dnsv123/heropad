@@ -46,6 +46,9 @@ interface VenueInfo {
   slug: string;
   name: string;
   stampsRequired: number;
+  /** Full branding jsonb — seeds the settings form with what is saved. */
+  branding?: Record<string, unknown> | null;
+  timezone?: string | null;
 }
 
 interface CustomerInfo {
@@ -131,11 +134,37 @@ export default function Business() {
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
 
-  // Load public venue info.
+  // Load public venue info — and seed the settings form with what is already
+  // saved. The form used to start blank and stay blank, so after a refresh a
+  // configured Happy Hour looked "unselected", as if it did not exist
+  // (Dumitru's bug); the same applied to reward, review link and contact.
   useEffect(() => {
     let active = true;
     getJson<{ ok: true; venue: VenueInfo }>(`/api/loyalty/venue/${slug}`)
-      .then((r) => active && setVenue(r.venue))
+      .then((r) => {
+        if (!active) return;
+        setVenue(r.venue);
+        const b = r.venue.branding ?? {};
+        const str = (v: unknown) => (typeof v === 'string' ? v : '');
+        setSetRequired(String(r.venue.stampsRequired ?? ''));
+        setSetReward(str(b.reward));
+        setSetReview(str(b.reviewUrl));
+        setSetPhone(str(b.phone));
+        setSetEmail(str(b.email));
+        setSetInsta(str(b.instagram));
+        setSetFb(str(b.facebook));
+        setSetSite(str(b.website));
+        if (typeof r.venue.timezone === 'string') setTz(r.venue.timezone);
+        const hh = b.happyHour as
+          | { days?: number[]; start?: string; end?: string; mult?: number }
+          | undefined;
+        if (hh && Array.isArray(hh.days) && hh.days.length > 0) {
+          setHhDays(hh.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6));
+          setHhStart(str(hh.start));
+          setHhEnd(str(hh.end));
+          setHhMult(Number(hh.mult) === 3 ? 3 : 2);
+        }
+      })
       .catch((err: Error) => active && setNotice({ kind: 'err', text: err.message }));
     return () => {
       active = false;

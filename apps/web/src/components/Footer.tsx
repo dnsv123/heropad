@@ -1,8 +1,11 @@
+import { useT } from '../i18n';
+
 // Footer — corporate identification + legal line + small social links.
 // Uses the SVU corporate logo (different from the EUIPO SuperVictor mark used
 // elsewhere) to position HeroPad as part of the SuperVictor Universe portfolio.
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { t } = useT();
 
   return (
     <footer className="mt-24 border-t border-hero-blue/20 bg-hero-deep/60">
@@ -26,16 +29,16 @@ export default function Footer() {
             >
               SuperVictor Universe
             </a>
-            . Fidelizare digitală pentru localuri.
+            . {t('f.tagline')}
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
           <a href="/privacy" className="hover:text-hero-cyan transition">
-            Privacy
+            {t('f.privacy')}
           </a>
           <a href="/terms" className="hover:text-hero-cyan transition">
-            Terms
+            {t('f.terms')}
           </a>
           <a
             href="https://supervictor.shop"

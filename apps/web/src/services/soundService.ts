@@ -20,6 +20,7 @@
 const MUTE_KEY = 'heropad:sound-muted';
 
 let ctx: AudioContext | null = null;
+let resumeHooked = false;
 
 function audioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -28,10 +29,25 @@ function audioContext(): AudioContext | null {
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return null;
+    if (ctx && ctx.state === 'closed') ctx = null;
     ctx ??= new Ctor();
     // iOS suspends the context until a user gesture; every call here follows
     // a tap, so resuming inline is safe and is what makes the first tone play.
-    if (ctx.state === 'suspended') void ctx.resume();
+    // Checked against 'running' rather than equal to 'suspended': iPadOS parks
+    // a context in a non-standard 'interrupted' state when the screen locks
+    // between customers, and a counter iPad does that all day — that context
+    // never matched the old check, so the iPad simply went silent (Dumitru).
+    if (ctx.state !== 'running') void ctx.resume();
+    if (!resumeHooked) {
+      resumeHooked = true;
+      // Coming back to the tab is the other moment iPadOS leaves the context
+      // parked; a listener costs nothing and self-heals without a tap.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && ctx && ctx.state !== 'running') {
+          void ctx.resume();
+        }
+      });
+    }
     return ctx;
   } catch {
     return null;
