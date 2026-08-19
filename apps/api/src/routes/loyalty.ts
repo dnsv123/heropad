@@ -598,6 +598,37 @@ function serverError(res: Response, scope: string, err: unknown): void {
 
 // --- Public ------------------------------------------------------------------
 
+// GET /api/loyalty/venues — every active venue: name, address, icon. Public
+// on purpose: this is the printed-sticker information, and the Profile's
+// "partner venues" list plus any future landing page read it. Nothing here
+// says whether a venue is claimed or what it earns.
+loyaltyRouter.get('/venues', async (_req: Request, res: Response) => {
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from('venues')
+      .select('slug, name, address, branding')
+      .eq('active', true)
+      .order('name', { ascending: true });
+    if (error) throw new Error(error.message);
+    return res.status(200).json({
+      ok: true,
+      venues: ((data ?? []) as Array<{
+        slug: string;
+        name: string;
+        address: string | null;
+        branding: Record<string, unknown> | null;
+      }>).map((v) => ({
+        slug: v.slug,
+        name: v.name,
+        address: v.address,
+        icon: typeof v.branding?.icon === 'string' ? v.branding.icon : null,
+      })),
+    });
+  } catch (err) {
+    return serverError(res, 'venues', err);
+  }
+});
+
 // GET /api/loyalty/venue/:slug — public venue card (no auth, no PII).
 loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
   try {
@@ -716,6 +747,18 @@ const BirthdayBody = z
     (b) => 'clear' in b || b.day <= DAYS_IN_MONTH[b.month - 1],
     'That day does not exist in that month.'
   );
+
+// GET /api/loyalty/me/code — the personal loyalty code, for the Profile card
+// that keeps it always at hand. Literal route — MUST stay above /me/:slug.
+loyaltyRouter.get('/me/code', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const privyId = (req as AuthedRequest).privyId as string;
+    const identity = await ensureIdentity(privyId);
+    return res.status(200).json({ ok: true, code: identity.loyalty_code });
+  } catch (err) {
+    return serverError(res, 'me-code', err);
+  }
+});
 
 // GET /api/loyalty/me/birthday — what the profile currently holds.
 // Literal route — MUST stay above /me/:slug.

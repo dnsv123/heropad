@@ -118,7 +118,10 @@ const SECTIONS_RO: Section[] = [
     o ștampilă și când, recompensele revendicate, codul tău de fidelitate de 6 caractere și
     codurile temporare de recompensă. Aceasta include istoricul localurilor pe care le-ai
     vizitat și în ce zile. (c) Tranzacțiile BITS și evenimentele de revendicare (moment,
-    cod, identificatorul activului). Nu colectăm și nu vedem niciodată chei private —
+    cod, identificatorul activului). (d) Opțional, dacă alegi să o introduci în Profil:
+    ziua ta de naștere, doar ziua și luna — niciodată anul. Localul pe care îl vizitezi în
+    acea zi vede doar un indicator „azi e ziua clientului", niciodată data; o poți șterge
+    oricând. Nu colectăm și nu vedem niciodată chei private —
     acestea rămân în custodia MPC a Privy sau în portofelul tău.`,
   },
   {

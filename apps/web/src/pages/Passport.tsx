@@ -42,10 +42,12 @@ interface PassportResponse {
   venues: PassportVenue[];
 }
 
-const TIER_EMOJI: Record<PassportTier['key'], string> = {
-  bronze: '🥉',
-  silver: '🥈',
-  gold: '🥇',
+/** The commissioned medal art (WebP for UI; the cNFT metadata points at the
+ * full-res PNGs, same split as the venue trophy). */
+const TIER_ART: Record<PassportTier['key'], string> = {
+  bronze: '/loyalty/passport/bronze_round_medal.webp',
+  silver: '/loyalty/passport/silver_round_medal.webp',
+  gold: '/loyalty/passport/gold_round_medal.webp',
 };
 
 function shortHash(h: string): string {
@@ -235,11 +237,11 @@ export default function Passport() {
                           : 'border-hero-blue/15 bg-hero-deep/60 text-slate-500'
                     }`}
                   >
-                    <span
-                      className={`block text-xl leading-none ${tier.earned ? '' : 'opacity-40 grayscale'}`}
-                    >
-                      {TIER_EMOJI[tier.key]}
-                    </span>
+                    <img
+                      src={TIER_ART[tier.key]}
+                      alt=""
+                      className={`mx-auto block h-9 w-9 object-contain ${tier.earned ? '' : 'opacity-40 grayscale'}`}
+                    />
                     <span className="mt-1 block">
                       {t('pass.tier.n', { n: tier.threshold })}
                     </span>
@@ -267,10 +269,15 @@ export default function Passport() {
                     key={tier.key}
                     className="flex items-center justify-between rounded-xl border border-hero-gold/40 bg-hero-gold/5 px-4 py-2.5"
                   >
-                    <span className="text-sm text-hero-gold">
-                      {TIER_EMOJI[tier.key]} {t(`pass.tier.${tier.key}` as TranslationKey)}
+                    <span className="flex items-center gap-2 text-sm text-hero-gold">
+                      <img
+                        src={TIER_ART[tier.key]}
+                        alt=""
+                        className="h-9 w-9 object-contain"
+                      />
+                      {t(`pass.tier.${tier.key}` as TranslationKey)}
                       {tier.bits > 0 && (
-                        <span className="ml-2 text-[11px] text-solana-green">
+                        <span className="ml-1 text-[11px] text-solana-green">
                           +{tier.bits} BITS
                         </span>
                       )}

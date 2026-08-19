@@ -19,6 +19,8 @@ interface VenueRow {
   address: string | null;
   stampsRequired: number;
   reward: string | null;
+  /** Emoji on the venue's passport-album tile (☕ when unset). */
+  icon: string | null;
   active: boolean;
   claimed: boolean;
   setupCode: string | null;
@@ -570,6 +572,53 @@ export default function Admin() {
                                   return <span className={tone}>● {label}</span>;
                                 })()}
                               </p>
+
+                              {/* Identity details — editable after creation, because cafés
+                                  move, rebrand, and pick their album emoji late. Owner-side
+                                  settings (reward, threshold, happy hour) stay on /business. */}
+                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Name
+                                  <input
+                                    type="text"
+                                    maxLength={80}
+                                    defaultValue={v.name}
+                                    onBlur={(e) => {
+                                      const val = e.target.value.trim();
+                                      if (val.length >= 2 && val !== v.name) void saveBilling(v, { name: val });
+                                    }}
+                                    className="mt-1 block w-44 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                  />
+                                </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Address
+                                  <input
+                                    type="text"
+                                    maxLength={200}
+                                    defaultValue={v.address ?? ''}
+                                    onBlur={(e) => {
+                                      const val = e.target.value.trim();
+                                      if (val !== (v.address ?? '')) void saveBilling(v, { address: val });
+                                    }}
+                                    className="mt-1 block w-64 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                  />
+                                </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Emoji
+                                  <InfoTip text="The icon on this venue's tile in the customer's SuperVictor Passport album (e.g. 🥐 for a bakery, 🍦 for gelato). Empty = the default ☕." />
+                                  <input
+                                    type="text"
+                                    maxLength={8}
+                                    defaultValue={v.icon ?? ''}
+                                    placeholder="☕"
+                                    onBlur={(e) => {
+                                      const val = e.target.value.trim();
+                                      if (val !== (v.icon ?? '')) void saveBilling(v, { icon: val });
+                                    }}
+                                    className="mt-1 block w-16 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-center text-sm text-white"
+                                  />
+                                </label>
+                              </div>
 
                               {/* Billing + who brought this venue — the inputs to commission */}
                               <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">

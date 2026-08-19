@@ -583,7 +583,12 @@ export default function Business() {
               <p className="mb-3 text-xs text-slate-500">
                 {t('b.anycode.hint')}
               </p>
-              <div className="mx-auto mt-3 flex max-w-xs items-stretch gap-2">
+              {/* Stacked, input FIRST: side-by-side the input shrank to a
+                 sliver on small phones and the keyboard covered it, so the
+                 owner typed their setup code blind (PXP Donuts session).
+                 Full-width and scrolled to centre on focus, every character
+                 stays visible while it is typed. */}
+              <div className="mx-auto mt-3 max-w-xs space-y-2">
                 <input
                   type="text"
                   autoComplete="off"
@@ -592,8 +597,11 @@ export default function Business() {
                   maxLength={8}
                   value={setupCode}
                   onChange={(e) => setSetupCode(e.target.value.toUpperCase())}
+                  onFocus={(e) =>
+                    e.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                  }
                   placeholder={t('b.setupcode.ph')}
-                  className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2.5 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                  className="block w-full rounded-xl border-2 border-hero-gold/50 bg-hero-deep/80 px-3 py-3 text-center font-mono text-2xl tracking-[0.3em] text-hero-gold placeholder:text-base placeholder:tracking-normal placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
                 />
                 <button
                   type="button"
@@ -602,7 +610,7 @@ export default function Business() {
                     claiming ||
                     (setupCode.trim().length !== 8 && setupCode.trim().length !== 6)
                   }
-                  className="shrink-0 rounded-full bg-hero-gold px-5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
+                  className="block w-full rounded-full bg-hero-gold px-5 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
                 >
                   {claiming
                     ? t('b.claim.busy')

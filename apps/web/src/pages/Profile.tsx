@@ -3,7 +3,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useT } from '../i18n';
 import AccountCard from '../components/AccountCard';
 import BirthdayCard from '../components/BirthdayCard';
+import MyCode from '../components/MyCode';
 import MyRoles from '../components/MyRoles';
+import PartnerVenues from '../components/PartnerVenues';
 import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
 import CollectionCard from '../components/CollectionCard';
@@ -38,6 +40,11 @@ export default function Profile() {
             {/* Order: who you are → your daily value (Power Pass) → the
                 plumbing (wallets) → what you own (collection). */}
             <AccountCard />
+            {/* The code lives high on the page: it is the thing a customer
+                opens the Profile FOR when they are standing at a counter. */}
+            <div className="mt-8">
+              <MyCode />
+            </div>
             {/* Renders nothing for a plain customer; sits high for the people
                 who do wear another hat, because it is why they opened this. */}
             <div className="mt-8">
@@ -45,6 +52,9 @@ export default function Profile() {
             </div>
             <div className="mt-8">
               <LoyaltyStats />
+            </div>
+            <div className="mt-8">
+              <PartnerVenues />
             </div>
             <div className="mt-8">
               <BirthdayCard />

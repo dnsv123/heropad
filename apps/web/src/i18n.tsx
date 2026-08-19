@@ -363,6 +363,13 @@ const en = {
   'f.tagline': 'Digital loyalty for local venues.',
   'f.privacy': 'Privacy',
   'f.terms': 'Terms',
+
+  // --- Profile: code + partner venues ---
+  'mc.title': 'Your code',
+  'mc.hint': 'Show or say this code at any partner venue counter.',
+  'pv.title': 'Partner venues',
+  'pv.hint': 'Every venue in the network — the same code works at all of them.',
+  'pv.passport': 'Open your SuperVictor Passport',
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -745,6 +752,13 @@ const ro: Record<TranslationKey, string> = {
   'f.tagline': 'Fidelizare digitală pentru localuri.',
   'f.privacy': 'Confidențialitate',
   'f.terms': 'Termeni',
+
+  // --- Profil: codul + localuri partenere ---
+  'mc.title': 'Codul tău',
+  'mc.hint': 'Arată sau spune acest cod la casa oricărui local partener.',
+  'pv.title': 'Localuri partenere',
+  'pv.hint': 'Toate localurile din rețea — același cod merge la toate.',
+  'pv.passport': 'Deschide-ți Pașaportul SuperVictor',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

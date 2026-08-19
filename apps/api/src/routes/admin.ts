@@ -185,6 +185,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         address: v.address,
         stampsRequired: v.stamps_required,
         reward: typeof v.branding?.reward === 'string' ? v.branding.reward : null,
+        icon: typeof v.branding?.icon === 'string' ? v.branding.icon : null,
         active: v.active,
         claimed: Boolean(v.owner_identity_id),
         setupCode: v.claim_token,
@@ -269,6 +270,8 @@ const UpdateBody = z.object({
   address: z.string().trim().max(200).optional(),
   stampsRequired: z.number().int().min(3).max(30).optional(),
   reward: z.string().trim().min(2).max(60).optional(),
+  /** Emoji shown on this venue's passport-album tile; '' clears it (☕ default). */
+  icon: z.string().trim().max(8).optional(),
   gpsLat: z.number().min(-90).max(90).nullable().optional(),
   gpsLng: z.number().min(-180).max(180).nullable().optional(),
   active: z.boolean().optional(),
@@ -304,8 +307,14 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     if (i.gpsLat !== undefined) patch.gps_lat = i.gpsLat;
     if (i.gpsLng !== undefined) patch.gps_lng = i.gpsLng;
     if (i.active !== undefined) patch.active = i.active;
-    if (i.reward !== undefined) {
-      patch.branding = { ...(venue.branding ?? {}), reward: i.reward };
+    if (i.reward !== undefined || i.icon !== undefined) {
+      const branding = { ...(venue.branding ?? {}) };
+      if (i.reward !== undefined) branding.reward = i.reward;
+      if (i.icon !== undefined) {
+        if (i.icon === '') delete branding.icon;
+        else branding.icon = i.icon;
+      }
+      patch.branding = branding;
     }
     if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
     if (i.billingStatus !== undefined) {
