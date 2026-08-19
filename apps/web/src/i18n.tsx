@@ -367,9 +367,12 @@ const en = {
   // --- Profile: code + partner venues ---
   'mc.title': 'Your code',
   'mc.hint': 'Show or say this code at any partner venue counter.',
-  'pv.title': 'Partner venues',
-  'pv.hint': 'Every venue in the network — the same code works at all of them.',
+  'pp.venues.label': 'Your active cards — venues where you already collect',
+  'pv.title': 'Discover partner venues',
+  'pv.hint':
+    'The full HeroPad map — every partner venue, including the ones you haven’t visited yet. Your code works at all of them, and each new place fills a page in your passport.',
   'pv.passport': 'Open your SuperVictor Passport',
+  'b.code.btn': 'Activate code',
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -756,9 +759,12 @@ const ro: Record<TranslationKey, string> = {
   // --- Profil: codul + localuri partenere ---
   'mc.title': 'Codul tău',
   'mc.hint': 'Arată sau spune acest cod la casa oricărui local partener.',
-  'pv.title': 'Localuri partenere',
-  'pv.hint': 'Toate localurile din rețea — același cod merge la toate.',
+  'pp.venues.label': 'Cardurile tale active — localurile unde colectezi deja',
+  'pv.title': 'Descoperă localurile partenere',
+  'pv.hint':
+    'Harta completă HeroPad — toate localurile partenere, inclusiv cele unde n-ai fost încă. Codul tău merge la toate, iar fiecare loc nou umple o pagină din pașaportul tău.',
   'pv.passport': 'Deschide-ți Pașaportul SuperVictor',
+  'b.code.btn': 'Activează codul',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

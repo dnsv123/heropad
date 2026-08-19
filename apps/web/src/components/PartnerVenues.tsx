@@ -32,8 +32,11 @@ export default function PartnerVenues() {
   if (!venues || venues.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
-      <h2 className="font-display text-lg font-semibold text-white">☕ {t('pv.title')}</h2>
+    /* Dashed border on purpose — the visual language of "not collected yet"
+       the passport album already speaks. This card is the map of what exists;
+       the Power Pass above is the diary of where you already collect. */
+    <div className="rounded-2xl border border-dashed border-hero-cyan/35 bg-hero-deep/30 p-6">
+      <h2 className="font-display text-lg font-semibold text-hero-cyan">🧭 {t('pv.title')}</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('pv.hint')}</p>
       <div className="mt-4 space-y-2">
         {venues.map((v) => (

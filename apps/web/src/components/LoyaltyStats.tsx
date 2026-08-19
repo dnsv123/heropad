@@ -170,6 +170,9 @@ export default function LoyaltyStats() {
           {/* Quick links: jump straight to each venue's loyalty page. */}
           {stats.venues.length > 0 && (
             <div className="mt-3 space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                {t('pp.venues.label')}
+              </p>
               {stats.venues.map((v) => (
                 <Link
                   key={v.slug}

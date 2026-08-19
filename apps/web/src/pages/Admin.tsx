@@ -3,6 +3,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import AdminPartners from '../components/AdminPartners';
+import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
 import InfoTip from '../components/InfoTip';
 
@@ -132,12 +133,22 @@ export default function Admin() {
       if (!token) return;
       await getJson('/api/admin/me', token);
       setIsAdmin(true);
-      const [v, o] = await Promise.all([
+      const [v, o, p] = await Promise.all([
         getJson<{ ok: true; venues: VenueRow[] }>('/api/admin/venues', token),
         getJson<{ ok: true } & Overview>('/api/admin/overview', token),
+        // Partner codes load with the page, NOT with the Partners tab: the
+        // "Brought by" select needs them as options, and a select whose saved
+        // value has no matching option silently renders the first one — which
+        // made every attribution LOOK reset on each fresh session, even
+        // though the database held it the whole time.
+        getJson<{ ok: true; partners: Array<{ partner: { code: string; displayName: string } }> }>(
+          '/api/admin/partners',
+          token
+        ),
       ]);
       setVenues(v.venues);
       setOverview(o);
+      setPartnerCodes(p.partners.map((x) => ({ code: x.partner.code, name: x.partner.displayName })));
     } catch (err) {
       const e = err as {
         code?: string;
@@ -605,17 +616,12 @@ export default function Admin() {
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Emoji
-                                  <InfoTip text="The icon on this venue's tile in the customer's SuperVictor Passport album (e.g. 🥐 for a bakery, 🍦 for gelato). Empty = the default ☕." />
-                                  <input
-                                    type="text"
-                                    maxLength={8}
-                                    defaultValue={v.icon ?? ''}
-                                    placeholder="☕"
-                                    onBlur={(e) => {
-                                      const val = e.target.value.trim();
-                                      if (val !== (v.icon ?? '')) void saveBilling(v, { icon: val });
+                                  <InfoTip text="The icon on this venue's tile in the customer's SuperVictor Passport album (e.g. 🥐 for a bakery, 🍩 for donuts). Tap to pick from the palette; Clear returns the default ☕." />
+                                  <EmojiPick
+                                    value={v.icon}
+                                    onPick={(icon) => {
+                                      if (icon !== (v.icon ?? '')) void saveBilling(v, { icon });
                                     }}
-                                    className="mt-1 block w-16 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-center text-sm text-white"
                                   />
                                 </label>
                               </div>
@@ -659,6 +665,12 @@ export default function Admin() {
                                     className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
                                   >
                                     <option value="">nobody (direct)</option>
+                                    {/* Safety net: the saved value always has an option,
+                                        so it can never DISPLAY as reset. */}
+                                    {v.partnerCode &&
+                                      !partnerCodes.some((pc) => pc.code === v.partnerCode) && (
+                                        <option value={v.partnerCode}>{v.partnerCode}</option>
+                                      )}
                                     {partnerCodes.map((pc) => (
                                       <option key={pc.code} value={pc.code}>
                                         {pc.name} ({pc.code})

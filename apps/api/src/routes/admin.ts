@@ -130,7 +130,13 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     {
       const ids = [...new Set(rows.map((r) => r.referred_by).filter(Boolean))] as string[];
       if (ids.length > 0) {
-        const { data: ps } = await supa.from('partners').select('id, code').in('id', ids);
+        // Never swallowed: a failed join here would render every attribution
+        // as "nobody", which reads as data loss when it is only a bad read.
+        const { data: ps, error: pErr } = await supa
+          .from('partners')
+          .select('id, code')
+          .in('id', ids);
+        if (pErr) throw new Error(pErr.message);
         for (const p of (ps ?? []) as Array<{ id: string; code: string }>) {
           partnerCodeById.set(p.id, p.code);
         }

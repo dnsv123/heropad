@@ -612,11 +612,13 @@ export default function Business() {
                   }
                   className="block w-full rounded-full bg-hero-gold px-5 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
                 >
-                  {claiming
-                    ? t('b.claim.busy')
-                    : setupCode.trim().length === 6
-                      ? t('b.staffclaim.go')
-                      : t('b.claim.btn')}
+                  {/* One neutral label, whatever the length. The old label
+                     flipped to "Join the team" at the 6th typed character of
+                     an 8-character owner code, then flipped again — watching
+                     it, the PXP Donuts owner briefly thought he was being
+                     demoted. The server tells the two codes apart; the
+                     button does not need to narrate it mid-keystroke. */}
+                  {claiming ? t('b.claim.busy') : t('b.code.btn')}
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-slate-600">{t('b.setupcode.hint')}</p>
