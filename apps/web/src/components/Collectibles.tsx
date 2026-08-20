@@ -115,7 +115,11 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
   }
 
   // ---- Data --------------------------------------------------------------
-  const { bits, bitsHistory, collectibles } = state.data;
+  const { bits, collectibles } = state.data;
+  // Defensive: a cached or older API payload may not carry the field yet —
+  // a missing ledger must degrade to "no history", never crash the Profile
+  // (which is exactly what it did on deploy day).
+  const bitsHistory = state.data.bitsHistory ?? [];
 
   // Every asset lands in exactly one folder: first matching rule wins, and
   // the last rule matches everything, so nothing can vanish.
