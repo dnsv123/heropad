@@ -150,6 +150,29 @@ export default function AdminGuide() {
         </p>
       </div>
 
+      {/* ---- Figurinele ---- */}
+      <div className={card}>
+        <h2 className={h}>🗿 Figurinele — ale cui sunt?</h2>
+        <p className={li}><b>Comodat (împrumut de folosință), nu vânzare.</b> Figurina rămâne proprietatea SuperVictor Universe; localul o folosește cât timp e abonat la Branded+ — e inclusă în preț, ca un echipament în chirie.</p>
+        <p className={li}>De ce așa: la reziliere figurina se întoarce (brandul nu rămâne pe tejgheaua unui fost client) · justifică diferența de tier lunar fără să vinzi stoc · o clauză simplă de comodat în contract acoperă pierderea/deteriorarea (taxă de înlocuire, ex. 150 lei).</p>
+        <p className={li}>Stickerele QR și tagurile NFC simple = consumabile, le dai gratuit, nu se contabilizează.</p>
+      </div>
+
+      {/* ---- Viitor / Scalare ---- */}
+      <div className={card}>
+        <h2 className={h}>🚀 Viitor & scalare — listă INTERNĂ de idei</h2>
+        <p className="mt-2 rounded-lg border border-hero-gold/30 bg-hero-gold/10 px-3 py-2 text-[12px] text-hero-gold">
+          ⚠️ Brainstorm, nu promisiuni. La un meeting NU promiți nimic de aici — formula
+          e „pe roadmap, vă anunț când e gata”. Prioritizarea o dictează cafenelele reale.
+        </p>
+        <p className={li}><b>Aproape (după pilot):</b> mainnet (trofee reale, plan scris) · NFC Faza 2b — chei criptografice: BITS de prezență la tap (1/zi), redeem direct prin figurină · reminder-uri „ne e dor de tine” (avem deja segmentele; lipsește doar trimiterea automată) · taguri NFC pe mese.</p>
+        <p className={li}><b>Monetizare & retenție:</b> abonamente/membership („cafea nelimitată”, ex. 199 lei/lună la casă) · reward dinamic (clientul alege din 2-3 recompense / surprise reward) · BITS sink — clienții cheltuie BITS pe perks în rețea (reduceri, produse, acces V-DASH) · ediții limitate de trofee co-branded pentru campanii.</p>
+        <p className={li}><b>Extindere pe verticale</b> (mecanica e identică, se schimbă emoji-ul și recompensa): gelaterii · cofetării · frizerii/saloane (acolo devine relevant și booking-ul — produs separat) · săli de fitness (+ waitlist) · food trucks · librării-cafenea.</p>
+        <p className={li}><b>Integrare & confort:</b> POS (Sedona/SmartBill — cel mai cerut de piață, dar dependență de terți; doar cu volum) · carduri Apple/Google Wallet · meniu QR digital ca add-on ieftin · white-label complet (tierul Custom) · multi-locație cu raport consolidat (tierul Chain — deja în grila de preț).</p>
+        <p className={li}><b>Inteligență:</b> predicție churn („clientul X n-a mai venit de 3 săptămâni, avea 8/10”) · sugestii de recompense și de ferestre Happy Hour din datele venue-ului.</p>
+        <p className={li}><b>Ecosistem SuperVictor:</b> caracter jucabil V-DASH prin claim (deții X trofee + pașaport) · legătura cu Hall of Heroes prin identitate · VicBits.</p>
+      </div>
+
       {/* ---- De reținut ---- */}
       <div className={card}>
         <h2 className={h}>🧭 De reținut la vânzare</h2>
