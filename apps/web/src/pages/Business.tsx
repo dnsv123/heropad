@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '@privy-io/react-auth';
@@ -139,6 +139,16 @@ export default function Business() {
   // "Load" instead of typing a code. Polled lightly, only while the counter
   // is actually open and looked at; entries expire server-side after 3 min.
   const [checkins, setCheckins] = useState<Array<{ code: string; secondsAgo: number }>>([]);
+  // Zero-click serve: when the counter is IDLE (no customer loaded, nothing
+  // being typed), the newest tap loads itself — the barista looks down and the
+  // card is already there, +2 away from done. Never auto-switches away from a
+  // customer already on screen, and never fights half-typed input. Refs keep
+  // the 5s poll honest about state without re-arming the interval.
+  const customerRef = useRef(customer);
+  customerRef.current = customer;
+  const codeInputRef = useRef(codeInput);
+  codeInputRef.current = codeInput;
+  const autoLoaded = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!canServe) return;
     let active = true;
@@ -151,7 +161,19 @@ export default function Business() {
           `/api/loyalty/merchant/${slug}/checkins`,
           token
         );
-        if (active) setCheckins(r.checkins);
+        if (!active) return;
+        setCheckins(r.checkins);
+        const newest = r.checkins[0];
+        if (
+          newest &&
+          !customerRef.current &&
+          codeInputRef.current.trim() === '' &&
+          !autoLoaded.current.has(newest.code)
+        ) {
+          autoLoaded.current.add(newest.code);
+          setCodeInput(newest.code);
+          void lookupCustomer(newest.code);
+        }
       } catch {
         /* a missed poll is just a missed poll */
       }
@@ -162,6 +184,7 @@ export default function Business() {
       active = false;
       window.clearInterval(id);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lookupCustomer is stable-enough; refs carry live state
   }, [canServe, slug, getAccessToken]);
 
   // Load public venue info — and seed the settings form with what is already
