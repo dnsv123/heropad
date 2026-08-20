@@ -3,6 +3,7 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import AdminPartners from '../components/AdminPartners';
+import AdminGuide from '../components/AdminGuide';
 import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
 import InfoTip from '../components/InfoTip';
@@ -1021,6 +1022,12 @@ export default function Admin() {
                 </div>
               </div>
             ),
+          },
+          {
+            key: 'guide',
+            icon: '📖',
+            label: 'How-to',
+            render: () => <AdminGuide />,
           },
           {
             key: 'support',

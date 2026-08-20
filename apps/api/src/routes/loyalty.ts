@@ -133,6 +133,15 @@ const TROPHY_BITS_REWARD = (() => {
   return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 1000;
 })();
 
+// A few BITS ride on every stamp — the purchase itself feeds the ecosystem,
+// not just the milestones. Costs the café nothing (BITS are ours), stays
+// proportionate to the big rewards (a full 10-stamp card earns ~20 BITS next
+// to the 1000-BITS trophy). 0 disables it.
+const STAMP_BITS_REWARD = (() => {
+  const parsed = Number(process.env.STAMP_BITS_REWARD);
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1000 ? parsed : 2;
+})();
+
 // The ceiling that bounds what the admin keypair can spend in a day across
 // EVERY venue. A per-venue limit multiplies by the number of cafés, which is
 // not a budget — it is a number that grows with success.
@@ -1780,6 +1789,20 @@ loyaltyRouter.post(
       });
       // The stamp IS the service — their figurine check-in has done its job.
       clearCheckin(owned.venue.id, customer.id);
+      // Per-stamp BITS, best-effort and off the response path. No wallet yet →
+      // silently skipped (unlike trophies these are pocket change, not worth a
+      // retro-mint pipeline). A later revoke does not claw them back — the
+      // amounts are too small to justify negative ledger entries.
+      if (STAMP_BITS_REWARD > 0 && customer.solana_wallet) {
+        void creditBits(
+          customer.solana_wallet,
+          effectiveCount * STAMP_BITS_REWARD,
+          'stamp',
+          { venue: owned.venue.slug, count: effectiveCount }
+        ).catch((bitsErr) => {
+          console.error('[loyalty.grant] stamp BITS failed:', bitsErr);
+        });
+      }
 
       const progress = await getVenueProgress(customer.id, owned.venue.id);
       return res.status(200).json({
