@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ro">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,21 +7,40 @@
     <link rel="alternate icon" type="image/png" href="/super-victor-pfp.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A1B3A" />
-    <meta name="description" content="HeroPad — phygital ecosystem on Solana. Where physical heroes become digital superpowers." />
+    <!-- Power-Pass-first, Romanian-first, and deliberately crypto-free: the
+         page sells a loyalty system to café owners, and so does its snippet. -->
+    <meta name="description" content="HeroPad Power Pass — sistem de fidelizare digital pentru cafenele și localuri. Fără aplicație de instalat: clientul scanează sau atinge figurina, bonusurile apar live, cardul plin aduce recompensa. Prețuri publice de la 99 lei/lună, clienți nelimitați." />
+    <link rel="canonical" href="https://heropad.supervictoruniverse.com/" />
 
-    <!-- Open Graph (Facebook, Discord, generic crawlers) -->
-    <meta property="og:title" content="HeroPad — phygital × Solana" />
-    <meta property="og:description" content="Where physical heroes become digital superpowers. Scan, claim, play." />
+    <!-- Open Graph (Facebook, WhatsApp, generic crawlers) -->
+    <meta property="og:title" content="HeroPad Power Pass — fidelizare pe care clienții chiar o iubesc" />
+    <meta property="og:description" content="Sistem de fidelizare digital pentru localuri: fără aplicație, bonusuri live, trofee de colecție. De la 99 lei/lună, clienți nelimitați." />
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ro_RO" />
     <meta property="og:url" content="https://heropad.supervictoruniverse.com" />
-    <meta property="og:image" content="https://heropad.supervictoruniverse.com/super-victor.webp" />
+    <meta property="og:image" content="https://heropad.supervictoruniverse.com/cnft/trophy-starter.png" />
 
     <!-- Twitter card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@SVictorUniverse" />
-    <meta name="twitter:title" content="HeroPad — phygital × Solana" />
-    <meta name="twitter:description" content="Scan a figurine, card, or pack. Claim a Solana cNFT. Unlock V-DASH." />
-    <meta name="twitter:image" content="https://heropad.supervictoruniverse.com/super-victor.webp" />
+    <meta name="twitter:title" content="HeroPad Power Pass — fidelizare pe care clienții chiar o iubesc" />
+    <meta name="twitter:description" content="Sistem de fidelizare digital pentru localuri: fără aplicație, bonusuri live, trofee de colecție. De la 99 lei/lună." />
+    <meta name="twitter:image" content="https://heropad.supervictoruniverse.com/cnft/trophy-starter.png" />
+
+    <!-- Structured data: what the product is, in Google's own vocabulary. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HeroPad Power Pass",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Sistem de fidelizare digital pentru cafenele și localuri, fără aplicație de instalat.",
+      "url": "https://heropad.supervictoruniverse.com",
+      "offers": { "@type": "Offer", "price": "99", "priceCurrency": "RON" },
+      "publisher": { "@type": "Organization", "name": "SuperVictor Universe" }
+    }
+    </script>
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -36,7 +55,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 
-    <title>HeroPad</title>
+    <title>HeroPad Power Pass — Fidelizare digitală pentru localuri</title>
   </head>
   <body class="bg-hero-deep text-slate-100 antialiased">
     <div id="root"></div>

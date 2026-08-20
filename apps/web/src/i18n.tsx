@@ -397,6 +397,8 @@ const en = {
   'lp.b.feats': 'Everything in Starter + the SuperVictor NFC figurine on your counter + co-branding with your logo and colors',
   'lp.g.feats': 'Everything in Branded + Happy Hour ×2/×3 + Google review invites + birthday surprises + advanced analytics',
   'lp.note': 'Automatic monthly e-invoice · pay by bank transfer or card · cancel anytime, no penalties.',
+  'lp.chain': 'Running a chain with 3+ locations? Chain — from 699 lei/month, with consolidated reporting.',
+  'lp.chain.cta': 'Write to us',
 
   // --- NFC figurine check-in ---
   'loy.tap.done': 'Checked in! The counter can see your code — no need to show it.',
@@ -818,6 +820,8 @@ const ro: Record<TranslationKey, string> = {
   'lp.b.feats': 'Tot din Starter + figurina SuperVictor cu NFC pe tejghea + co-branding cu logo-ul și culorile voastre',
   'lp.g.feats': 'Tot din Branded + Happy Hour ×2/×3 + invitații la recenzii Google + surprize de zi de naștere + analitice avansate',
   'lp.note': 'Factură electronică automată lunar · plată prin transfer sau card · reziliere oricând, fără penalități.',
+  'lp.chain': 'Aveți un lanț cu 3+ locații? Chain — de la 699 lei/lună, cu raport consolidat.',
+  'lp.chain.cta': 'Scrieți-ne',
 
   // --- Check-in cu figurina NFC ---
   'loy.tap.done': 'Te-ai anunțat! Casa îți vede codul — nu mai e nevoie să-l arăți.',

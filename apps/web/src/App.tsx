@@ -1,5 +1,10 @@
 import { Suspense, lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
+// Cookieless, anonymous page analytics — consistent with the privacy policy's
+// "no advertising cookies and no third-party trackers" promise (GA4 would
+// break it and drag in a consent banner). No-ops until the Vercel dashboard
+// toggle is on.
+import { Analytics } from '@vercel/analytics/react';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -49,6 +54,7 @@ export default function App() {
         </Suspense>
       </main>
       <Footer />
+      <Analytics />
     </div>
   );
 }

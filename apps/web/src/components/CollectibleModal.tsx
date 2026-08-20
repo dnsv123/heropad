@@ -85,7 +85,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-hero-blue/30 bg-hero-deep shadow-2xl"
+          className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-hero-blue/30 bg-hero-deep shadow-2xl"
         >
           {/* Close button */}
           <button
@@ -101,7 +101,9 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
 
           <div className="grid gap-0 md:grid-cols-2">
             {/* Image side */}
-            <div className="relative aspect-square w-full bg-gradient-to-br from-hero-blue/20 via-hero-deep to-hero-deep">
+            {/* Full square on desktop; capped on phones so the details are
+               reachable without the art swallowing the whole viewport. */}
+            <div className="relative w-full bg-gradient-to-br from-hero-blue/20 via-hero-deep to-hero-deep max-md:h-56 md:aspect-square">
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}

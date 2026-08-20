@@ -51,7 +51,16 @@ export default function LandingPricing() {
         ))}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-500">{t('lp.note')}</p>
+      <p className="mt-4 text-center text-sm text-slate-400">
+        {t('lp.chain')}{' '}
+        <a
+          href="mailto:dinescuioanvalentin@gmail.com?subject=HeroPad%20Chain%20—%20multi-loca%C8%9Bie"
+          className="text-hero-cyan underline transition hover:text-hero-gold"
+        >
+          {t('lp.chain.cta')}
+        </a>
+      </p>
+      <p className="mt-2 text-center text-xs text-slate-500">{t('lp.note')}</p>
       <div className="mt-5 text-center">
         <a
           href="mailto:dinescuioanvalentin@gmail.com?subject=HeroPad%20Power%20Pass%20—%20Demo"

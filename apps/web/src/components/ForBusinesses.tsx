@@ -9,10 +9,10 @@ export default function ForBusinesses() {
   const { t } = useT();
 
   const benefits = [
-    { title: t('biz.b1.t'), text: t('biz.b1.d') },
-    { title: t('biz.b2.t'), text: t('biz.b2.d') },
-    { title: t('biz.b3.t'), text: t('biz.b3.d') },
-    { title: t('biz.b4.t'), text: t('biz.b4.d') },
+    { icon: '🔁', tint: 'bg-hero-cyan/15', title: t('biz.b1.t'), text: t('biz.b1.d') },
+    { icon: '📊', tint: 'bg-hero-cyan/15', title: t('biz.b2.t'), text: t('biz.b2.d') },
+    { icon: '🛡️', tint: 'bg-hero-gold/15', title: t('biz.b3.t'), text: t('biz.b3.d') },
+    { icon: '🔒', tint: 'bg-hero-gold/15', title: t('biz.b4.t'), text: t('biz.b4.d') },
   ];
 
   return (
@@ -34,10 +34,17 @@ export default function ForBusinesses() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="rounded-2xl border-l-4 border-hero-gold bg-hero-deep/50 p-5"
+              className="flex items-start gap-4 rounded-2xl border border-hero-blue/15 bg-hero-deep/50 p-5"
             >
-              <p className="font-display font-semibold text-hero-gold">{b.title}</p>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-300">{b.text}</p>
+              <span
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl ${b.tint}`}
+              >
+                {b.icon}
+              </span>
+              <span>
+                <p className="font-display font-semibold text-white">{b.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-400">{b.text}</p>
+              </span>
             </motion.div>
           ))}
         </div>
