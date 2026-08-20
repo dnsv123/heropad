@@ -46,10 +46,18 @@ export interface CollectibleSummary {
   attributes: Array<{ trait: string; value: string }>;
 }
 
+export interface BitsHistoryEntry {
+  amount: number;
+  reason: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
 export interface UserMeResponse {
   ok: true;
   wallet: string;
   bits: { current: number; earned: number; spent: number };
+  bitsHistory: BitsHistoryEntry[];
   collectibles: CollectibleSummary[];
   collectibleCount: number;
   cached: boolean;

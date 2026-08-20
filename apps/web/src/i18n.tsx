@@ -400,6 +400,22 @@ const en = {
   'lp.chain': 'Running a chain with 3+ locations? Chain — from 699 lei/month, with consolidated reporting.',
   'lp.chain.cta': 'Write to us',
 
+  // --- Collection + BITS ledger ---
+  'col.bits.earned': '{n} earned in total',
+  'col.bits.show': 'Where from?',
+  'col.bits.hide': 'Hide history',
+  'col.f.venue': 'Venue trophies',
+  'col.f.passport': 'Passport trophies',
+  'col.f.physical': 'Figurines & physical products',
+  'col.empty.t': 'No collectibles yet.',
+  'col.empty.d': 'Your first completed card mints your first trophy.',
+  'col.r.stamp': 'Purchase bonus',
+  'col.r.trophy': 'Trophy — completed card',
+  'col.r.passport': 'Passport trophy',
+  'col.r.refinv': 'Bring a friend — your bonus',
+  'col.r.reffriend': 'Welcome bonus from a friend',
+  'col.r.claim': 'Collectible claim',
+
   // --- NFC figurine check-in ---
   'loy.tap.done': 'Checked in! The counter can see your code — no need to show it.',
   'b.checkin.title': 'At the counter — tapped the figurine',
@@ -822,6 +838,22 @@ const ro: Record<TranslationKey, string> = {
   'lp.note': 'Factură electronică automată lunar · plată prin transfer sau card · reziliere oricând, fără penalități.',
   'lp.chain': 'Aveți un lanț cu 3+ locații? Chain — de la 699 lei/lună, cu raport consolidat.',
   'lp.chain.cta': 'Scrieți-ne',
+
+  // --- Colecția + registrul BITS ---
+  'col.bits.earned': '{n} câștigați în total',
+  'col.bits.show': 'De unde?',
+  'col.bits.hide': 'Ascunde istoricul',
+  'col.f.venue': 'Trofee de la localuri',
+  'col.f.passport': 'Trofee de pașaport',
+  'col.f.physical': 'Figurine & produse fizice',
+  'col.empty.t': 'Niciun colecționabil încă.',
+  'col.empty.d': 'Primul card completat îți creează primul trofeu.',
+  'col.r.stamp': 'Bonus la cumpărătură',
+  'col.r.trophy': 'Trofeu — card completat',
+  'col.r.passport': 'Trofeu de pașaport',
+  'col.r.refinv': 'Adu un prieten — bonusul tău',
+  'col.r.reffriend': 'Bonus de bun venit de la un prieten',
+  'col.r.claim': 'Revendicare colecționabil',
 
   // --- Check-in cu figurina NFC ---
   'loy.tap.done': 'Te-ai anunțat! Casa îți vede codul — nu mai e nevoie să-l arăți.',

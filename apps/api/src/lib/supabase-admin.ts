@@ -181,6 +181,40 @@ export async function creditBits(
  * update (e.g. the partial-unique-index upsert quirk). For hackathon scale
  * (low write rate), summing on read is cheap and accurate.
  */
+/**
+ * The ledger itself, newest first — the "where did my BITS come from"
+ * accounting the Profile shows. Reasons in the wild: claim, stamp,
+ * loyalty_trophy, passport_trophy, referral_inviter, referral_friend.
+ */
+export async function getBitsHistory(
+  walletAddress: string,
+  limit = 60
+): Promise<Array<{
+  amount: number;
+  reason: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}>> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('bits_transactions')
+    .select('amount, reason, metadata, created_at')
+    .eq('wallet_address', walletAddress)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`[Supabase] getBitsHistory: ${error.message}`);
+  return ((data ?? []) as Array<{
+    amount: number;
+    reason: string;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+  }>).map((r) => ({
+    amount: Number(r.amount),
+    reason: r.reason,
+    metadata: r.metadata,
+    createdAt: r.created_at,
+  }));
+}
+
 export async function getBitsBalance(walletAddress: string): Promise<{
   current: number;
   earned: number;

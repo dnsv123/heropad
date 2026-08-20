@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 
 import { getOwnedCollectibles } from '../lib/helius.js';
-import { getBitsBalance } from '../lib/supabase-admin.js';
+import { getBitsBalance, getBitsHistory } from '../lib/supabase-admin.js';
 import {
   requireAuth,
   getUserSolanaWallets,
@@ -92,14 +92,16 @@ userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    const [bits, collectibles] = await Promise.all([
+    const [bits, collectibles, bitsHistory] = await Promise.all([
       getBitsBalance(wallet),
       getOwnedCollectibles(wallet),
+      getBitsHistory(wallet),
     ]);
 
     const payload = {
       wallet,
       bits,
+      bitsHistory,
       collectibles,
       collectibleCount: collectibles.length,
     };
