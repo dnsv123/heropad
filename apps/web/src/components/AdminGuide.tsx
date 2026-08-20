@@ -158,6 +158,63 @@ export default function AdminGuide() {
         <p className={li}>Stickerele QR și tagurile NFC simple = consumabile, le dai gratuit, nu se contabilizează.</p>
       </div>
 
+      {/* ---- Pentru cine e pretabil ---- */}
+      <div className={card}>
+        <h2 className={h}>🏪 Pentru cine e pretabil</h2>
+        <p className={p}>
+          Regula: <b>orice business cu clienți care POT reveni des</b> și o recompensă
+          care se dă la tejghea. Mecanica e identică peste tot — se schimbă doar
+          emoji-ul, pragul și recompensa:
+        </p>
+        <p className={li}><b>☕ Cafenele & specialty coffee</b> — cazul de bază: 10 cafele → una gratis.</p>
+        <p className={li}><b>🍦 Gelaterii</b> — sezonier puternic; Happy Hour umple orele reci.</p>
+        <p className={li}><b>🍰 Cofetării & patiserii</b> — prag mic (5-7), recompensă = prăjitura zilei.</p>
+        <p className={li}><b>🥖 Brutării artizanale</b> — clientelă zilnică, cea mai mare frecvență posibilă.</p>
+        <p className={li}><b>🫖 Ceainării & bubble tea</b> — public tânăr, exact publicul colecționabilelor.</p>
+        <p className={li}><b>🍕 Pizzerii & fast-casual</b> — 10 pizza → una gratis; prânzurile de birou revin.</p>
+        <p className={li}><b>🍜 Restaurante cu meniu de prânz</b> — fidelizarea angajaților din zonă.</p>
+        <p className={li}><b>🚚 Food trucks</b> — zero infrastructură = clientul nostru ideal; QR + figurină și gata.</p>
+        <p className={li}><b>💈 Frizerii & barber shops</b> — vizite regulate (3-5 săpt.), a 10-a tunsoare gratis.</p>
+        <p className={li}><b>💅 Saloane (manichiură, cosmetică)</b> — frecvență lunară, valoare mare per vizită.</p>
+        <p className={li}><b>🏋️ Săli de fitness & yoga</b> — ștampilă per ședință; trofeul = motivația de consecvență.</p>
+        <p className={li}><b>🧖 Solare & spa</b> — pachete care se pretează natural la praguri.</p>
+        <p className={li}><b>📚 Librării-cafenea & boardgame cafés</b> — comunitate + colecționabile = potrivire perfectă.</p>
+        <p className={li}><b>🍺 Vinoteci & craft beer shops</b> — degustări, clientelă de habitué.</p>
+        <p className={li}><b>🐾 Pet shops & saloane de toaletaj</b> — recurență lunară garantată de animal. 😄</p>
+        <p className={li}><b>🚗 Spălătorii auto</b> — clasicul cardului ștampilat, digitalizat.</p>
+        <p className={li}><b>💐 Florării</b> — ocazii repetate; reminder-ul de zi de naștere lucrează dublu.</p>
+        <p className={li}><b>🌿 Magazine naturiste / zero-waste / de cartier</b> — coșul săptămânal recurent.</p>
+        <p className={li}><b>🎯 Escape rooms, cinema local, locuri de joacă</b> — a 5-a vizită gratis; părinții revin oricum.</p>
+        <p className={li}>Anti-exemple (nu forța): achiziții rare (mobilă, electrocasnice, dealeri auto) — acolo nu există revenire frecventă de fidelizat.</p>
+      </div>
+
+      {/* ---- Administrativ / contabila ---- */}
+      <div className={card}>
+        <h2 className={h}>📋 Administrativ — de discutat cu contabila</h2>
+        <p className={li}><b>Abonamentele:</b> factură recurentă din Oblio pe data de 1 (99/199/349 lei, preț final), trimisă automat pe email + depusă în SPV (e-Factura). Încasare: transfer bancar sau card prin linkul Netopia din factură (contul Netopia se activează la prima cafenea semnată — aprobarea durează câteva zile). Neplată 30 zile → reminder → suspendare venue.</p>
+        <p className={li}><b>Founding Partners (primele 2 luni gratuite):</b> întreab-o cum preferă fiscal — factură cu discount 100% (recomandat: lasă urmă scrisă a beneficiului) sau fără factură în lunile gratuite.</p>
+        <p className={li}><b>Figurinele (comodat):</b> rămân în patrimoniul SVU (obiecte de inventar). Se predau pe bază de <b>contract/clauză de comodat</b> — localul le folosește cât e abonat Branded+, le returnează la reziliere. Taxa de înlocuire (~150 lei) se facturează DOAR dacă e cazul. Nu e vânzare → fără factură de marfă, fără stoc de vândut.</p>
+        <p className={li}><b>Consumabile</b> (stickere QR, taguri NFC simple): cheltuieli proprii de marketing, nu se refacturează.</p>
+        <p className={li}><b>Contractul cu cafeneaua</b> (draftul există în dosarul privat): abonament lunar + reziliere oricând fără penalități + prețul de fondator PE VIAȚĂ scris explicit + clauza de comodat pentru figurină + prelucrarea datelor (noi = operator, ei văd doar coduri anonime).</p>
+        <p className={li}><b>Comisioanele partenerilor:</b> luna se închide la final, plata până pe 10, pe bază de factură de la partener (PFA/SRL) sau contract de comision — de aliniat cu contabila forma corectă.</p>
+      </div>
+
+      {/* ---- Povestea de vanzare / dovezi ---- */}
+      <div className={card}>
+        <h2 className={h}>🎯 Dovezile de colectat din pilot (povestea de bani)</h2>
+        <p className={p}>
+          Materialele au features; le lipsesc CIFRELE și CITATELE — și alea se culeg din
+          pilot, din prima zi. Ce urmărești ca la cafeneaua #4 să ai povestea gata:
+        </p>
+        <p className={li}><b>Rata de revenire</b> — înainte (estimarea ownerului) vs după 45/60 de zile (Analytics → Repeat rate). Ținta poveștii: „+X% clienți care revin”.</p>
+        <p className={li}><b>Timp economisit la tejghea</b> — întreabă barista după 2 săptămâni: cât dura cu cardurile de hârtie vs acum (zero tastare cu figurina).</p>
+        <p className={li}><b>Recenzii Google</b> — numărul de recenzii înainte de instalare vs după 60 de zile (invitația la momentul recompensei).</p>
+        <p className={li}><b>Citate scurte</b> — o frază de la owner + una de la barista, cu acordul lor, pentru one-pager și deck.</p>
+        <p className={li}><b>Screenshot-uri de dashboard</b> — cu acordul localului, date agregate (fără coduri de clienți).</p>
+        <p className={li}><b>Formula de urgență</b> (adevărată, nu inventată): „au mai rămas X din cele 3 locuri de Founding Partner în Sibiu” — actualizezi X pe măsură ce semnezi.</p>
+        <p className={li}><b>Viziunea de rețea</b>, spusă simplu: „cu fiecare local nou, Pașaportul devine mai valoros pentru clienții tăi — și pentru tine”.</p>
+      </div>
+
       {/* ---- Viitor / Scalare ---- */}
       <div className={card}>
         <h2 className={h}>🚀 Viitor & scalare — listă INTERNĂ de idei</h2>
