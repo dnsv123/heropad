@@ -134,6 +134,36 @@ export default function Business() {
   const normalizedCode = codeInput.trim().toUpperCase();
   const codeValid = CODE_RE.test(normalizedCode);
 
+  // --- Figurine check-ins (NFC Faza 2a) --------------------------------------
+  // Customers who tapped the figurine in the last minutes; the barista taps
+  // "Load" instead of typing a code. Polled lightly, only while the counter
+  // is actually open and looked at; entries expire server-side after 3 min.
+  const [checkins, setCheckins] = useState<Array<{ code: string; secondsAgo: number }>>([]);
+  useEffect(() => {
+    if (!canServe) return;
+    let active = true;
+    const tick = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const r = await getJson<{ ok: true; checkins: Array<{ code: string; secondsAgo: number }> }>(
+          `/api/loyalty/merchant/${slug}/checkins`,
+          token
+        );
+        if (active) setCheckins(r.checkins);
+      } catch {
+        /* a missed poll is just a missed poll */
+      }
+    };
+    void tick();
+    const id = window.setInterval(() => void tick(), 5000);
+    return () => {
+      active = false;
+      window.clearInterval(id);
+    };
+  }, [canServe, slug, getAccessToken]);
+
   // Load public venue info — and seed the settings form with what is already
   // saved. The form used to start blank and stay blank, so after a refresh a
   // configured Happy Hour looked "unselected", as if it did not exist
@@ -632,6 +662,34 @@ export default function Business() {
             </div>
           ) : (
             <>
+              {/* Figurine check-ins — codes arrive by themselves, nobody types. */}
+              {checkins.length > 0 && (
+                <div className="mb-3 rounded-2xl border border-hero-cyan/40 bg-hero-cyan/10 px-4 py-2.5">
+                  <p className="text-[10px] uppercase tracking-wider text-hero-cyan">
+                    📡 {t('b.checkin.title')}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-2">
+                    {checkins.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          setCodeInput(c.code);
+                          void lookupCustomer(c.code);
+                        }}
+                        className="flex items-center gap-2 rounded-full border border-hero-cyan/50 px-3 py-1.5 font-mono text-sm tracking-[0.15em] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep disabled:opacity-40"
+                      >
+                        {c.code}
+                        <span className="font-sans text-[10px] tracking-normal opacity-70">
+                          {c.secondsAgo < 60 ? t('b.checkin.now') : `${Math.floor(c.secondsAgo / 60)}m`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {queued.length > 0 && (
                 <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-4 py-2.5">
                   <p className="text-xs text-hero-gold">

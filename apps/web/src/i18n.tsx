@@ -373,6 +373,11 @@ const en = {
     'The full HeroPad map — every partner venue, including the ones you haven’t visited yet. Your code works at all of them, and each new place fills a page in your passport.',
   'pv.passport': 'Open your SuperVictor Passport',
   'b.code.btn': 'Activate code',
+
+  // --- NFC figurine check-in ---
+  'loy.tap.done': 'Checked in! The counter can see your code — no need to show it.',
+  'b.checkin.title': 'At the counter — tapped the figurine',
+  'b.checkin.now': 'now',
   'col.title': 'Your collection',
   'col.sub': 'Digital collectibles owned by your account — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Solana wallets',
@@ -765,6 +770,11 @@ const ro: Record<TranslationKey, string> = {
     'Harta completă HeroPad — toate localurile partenere, inclusiv cele unde n-ai fost încă. Codul tău merge la toate, iar fiecare loc nou umple o pagină din pașaportul tău.',
   'pv.passport': 'Deschide-ți Pașaportul SuperVictor',
   'b.code.btn': 'Activează codul',
+
+  // --- Check-in cu figurina NFC ---
+  'loy.tap.done': 'Te-ai anunțat! Casa îți vede codul — nu mai e nevoie să-l arăți.',
+  'b.checkin.title': 'La tejghea — au atins figurina',
+  'b.checkin.now': 'acum',
   'col.title': 'Colecția ta',
   'col.sub': 'Obiectele digitale ale contului tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Portofele Solana',

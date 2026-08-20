@@ -985,6 +985,94 @@ loyaltyRouter.post('/me/consent', requireAuth, async (req: Request, res: Respons
   }
 });
 
+// --- NFC check-in (Faza 2a) --------------------------------------------------
+//
+// The figurine's tap URL carries ?tap=1. After the customer's phone opens
+// their card, it announces them here — and the counter screen shows their
+// code without anyone typing it. The barista still grants every stamp, so a
+// spoofed check-in buys an attacker nothing but a code on a screen; that is
+// why this phase needs no chip cryptography. In-memory on purpose: a
+// check-in is 3 minutes of ephemeral state, not a record.
+
+interface CounterCheckin {
+  identityId: string;
+  code: string;
+  at: number;
+}
+
+const CHECKIN_TTL_MS = 3 * 60 * 1000;
+const CHECKIN_MAX_PER_VENUE = 15;
+const checkinsByVenue = new Map<string, CounterCheckin[]>();
+
+function liveCheckins(venueId: string): CounterCheckin[] {
+  const now = Date.now();
+  const list = (checkinsByVenue.get(venueId) ?? []).filter(
+    (c) => now - c.at < CHECKIN_TTL_MS
+  );
+  checkinsByVenue.set(venueId, list);
+  return list;
+}
+
+/** Served customers leave the queue the moment their stamp lands. */
+function clearCheckin(venueId: string, identityId: string): void {
+  checkinsByVenue.set(
+    venueId,
+    liveCheckins(venueId).filter((c) => c.identityId !== identityId)
+  );
+}
+
+// POST /api/loyalty/me/:slug/checkin — "I just tapped the figurine".
+loyaltyRouter.post(
+  '/me/:slug/checkin',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const venue = await loadActiveVenue(req.params.slug, res);
+      if (!venue) return;
+      const identity = await ensureIdentity(privyId);
+      if (!identity.loyalty_code) return res.status(200).json({ ok: true });
+
+      const list = liveCheckins(venue.id);
+      const mine = list.find((c) => c.identityId === identity.id);
+      // Re-taps refresh rather than duplicate, and a 30s floor keeps a
+      // nervous tapper from hammering the store.
+      if (mine && Date.now() - mine.at < 30_000) {
+        return res.status(200).json({ ok: true });
+      }
+      const rest = list.filter((c) => c.identityId !== identity.id);
+      rest.push({ identityId: identity.id, code: identity.loyalty_code, at: Date.now() });
+      checkinsByVenue.set(venue.id, rest.slice(-CHECKIN_MAX_PER_VENUE));
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      return serverError(res, 'checkin', err);
+    }
+  }
+);
+
+// GET /api/loyalty/merchant/:slug/checkins — the live counter queue.
+loyaltyRouter.get(
+  '/merchant/:slug/checkins',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const now = Date.now();
+      return res.status(200).json({
+        ok: true,
+        checkins: liveCheckins(owned.venue.id)
+          .slice()
+          .reverse()
+          .map((c) => ({ code: c.code, secondsAgo: Math.round((now - c.at) / 1000) })),
+      });
+    } catch (err) {
+      return serverError(res, 'checkins', err);
+    }
+  }
+);
+
 // POST /api/loyalty/me/:slug/redeem-code — the customer, on their OWN phone,
 // generates a one-time code (5-min TTL) proving they are present. The barista
 // types THIS code to redeem — the permanent loyalty code can no longer consume
@@ -1690,6 +1778,8 @@ loyaltyRouter.post(
       void runReferralAward(customer).catch((refErr) => {
         console.error('[loyalty.grant] referral check failed:', (refErr as Error).message);
       });
+      // The stamp IS the service — their figurine check-in has done its job.
+      clearCheckin(owned.venue.id, customer.id);
 
       const progress = await getVenueProgress(customer.id, owned.venue.id);
       return res.status(200).json({

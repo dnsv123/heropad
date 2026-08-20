@@ -125,6 +125,33 @@ export default function Loyalty() {
     if (REF_RE.test(ref)) void setItem('pendingRef', ref);
   }, [searchParams]);
 
+  // --- NFC figurine check-in (?tap=1) ----------------------------------------
+  // The tap opened this page; once the customer is logged in, the phone
+  // announces them at the counter so the barista sees their code without
+  // anyone typing it. One announcement per page open.
+  const [tappedIn, setTappedIn] = useState(false);
+  const tapSubmitted = useRef(false);
+  useEffect(() => {
+    if (searchParams.get('tap') !== '1') return;
+    if (!ready || !authenticated || tapSubmitted.current) return;
+    tapSubmitted.current = true;
+    void (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        await postJson<Record<string, never>, { ok: true }>(
+          `/api/loyalty/me/${slug}/checkin`,
+          {},
+          token
+        );
+        setTappedIn(true);
+        hapticTap(20);
+      } catch {
+        tapSubmitted.current = false; // network hiccup — next render retries
+      }
+    })();
+  }, [searchParams, ready, authenticated, slug, getAccessToken]);
+
   useEffect(() => {
     if (!ready || !authenticated || refSubmitted.current) return;
     refSubmitted.current = true;
@@ -323,6 +350,13 @@ export default function Loyalty() {
           )}
 
         </div>
+
+        {/* Figurine tap acknowledged — the customer knows the counter saw them. */}
+        {tappedIn && (
+          <div className="mt-4 rounded-xl border border-solana-green/40 bg-solana-green/10 p-3 text-center text-sm text-solana-green">
+            ✋ {t('loy.tap.done')}
+          </div>
+        )}
 
         {/* Happy Hour — gold pulsing banner while the window is live. The
             countdown lives inside VenueContact below, where it can also say
