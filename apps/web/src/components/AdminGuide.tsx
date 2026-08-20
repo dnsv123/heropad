@@ -153,7 +153,7 @@ export default function AdminGuide() {
       {/* ---- Figurinele ---- */}
       <div className={card}>
         <h2 className={h}>🗿 Figurinele — ale cui sunt?</h2>
-        <p className={li}><b>Comodat (împrumut de folosință), nu vânzare.</b> Figurina rămâne proprietatea SuperVictor Universe; localul o folosește cât timp e abonat la Branded+ — e inclusă în preț, ca un echipament în chirie.</p>
+        <p className={li}><b>Comodat (împrumut de folosință), nu vânzare.</b> Figurina rămâne proprietatea SuperVictor Universe; localul o folosește cât timp e abonat la Branded+ — e inclusă în preț, ca un echipament în chirie. <b>Excepție: cele 3 Founding Partners o primesc inclusă</b> (tot în comodat) — vitrina lor e marketingul nostru; pentru ei, Branded înseamnă doar co-branding-ul.</p>
         <p className={li}>De ce așa: la reziliere figurina se întoarce (brandul nu rămâne pe tejgheaua unui fost client) · justifică diferența de tier lunar fără să vinzi stoc · o clauză simplă de comodat în contract acoperă pierderea/deteriorarea (taxă de înlocuire, ex. 150 lei).</p>
         <p className={li}>Stickerele QR și tagurile NFC simple = consumabile, le dai gratuit, nu se contabilizează.</p>
       </div>
@@ -312,7 +312,7 @@ export default function AdminGuide() {
       <div className={card}>
         <h2 className={h}>🧭 De reținut la vânzare</h2>
         <p className={li}>Spune „<b>sistem de fidelizare</b>”, niciodată „aplicație de loialitate”. Niciodată crypto/NFT/blockchain — „trofeu digital securizat”.</p>
-        <p className={li}>Prețuri: Starter 99 · Branded 199 (figurina NFC + co-branding) · Growth 349 (motorul de creștere) · Chain 699+ — toate cu <b>clienți NELIMITAȚI</b> (spre deosebire de Cardora). Founding Partner: 0 lei 2 luni → 99/lună PE VIAȚĂ cu pachetul Growth, în contract.</p>
+        <p className={li}>Prețuri: Starter 99 · Branded 199 (figurina NFC + co-branding) · Growth 349 (motorul de creștere) · Chain 699+ — toate cu <b>clienți NELIMITAȚI</b> (spre deosebire de Cardora). Founding Partner: 0 lei 2 luni → 99/lună PE VIAȚĂ cu pachetul Growth <b>+ figurina inclusă (în comodat)</b>, în contract. Diferența rămasă pentru Branded la Founding: <b>co-branding-ul</b> (logo-ul și culorile lor).</p>
         <p className={li}>La un meeting arăți DOUĂ opțiuni, niciodată trei-patru. Nu scazi prețul la obiecție — cobori un prag.</p>
         <p className={li}>GDPR: localul nu vede niciodată emailuri — doar coduri anonime. Toată povara legală e la noi (export, ștergere, consimțământ — tab-ul Support/GDPR).</p>
       </div>

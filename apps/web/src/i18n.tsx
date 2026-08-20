@@ -31,7 +31,7 @@ const en = {
   // --- Landing: hero ---
   'hero.eyebrow': 'Loyalty customers actually love',
   'hero.subtitle':
-    'Power Pass turns every visit to your favorite café into a superhero charge-up — nothing to install. A full card earns the reward plus a collectible trophy that is truly yours.',
+    'Power Pass turns every visit to your favorite places — the coffee shop, the bakery, the barber, the gym — into a superhero charge-up. Nothing to install. A full card earns the reward plus a collectible trophy that is truly yours.',
   'hero.cta.business': 'For businesses',
   'hero.cta.scan': 'I scanned a QR code',
   'hero.project': 'A SuperVictor Universe project.',
@@ -391,7 +391,7 @@ const en = {
   'lp.title': 'Simple, public pricing',
   'lp.sub': 'No hidden quotes, no "let\'s talk". Unlimited customers on every plan.',
   'lp.founding':
-    'FOUNDING PARTNER — the first 3 cafés in Sibiu: 0 lei for 2 months, then 99 lei/month FOR LIFE with the full Growth package. In the contract.',
+    'FOUNDING PARTNER — the first 3 cafés in Sibiu: 0 lei for 2 months, then 99 lei/month FOR LIFE with the full Growth package + the SuperVictor NFC figurine on your counter. In the contract.',
   'lp.mo': 'lei / month',
   'lp.s.feats': 'The complete loyalty system · QR counter kit · live statistics · 2 team accounts',
   'lp.b.feats': 'Everything in Starter + the SuperVictor NFC figurine on your counter + co-branding with your logo and colors',
@@ -459,7 +459,7 @@ const ro: Record<TranslationKey, string> = {
   'nav.logout': 'Ieșire',
   'hero.eyebrow': 'Fidelizare pe care clienții chiar o iubesc',
   'hero.subtitle':
-    'Power Pass transformă fiecare vizită la cafeneaua ta preferată într-o încărcare de supererou — fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.',
+    'Power Pass transformă fiecare vizită la locurile tale preferate — cafeneaua, brutăria, frizeria, sala — într-o încărcare de supererou. Fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.',
   'hero.cta.business': 'Pentru afaceri',
   'hero.cta.scan': 'Am scanat un cod QR',
   'hero.project': 'Un proiect SuperVictor Universe.',
@@ -812,7 +812,7 @@ const ro: Record<TranslationKey, string> = {
   'lp.title': 'Prețuri simple, publice',
   'lp.sub': 'Fără oferte ascunse, fără „hai să vorbim". Clienți nelimitați la orice pachet.',
   'lp.founding':
-    'FOUNDING PARTNER — primele 3 cafenele din Sibiu: 0 lei 2 luni, apoi 99 lei/lună PE VIAȚĂ cu tot pachetul Growth. Scris în contract.',
+    'FOUNDING PARTNER — primele 3 cafenele din Sibiu: 0 lei 2 luni, apoi 99 lei/lună PE VIAȚĂ cu tot pachetul Growth + figurina SuperVictor cu NFC pe tejghea. Scris în contract.',
   'lp.mo': 'lei / lună',
   'lp.s.feats': 'Sistemul complet de fidelizare · kit QR pentru tejghea · statistici live · 2 conturi de angajat',
   'lp.b.feats': 'Tot din Starter + figurina SuperVictor cu NFC pe tejghea + co-branding cu logo-ul și culorile voastre',
