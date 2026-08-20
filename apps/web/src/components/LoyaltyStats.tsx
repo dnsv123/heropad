@@ -308,7 +308,7 @@ export default function LoyaltyStats() {
                                   className="absolute inset-0 rounded-full bg-hero-gold/20 blur-md"
                                 />
                                 <img
-                                  src="/super-victor.webp"
+                                  src="/cnft/trophy-starter.webp"
                                   alt={`SuperVictor Trophy — ${t.venueName} #${t.edition}`}
                                   className="relative h-full w-full object-contain"
                                   onError={(e) => {

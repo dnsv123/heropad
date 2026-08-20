@@ -2,7 +2,7 @@
   "name": "SuperVictor Trophy",
   "symbol": "SVTROPHY",
   "description": "Loyalty trophy from the SuperVictor Universe — earned by completing a full loyalty card at a HeroPad partner venue. The achievement itself is bound to the earner's HeroPad identity; this collectible is the memento.",
-  "image": "https://heropad.vercel.app/super-victor.png",
+  "image": "https://heropad.vercel.app/cnft/trophy-starter.png",
   "external_url": "https://heropad.vercel.app",
   "attributes": [
     { "trait_type": "Type", "value": "Loyalty Trophy" },
