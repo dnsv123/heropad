@@ -230,11 +230,89 @@ export default function AdminGuide() {
         <p className={li}><b>Ecosistem SuperVictor:</b> caracter jucabil V-DASH prin claim (deții X trofee + pașaport) · legătura cu Hall of Heroes prin identitate · VicBits.</p>
       </div>
 
+      {/* ---- Intrebari de la patroni sceptici ---- */}
+      <div className={card}>
+        <h2 className={h}>🙋‍♂️ Întrebări de la patroni sceptici</h2>
+        <p className="mt-1 text-[11px] text-slate-500">
+          Apasă pe întrebare pentru răspunsul gata de zis. Versiunea extinsă + fișa
+          anti-competitori: în scriptul de vizită (dosarul privat).
+        </p>
+        {[
+          ['„Unde-s cifrele reale? Toți îmi promit retenție."',
+            'Aveți dreptate — exact de-asta primele 3 cafenele nu plătesc nimic: ele SUNT studiul de caz. Iar cifrele nu vi le povestesc eu peste 2 luni — le vedeți DUMNEAVOASTRĂ live, din prima săptămână, în panoul vostru.'],
+          ['„Clienții mei nu vor nici măcar QR."',
+            'De-asta există figurina: doar atingi telefonul de ea și cardul e în mână — mai simplu decât cartonul care se uită acasă. Login-ul de 10 secunde e O SINGURĂ dată în viață. Cine nu vrea — nu-l deranjează nimeni; țineți și cartonul în paralel o lună și vedeți spre care migrează lumea.'],
+          ['„Barista n-are timp de coduri. Și dacă pică netul?"',
+            'Barista nu tastează NIMIC: clientul dă tap, codul apare singur pe ecran, barista apasă +2. Codul de validare apare doar la recompensă (1 din 10 vizite) și îl generează CLIENTUL — barista doar scanează. Iar la offline: opresc wifi-ul acum și vă dau o ștampilă în fața dumneavoastră. (Chiar fă demo-ul — coada offline merge.)'],
+          ['„De ce doar 3 locuri Founding? Sună a scarcity artificială."',
+            '3 pentru că fiecare Founding primește suportul meu personal, săptămânal — nu pot promite asta la 30 de localuri. Și Founding = 99 lei PE VIAȚĂ cu pachetul complet de 349 — nu e truc de marketing, e capacitatea mea reală de suport.'],
+          ['„Pașaportul îmi trimite clienții la concurență."',
+            'Clienții dumneavoastră ORICUM merg și în alte părți — întrebarea e dacă rețeaua vi-i trimite și pe ai lor înapoi. Bronzul la 3 localuri = clientul altcuiva vă CAUTĂ. Cine intră primul în rețea, primește cel mai mult din ea.'],
+          ['„Eu vând cafea, nu jocuri crypto."',
+            'Corect — și clientul vede exact atât: un card de fidelitate cu un supererou care se încarcă. Cuvântul crypto nu apare nicăieri. Trofeul e un sticker digital care nu se pierde — tehnologia e treaba mea, nu a clientului.'],
+          ['„După 2 luni gratis, cum mă leg?"',
+            'Nu vă legați: reziliere oricând, fără penalități, scrie în contract. La final vă pun cifrele pe masă și decideți cu ele în față. Dacă nu se vede diferența, ne despărțim prieteni — și rămâneți cu 2 luni de date gratuite.'],
+          ['„Arată-mi un local din Sibiu care a făcut bani cu voi."',
+            'Încă nu există — sunteți la începutul pieței, și exact asta e oportunitatea: primele 3 iau condiții pe care nimeni nu le va mai primi. Peste 6 luni vă arăt studii de caz — dar atunci oferta asta nu mai există. (Niciodată nu inventa cifre.)'],
+        ].map(([q, a]) => (
+          <details key={q} className="mt-2 rounded-xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-2.5">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-200">{q}</summary>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">{a}</p>
+          </details>
+        ))}
+      </div>
+
+      {/* ---- Pachete vs Cardora ---- */}
+      <div className={card}>
+        <h2 className={h}>💰 Pachetele noastre față de Cardora (aug 2026)</h2>
+        <p className={p}>
+          Slăbiciunea lor structurală: <b>taxează pe numărul de clienți activi</b> — 100
+          la Penguin (50 lei), 500 la Koala (99 lei), pachete EXTRA de 1000 peste. Adică
+          își penalizează clienții care au succes. <b>Noi: clienți NELIMITAȚI la orice
+          pachet</b> — fraza care întoarce orice comparație de preț.
+        </p>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-[12.5px]">
+            <thead className="text-slate-500">
+              <tr>
+                <th className="py-1.5 pr-3 font-medium">Al nostru</th>
+                <th className="py-1.5 pr-3 font-medium">Bate direct</th>
+                <th className="py-1.5 font-medium">Lovitura (ce spui)</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-300">
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3 align-top"><b className="text-hero-cyan">Starter 99</b></td>
+                <td className="py-2 pr-3 align-top">Koala 99 + Penguin 50</td>
+                <td className="py-2 align-top">Același preț ca Koala, dar: clienți nelimitați (ei: 500) · sistem de tejghea cu anti-fraudă și conturi de angajat (ei: un card pasiv în Wallet) · animație + trofee pe care clientul le ține minte. Iar Penguin la 50 lei e o capcană: 100 de clienți activi = ~3 pe zi — orice cafenea decentă îl sparge în prima lună.</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3 align-top"><b className="text-hero-gold">Branded 199</b></td>
+                <td className="py-2 pr-3 align-top">— (n-au echivalent)</td>
+                <td className="py-2 align-top">Figurina NFC fizică pe tejghea + co-branding cu logo-ul localului. Cardora nu are niciun obiect fizic și nicio mascotă — aici jucăm singuri.</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3 align-top"><b className="text-hero-cyan">Growth 349</b></td>
+                <td className="py-2 pr-3 align-top">Elephant („custom quote")</td>
+                <td className="py-2 align-top">Ei ascund prețul după „Let's talk"; noi îl publicăm. Happy Hour, recenzii Google la momentul recompensei, zi de naștere, analitice — funcții de CREȘTERE, nu doar raportare lunară.</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3 align-top"><b className="text-slate-200">Chain 699+</b></td>
+                <td className="py-2 pr-3 align-top">Elephant</td>
+                <td className="py-2 align-top">Multi-locație cu raport consolidat + roluri, preț public, plus rețeaua Pașaportului — pe care niciun competitor nu o are deloc.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={li}><b>Avantajul lor real (fii onest dacă îl ridică):</b> cardul în Apple/Google Wallet. Răspunsul: „e pe roadmap-ul nostru — dar cardul în Wallet e pasiv; figurina, animația și rețeaua sunt motivul pentru care clientul REVINE, nu locul unde zace cardul."</p>
+        <p className={li}><b>Rezumatul în o frază:</b> „Cardora vinde un card digital. Noi vindem sistemul care aduce clientul înapoi — cu tot cu tejghea, rețea și poveste."</p>
+      </div>
+
       {/* ---- De reținut ---- */}
       <div className={card}>
         <h2 className={h}>🧭 De reținut la vânzare</h2>
         <p className={li}>Spune „<b>sistem de fidelizare</b>”, niciodată „aplicație de loialitate”. Niciodată crypto/NFT/blockchain — „trofeu digital securizat”.</p>
-        <p className={li}>Prețuri: Starter 99 · Branded 199 (figurina NFC + co-branding) · Growth 349 (motorul de creștere) · Chain 699+. Founding Partner: 0 lei 2 luni → 99/lună PE VIAȚĂ cu pachetul Growth, în contract.</p>
+        <p className={li}>Prețuri: Starter 99 · Branded 199 (figurina NFC + co-branding) · Growth 349 (motorul de creștere) · Chain 699+ — toate cu <b>clienți NELIMITAȚI</b> (spre deosebire de Cardora). Founding Partner: 0 lei 2 luni → 99/lună PE VIAȚĂ cu pachetul Growth, în contract.</p>
         <p className={li}>La un meeting arăți DOUĂ opțiuni, niciodată trei-patru. Nu scazi prețul la obiecție — cobori un prag.</p>
         <p className={li}>GDPR: localul nu vede niciodată emailuri — doar coduri anonime. Toată povara legală e la noi (export, ștergere, consimțământ — tab-ul Support/GDPR).</p>
       </div>
