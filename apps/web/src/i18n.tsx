@@ -374,6 +374,30 @@ const en = {
   'pv.passport': 'Open your SuperVictor Passport',
   'b.code.btn': 'Activate code',
 
+  // --- Landing: for who + pricing ---
+  'fw.title': 'Built for any business with returning customers',
+  'fw.sub': 'The mechanics are identical everywhere — only the emoji, the threshold and the reward change.',
+  'fw.v1': 'Coffee shops',
+  'fw.v2': 'Gelato & ice cream',
+  'fw.v3': 'Pastry & cake shops',
+  'fw.v4': 'Bakeries',
+  'fw.v5': 'Pizza & fast-casual',
+  'fw.v6': 'Barber shops',
+  'fw.v7': 'Beauty salons',
+  'fw.v8': 'Fitness & yoga',
+  'fw.v9': 'Food trucks',
+  'fw.v10': 'Book & board-game cafés',
+  'fw.more': '…and any place where a customer can come back often.',
+  'lp.title': 'Simple, public pricing',
+  'lp.sub': 'No hidden quotes, no "let\'s talk". Unlimited customers on every plan.',
+  'lp.founding':
+    'FOUNDING PARTNER — the first 3 cafés in Sibiu: 0 lei for 2 months, then 99 lei/month FOR LIFE with the full Growth package. In the contract.',
+  'lp.mo': 'lei / month',
+  'lp.s.feats': 'The complete loyalty system · QR counter kit · live statistics · 2 team accounts',
+  'lp.b.feats': 'Everything in Starter + the SuperVictor NFC figurine on your counter + co-branding with your logo and colors',
+  'lp.g.feats': 'Everything in Branded + Happy Hour ×2/×3 + Google review invites + birthday surprises + advanced analytics',
+  'lp.note': 'Automatic monthly e-invoice · pay by bank transfer or card · cancel anytime, no penalties.',
+
   // --- NFC figurine check-in ---
   'loy.tap.done': 'Checked in! The counter can see your code — no need to show it.',
   'b.checkin.title': 'At the counter — tapped the figurine',
@@ -770,6 +794,30 @@ const ro: Record<TranslationKey, string> = {
     'Harta completă HeroPad — toate localurile partenere, inclusiv cele unde n-ai fost încă. Codul tău merge la toate, iar fiecare loc nou umple o pagină din pașaportul tău.',
   'pv.passport': 'Deschide-ți Pașaportul SuperVictor',
   'b.code.btn': 'Activează codul',
+
+  // --- Landing: pentru cine + prețuri ---
+  'fw.title': 'Făcut pentru orice business cu clienți care revin',
+  'fw.sub': 'Mecanica e identică peste tot — se schimbă doar emoji-ul, pragul și recompensa.',
+  'fw.v1': 'Cafenele',
+  'fw.v2': 'Gelaterii',
+  'fw.v3': 'Cofetării',
+  'fw.v4': 'Brutării',
+  'fw.v5': 'Pizzerii & fast-casual',
+  'fw.v6': 'Frizerii',
+  'fw.v7': 'Saloane de înfrumusețare',
+  'fw.v8': 'Fitness & yoga',
+  'fw.v9': 'Food trucks',
+  'fw.v10': 'Librării-cafenea',
+  'fw.more': '…și orice loc unde clientul poate reveni des.',
+  'lp.title': 'Prețuri simple, publice',
+  'lp.sub': 'Fără oferte ascunse, fără „hai să vorbim". Clienți nelimitați la orice pachet.',
+  'lp.founding':
+    'FOUNDING PARTNER — primele 3 cafenele din Sibiu: 0 lei 2 luni, apoi 99 lei/lună PE VIAȚĂ cu tot pachetul Growth. Scris în contract.',
+  'lp.mo': 'lei / lună',
+  'lp.s.feats': 'Sistemul complet de fidelizare · kit QR pentru tejghea · statistici live · 2 conturi de angajat',
+  'lp.b.feats': 'Tot din Starter + figurina SuperVictor cu NFC pe tejghea + co-branding cu logo-ul și culorile voastre',
+  'lp.g.feats': 'Tot din Branded + Happy Hour ×2/×3 + invitații la recenzii Google + surprize de zi de naștere + analitice avansate',
+  'lp.note': 'Factură electronică automată lunar · plată prin transfer sau card · reziliere oricând, fără penalități.',
 
   // --- Check-in cu figurina NFC ---
   'loy.tap.done': 'Te-ai anunțat! Casa îți vede codul — nu mai e nevoie să-l arăți.',

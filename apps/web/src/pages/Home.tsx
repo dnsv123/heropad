@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import Hero from '../components/Hero';
 import HowItWorks from '../components/HowItWorks';
 import ForBusinesses from '../components/ForBusinesses';
+import ForWho from '../components/ForWho';
+import LandingPricing from '../components/LandingPricing';
 import Ecosystem from '../components/Ecosystem';
 
 // Landing narrative, Power-Pass-first:
@@ -31,6 +33,8 @@ export default function Home() {
       />
 
       <ForBusinesses />
+      <ForWho />
+      <LandingPricing />
       <Ecosystem />
     </div>
   );
