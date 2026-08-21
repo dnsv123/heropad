@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 
 import Hero from '../components/Hero';
 import HowItWorks from '../components/HowItWorks';
+import ProductCarousel from '../components/ProductCarousel';
 import ForBusinesses from '../components/ForBusinesses';
 import ForWho from '../components/ForWho';
 import LandingPricing from '../components/LandingPricing';
@@ -32,6 +33,7 @@ export default function Home() {
         }}
       />
 
+      <ProductCarousel />
       <ForBusinesses />
       <ForWho />
       <LandingPricing />

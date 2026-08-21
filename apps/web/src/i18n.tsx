@@ -374,6 +374,16 @@ const en = {
   'pv.passport': 'Open your SuperVictor Passport',
   'b.code.btn': 'Activate code',
 
+  // --- Landing: product carousel ---
+  'pc.title': 'See the product in action',
+  'pc.sub': 'Real screens, not mockups — this is exactly what your customers and your counter get.',
+  'pc.hint': 'Drag, or tap a card to bring it forward',
+  'pc.i1': 'The SuperVictor Passport',
+  'pc.i2': 'The counter — zero typing',
+  'pc.i3': 'The customer card',
+  'pc.i4': 'Collectible trophies',
+  'pc.i5': 'Happy Hour ×2/×3',
+
   // --- Landing: for who + pricing ---
   'fw.title': 'Built for any business with returning customers',
   'fw.sub': 'The mechanics are identical everywhere — only the emoji, the threshold and the reward change.',
@@ -812,6 +822,16 @@ const ro: Record<TranslationKey, string> = {
     'Harta completă HeroPad — toate localurile partenere, inclusiv cele unde n-ai fost încă. Codul tău merge la toate, iar fiecare loc nou umple o pagină din pașaportul tău.',
   'pv.passport': 'Deschide-ți Pașaportul SuperVictor',
   'b.code.btn': 'Activează codul',
+
+  // --- Landing: carousel de produs ---
+  'pc.title': 'Vezi produsul în acțiune',
+  'pc.sub': 'Ecrane reale, nu machete — exact ce primesc clienții și casa ta.',
+  'pc.hint': 'Trage, sau atinge un card ca să-l aduci în față',
+  'pc.i1': 'Pașaportul SuperVictor',
+  'pc.i2': 'Tejgheaua — zero tastare',
+  'pc.i3': 'Cardul clientului',
+  'pc.i4': 'Trofee de colecție',
+  'pc.i5': 'Happy Hour ×2/×3',
 
   // --- Landing: pentru cine + prețuri ---
   'fw.title': 'Făcut pentru orice business cu clienți care revin',
