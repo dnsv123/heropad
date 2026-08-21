@@ -342,9 +342,22 @@ export default function AdminGuide() {
             </tbody>
           </table>
         </div>
-        <p className={li}><b>Break-even la ~1.800 RON/lună:</b> doar Starter (99) → <b>~18 localuri</b> · doar Branded (199) → <b>~9</b> · doar Growth (349) → <b>~5-6</b> · mix realist (medie ~190 lei) → <b>~10 localuri</b>. Cei 3 Founding (3×99 = 297) acoperă deja ~17%.</p>
-        <p className={li}><b>De ținut minte:</b> impozitul micro (1–3% din venit) e neglijabil la calcul, dar există · consumabile (taguri NFC ~10 lei/buc, printuri figurine, benzină vânzări) = variabile mici · comisionul Netopia e per tranzacție, nu abonament · comisioanele partenerilor (20–30%) se scad din venitul localurilor aduse de ei, deci break-even-ul pe acelea urcă puțin.</p>
-        <p className={li}><b>Fraza de moral:</b> 10 localuri = firma se susține singură. 20 = trăiește. 40+ (ținta Sibiu an 1) = crește.</p>
+        <p className={li}><b>Calculul PRUDENT</b> (mix realist ~190 lei/local · comision partener <b>25% scăzut la TOATE</b> localurile — în realitate vânzările directe n-au comision, deci cifrele reale ies mai bune):</p>
+        <div className="mt-2 overflow-x-auto">
+          <table className="w-full text-left text-[12.5px]">
+            <thead className="text-slate-500">
+              <tr><th className="py-1 pr-3 font-medium">Localuri</th><th className="py-1 pr-3 font-medium">Venit net de comision (75%)</th><th className="py-1 font-medium">Rezultat (fără salariul tău)</th></tr>
+            </thead>
+            <tbody className="text-slate-300">
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>~13</b></td><td className="py-1 pr-3">~1.850</td><td className="py-1">break-even — firma se susține</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>20</b></td><td className="py-1 pr-3">~2.850</td><td className="py-1">≈ +880 net/lună (după 16% pe profit) — trăiește modest</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>30</b></td><td className="py-1 pr-3">~4.275</td><td className="py-1"><b>≈ +2.080 net/lună — DA, trăiește</b></td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>~40-42</b></td><td className="py-1 pr-3">~6.000</td><td className="py-1">acoperă și <b>salariul tău minim</b> (~4.150 cost total angajator) — pragul „mă plătesc și eu”</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={li}><b>Note fiscale (de confirmat cu contabila):</b> impozit <b>16% pe PROFIT</b> (venit − cheltuieli; la break-even profitul e ~0, deci și impozitul) · salariul tău = cheltuială deductibilă (scade profitul impozabil) · consumabile (taguri ~10 lei, printuri, benzină) = variabile mici · Netopia = comision per tranzacție, nu abonament.</p>
+        <p className={li}><b>Fraza de moral (varianta prudentă):</b> 13 = se susține · 20 = trăiește modest · 30 = respiră · <b>40+ (ținta Sibiu an 1) = te plătești și crești</b>. Iar dacă mixul alunecă spre Growth (medie ~250), pragul cu salariu coboară la ~32.</p>
       </div>
 
       {/* ---- De reținut ---- */}
