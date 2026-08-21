@@ -224,6 +224,13 @@ export default function AdminGuide() {
         </p>
         <p className={li}><b>Aproape (după pilot):</b> mainnet (trofee reale, plan scris) · NFC Faza 2b — chei criptografice: BITS de prezență la tap (1/zi), redeem direct prin figurină · reminder-uri „ne e dor de tine” (avem deja segmentele; lipsește doar trimiterea automată) · taguri NFC pe mese.</p>
         <p className={li}><b>Monetizare & retenție:</b> abonamente/membership („cafea nelimitată”, ex. 199 lei/lună la casă) · reward dinamic (clientul alege din 2-3 recompense / surprise reward) · BITS sink — clienții cheltuie BITS pe perks în rețea (reduceri, produse, acces V-DASH) · ediții limitate de trofee co-branded pentru campanii.</p>
+        <p className={li}><b>Unde intră în pachete (recomandare — pachetele RĂMÂN cum sunt):</b> streaks (pe BITS) = în toate pachetele, e motorul de obicei al clientului și nu costă localul nimic · surprise rewards + win-back + challenges = <b>Growth</b> (sunt literal „motorul de creștere” — întăresc exact tierul de 349) · challenges multi-local = Chain. Nimic nou de tier, nimic de scumpit — doar Growth devine mai gras.</p>
+        <p className={li}><b>Întrebările de validare la meetinguri (notează răspunsurile!):</b>
+          {' '}· „Ați oferi din când în când o <b>surpriză mică</b> (un fursec, un topping) în loc de o reducere fixă?”
+          {' '}· „Câți clienți <b>dispar</b> pur și simplu? Ați da o ofertă personală (ex. 50% la un produs) cuiva care n-a mai venit de 2 săptămâni? Cât de generoasă?”
+          {' '}· „Ce ați oferi unui client care vine <b>4 săptămâni la rând</b>?”
+          {' '}· „Ați porni <b>campanii</b> gen «3 vizite săptămâna asta → X»? Cât de des?”
+          {' '}· Întrebarea de aur: „<b>Care din astea v-ar face să treceți la pachetul mai mare?</b>”</p>
         <p className={li}><b>Mecanici comportamentale (lista Valentin, aug 2026 — ordinea recomandată):</b>
           {' '}1) <b>Surprise rewards</b> — șansă de surpriză la ștampilă (mic, delight mare, vinde tierul Surprise Bag) ·
           {' '}2) <b>Win-back personal</b> — clientul lipsește 14 zile → email DOAR lui cu o ofertă a localului („50% la un burger”), cod unic validat la casă; avem deja segmentul + consimțământul, lipsește doar trimiterea automată (necesită un furnizor de email, ex. Resend) ·
@@ -311,6 +318,33 @@ export default function AdminGuide() {
         </div>
         <p className={li}><b>Avantajul lor real (fii onest dacă îl ridică):</b> cardul în Apple/Google Wallet. Răspunsul: „e pe roadmap-ul nostru — dar cardul în Wallet e pasiv; figurina, animația și rețeaua sunt motivul pentru care clientul REVINE, nu locul unde zace cardul."</p>
         <p className={li}><b>Rezumatul în o frază:</b> „Cardora vinde un card digital. Noi vindem sistemul care aduce clientul înapoi — cu tot cu tejghea, rețea și poveste."</p>
+      </div>
+
+      {/* ---- Costuri & break-even ---- */}
+      <div className={card}>
+        <h2 className={h}>💸 Costuri lunare & break-even (estimare aug 2026)</h2>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-[12.5px]">
+            <thead className="text-slate-500">
+              <tr><th className="py-1 pr-3 font-medium">Cheltuială</th><th className="py-1 font-medium">~RON/lună</th></tr>
+            </thead>
+            <tbody className="text-slate-300">
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Contabilă</td><td className="py-1">500–1.000</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">AI (Claude Code, ~110 €)</td><td className="py-1">~555</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Shopify (320 €/an)</td><td className="py-1">~135</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Supabase Pro (25 $) — la primul client plătitor</td><td className="py-1">~120</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Railway (Hobby + consum)</td><td className="py-1">~25–50</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Gemini / generare imagini (~20 $)</td><td className="py-1">~100</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">X Premium</td><td className="py-1">~50</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Domenii (4, anualizat)</td><td className="py-1">~30</td></tr>
+              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Vercel + Helius + Resend (free tier acum)</td><td className="py-1">0 <span className="text-slate-500">(Pro ~100 la nevoie)</span></td></tr>
+              <tr className="border-t border-hero-gold/30 font-semibold text-white"><td className="py-1.5 pr-3">TOTAL</td><td className="py-1.5">~1.500 – 2.100 (mediană ~1.800)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={li}><b>Break-even la ~1.800 RON/lună:</b> doar Starter (99) → <b>~18 localuri</b> · doar Branded (199) → <b>~9</b> · doar Growth (349) → <b>~5-6</b> · mix realist (medie ~190 lei) → <b>~10 localuri</b>. Cei 3 Founding (3×99 = 297) acoperă deja ~17%.</p>
+        <p className={li}><b>De ținut minte:</b> impozitul micro (1–3% din venit) e neglijabil la calcul, dar există · consumabile (taguri NFC ~10 lei/buc, printuri figurine, benzină vânzări) = variabile mici · comisionul Netopia e per tranzacție, nu abonament · comisioanele partenerilor (20–30%) se scad din venitul localurilor aduse de ei, deci break-even-ul pe acelea urcă puțin.</p>
+        <p className={li}><b>Fraza de moral:</b> 10 localuri = firma se susține singură. 20 = trăiește. 40+ (ținta Sibiu an 1) = crește.</p>
       </div>
 
       {/* ---- De reținut ---- */}
