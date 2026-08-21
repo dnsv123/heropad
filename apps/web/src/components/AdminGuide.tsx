@@ -224,6 +224,11 @@ export default function AdminGuide() {
         </p>
         <p className={li}><b>Aproape (după pilot):</b> mainnet (trofee reale, plan scris) · NFC Faza 2b — chei criptografice: BITS de prezență la tap (1/zi), redeem direct prin figurină · reminder-uri „ne e dor de tine” (avem deja segmentele; lipsește doar trimiterea automată) · taguri NFC pe mese.</p>
         <p className={li}><b>Monetizare & retenție:</b> abonamente/membership („cafea nelimitată”, ex. 199 lei/lună la casă) · reward dinamic (clientul alege din 2-3 recompense / surprise reward) · BITS sink — clienții cheltuie BITS pe perks în rețea (reduceri, produse, acces V-DASH) · ediții limitate de trofee co-branded pentru campanii.</p>
+        <p className={li}><b>Mecanici comportamentale (lista Valentin, aug 2026 — ordinea recomandată):</b>
+          {' '}1) <b>Surprise rewards</b> — șansă de surpriză la ștampilă (mic, delight mare, vinde tierul Surprise Bag) ·
+          {' '}2) <b>Win-back personal</b> — clientul lipsește 14 zile → email DOAR lui cu o ofertă a localului („50% la un burger”), cod unic validat la casă; avem deja segmentul + consimțământul, lipsește doar trimiterea automată (necesită un furnizor de email, ex. Resend) ·
+          {' '}3) <b>Streaks blânde</b> — săptămâni consecutive cu ≥1 vizită (nu zilnice — la cafea streak-ul zilnic pedepsește și demotivează) ·
+          {' '}4) <b>Challenges per local</b> — campanii configurabile („3 vizite săptămâna asta → X”), motor de campanii, upsell natural la Growth. Pașaportul E deja challenge-ul de rețea.</p>
         <p className={li}><b>Extindere pe verticale</b> (mecanica e identică, se schimbă emoji-ul și recompensa): gelaterii · cofetării · frizerii/saloane (acolo devine relevant și booking-ul — produs separat) · săli de fitness (+ waitlist) · food trucks · librării-cafenea.</p>
         <p className={li}><b>Integrare & confort:</b> POS (Sedona/SmartBill — cel mai cerut de piață, dar dependență de terți; doar cu volum) · carduri Apple/Google Wallet · meniu QR digital ca add-on ieftin · white-label complet (tierul Custom) · multi-locație cu raport consolidat (tierul Chain — deja în grila de preț).</p>
         <p className={li}><b>Inteligență:</b> predicție churn („clientul X n-a mai venit de 3 săptămâni, avea 8/10”) · sugestii de recompense și de ferestre Happy Hour din datele venue-ului.</p>
