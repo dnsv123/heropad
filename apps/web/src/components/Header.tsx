@@ -77,36 +77,41 @@ export default function Header() {
           <NavLink to="/v-dash" className={navLinkClass}>
             {t('nav.vdash')}
           </NavLink>
-          {authenticated && (
-            <NavLink to="/profile" className={navLinkClass}>
-              {t('nav.profile')}
-            </NavLink>
-          )}
+          {/* Always rendered: a guest clicking it lands on the Profile login
+             prompt, and the link no longer POPS IN when Privy resolves —
+             that pop was shifting the whole nav (the page's biggest CLS). */}
+          <NavLink to="/profile" className={navLinkClass}>
+            {t('nav.profile')}
+          </NavLink>
           {langToggle}
 
-          {!authenticated ? (
-            <button
-              type="button"
-              onClick={login}
-              disabled={!ready}
-              className="rounded-full bg-solana-purple px-5 py-2 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
-            >
-              {ready ? t('nav.login') : t('nav.loading')}
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span className="rounded-full border border-hero-cyan/40 px-3 py-1 font-mono text-xs text-hero-cyan">
-                {userLabel}
-              </span>
+          {/* Fixed-width slot: the login button and the account chip swap
+             inside reserved space instead of resizing the nav. */}
+          <div className="flex min-w-[190px] items-center justify-end gap-3">
+            {!authenticated ? (
               <button
                 type="button"
-                onClick={logout}
-                className="text-xs text-slate-400 transition hover:text-white"
+                onClick={login}
+                disabled={!ready}
+                className="rounded-full bg-solana-purple px-5 py-2 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
               >
-                {t('nav.logout')}
+                {ready ? t('nav.login') : t('nav.loading')}
               </button>
-            </div>
-          )}
+            ) : (
+              <>
+                <span className="max-w-[150px] truncate rounded-full border border-hero-cyan/40 px-3 py-1 font-mono text-xs text-hero-cyan">
+                  {userLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-xs text-slate-400 transition hover:text-white"
+                >
+                  {t('nav.logout')}
+                </button>
+              </>
+            )}
+          </div>
         </nav>
 
         {/* Mobile controls: compact login + hamburger. */}

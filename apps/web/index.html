@@ -50,10 +50,16 @@
     <meta name="apple-mobile-web-app-title" content="HeroPad" />
     <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- Fonts -->
+    <!-- LCP: the hero mascot starts downloading before React even boots. -->
+    <link rel="preload" as="image" href="/super-victor-hero.webp" imagesrcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" imagesizes="(min-width: 768px) 384px, 220px" fetchpriority="high" />
+
+    <!-- Fonts — loaded WITHOUT blocking first paint: the stylesheet arrives as
+         "print" (non-blocking) and flips to "all" once fetched. Body text uses
+         system fonts anyway; only display headings wait for Space Grotesk. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" /></noscript>
 
     <title>HeroPad Power Pass — Fidelizare digitală pentru localuri</title>
   </head>

@@ -9,17 +9,19 @@ import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Claim from './pages/Claim';
 import Profile from './pages/Profile';
-import Play from './pages/Play';
 import Loyalty from './pages/Loyalty';
-import Passport from './pages/Passport';
 // Merchant + admin screens load on demand: they pull in the QR scanner and
 // jsQR (~250 KB) which a CUSTOMER opening their loyalty card must never pay
 // for on café cellular. Privy stays eager in main.tsx — only routes split.
+// Claim/Play/Passport join them: none is on the landing's critical path,
+// and every KB out of the entry chunk is Speed Index for the pitch page.
 const Business = lazy(() => import('./pages/Business'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Partner = lazy(() => import('./pages/Partner'));
+const Claim = lazy(() => import('./pages/Claim'));
+const Play = lazy(() => import('./pages/Play'));
+const Passport = lazy(() => import('./pages/Passport'));
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 

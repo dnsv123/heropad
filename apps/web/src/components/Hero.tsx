@@ -38,7 +38,11 @@ export default function Hero() {
           />
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-hero-blue/30 bg-gradient-to-br from-hero-deep via-hero-blue/20 to-hero-deep">
             <motion.img
-              src="/super-victor.webp"
+              src="/super-victor-hero.webp"
+              srcSet="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w"
+              sizes="(min-width: 768px) 384px, 220px"
+              width={480}
+              height={753}
               alt="SuperVictor — the official HeroPad mascot"
               className="absolute inset-0 h-full w-full object-contain p-3 md:p-5"
               animate={{ y: [0, -10, 0] }}
