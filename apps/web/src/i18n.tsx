@@ -99,10 +99,6 @@ const en = {
   'meter.full': '⚡ Full power — reward unlocked!',
   'meter.more.one': '1 more stamp to your reward',
   'meter.more.many': '{n} more stamps to your reward',
-  'meter.seelevels': 'See all power levels',
-  'meter.gallery.title': 'SuperVictor power levels',
-  'meter.gallery.sub': 'Every stamp charges him up — you are at level {n}.',
-  'meter.gallery.close': 'Keep charging ⚡',
   'meter.alt': 'SuperVictor charging up — tap to see all levels',
   // --- Business page (merchant) ---
   'b.sub': 'Merchant counter · grant & redeem stamps',
@@ -428,6 +424,8 @@ const en = {
   'col.r.reffriend': 'Welcome bonus from a friend',
   'col.r.claim': 'Collectible claim',
 
+  'loy.celebrate.close': 'Close',
+
   // --- Stamp card (circles) ---
   'st.title': 'Your stamps',
   'st.hide': 'Hide',
@@ -557,10 +555,6 @@ const ro: Record<TranslationKey, string> = {
   'meter.full': '⚡ Energie maximă — recompensă deblocată!',
   'meter.more.one': 'Încă 1 bonus până la recompensă',
   'meter.more.many': 'Încă {n} bonusuri până la recompensă',
-  'meter.seelevels': 'Vezi toate nivelurile de putere',
-  'meter.gallery.title': 'Nivelurile de putere SuperVictor',
-  'meter.gallery.sub': 'Fiecare bonus îl încarcă — tu ești la nivelul {n}.',
-  'meter.gallery.close': 'Continuă încărcarea ⚡',
   'meter.alt': 'SuperVictor se încarcă — atinge ca să vezi toate nivelurile',
   'b.sub': 'Casa localului · acordă și validează bonusuri',
   'b.code.label': 'Codul clientului (6 caractere)',
@@ -883,6 +877,8 @@ const ro: Record<TranslationKey, string> = {
   'col.r.refinv': 'Adu un prieten — bonusul tău',
   'col.r.reffriend': 'Bonus de bun venit de la un prieten',
   'col.r.claim': 'Revendicare colecționabil',
+
+  'loy.celebrate.close': 'Închide',
 
   // --- Cardul cu ștampile (cerculețe) ---
   'st.title': 'Ștampilele tale',

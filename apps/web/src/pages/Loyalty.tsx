@@ -244,7 +244,7 @@ export default function Loyalty() {
         setCelebrating(true);
         setRedeemCode(null); // the card was redeemed — the one-time code is spent
         hapticTap(40);
-        window.setTimeout(() => setCelebrating(false), 8000);
+        // No auto-dismiss: the customer closes it when they are done reading.
       }
       prevStamps.current = r.stamps;
       prevCards.current = r.cardsCompleted;
@@ -279,6 +279,22 @@ export default function Loyalty() {
       color: { dark: '#0A1B3A', light: '#FFFFFF' },
     }).then(setRedeemQr, () => setRedeemQr(null));
   }, [redeemCode?.code]);
+
+  // Escape closes the celebration, and the page underneath must not scroll
+  // while it is up — the same manners the collectible modal already has.
+  useEffect(() => {
+    if (!celebrating) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCelebrating(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [celebrating]);
 
   // Countdown for the active one-time redeem code (5-minute TTL).
   useEffect(() => {
@@ -384,38 +400,81 @@ export default function Loyalty() {
           happyHourNext={venue?.happyHourNext ?? null}
         />
 
-        {/* Celebration overlay when a card was just completed & redeemed */}
+        {/* Celebration — a CENTRED modal, not a block in the page.
+           It used to render inline below the venue card and auto-dismiss after
+           8 seconds: by the time the customer looked back from the barista, the
+           moment (and the review invite with it) was gone, and reaching it
+           meant scrolling up. Now it takes the middle of the screen and stays
+           until the customer closes it — this is the happiest moment in the
+           whole flow and the one place a review actually gets asked for. */}
         <AnimatePresence>
           {celebrating && (
             <motion.div
-              key="celebrate"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              key="celebrate-bg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="mt-6 rounded-2xl border border-solana-green/40 bg-solana-green/10 p-5 text-center"
+              onClick={() => setCelebrating(false)}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
             >
-              <p className="font-display text-xl font-semibold text-solana-green">
-                {t('loy.celebrate.title')}
-              </p>
-              <p className="mt-1 text-sm text-slate-300">
-                {t('loy.celebrate.body')}{' '}
-                <a href="/profile" className="text-hero-cyan underline">
-                  {t('loy.celebrate.link')}
-                </a>
-                {t('loy.celebrate.tail')}
-              </p>
-              {/* Review invite — shown to EVERYONE at the happiest moment (free
-                  reward in hand). No filtering: Google forbids review-gating. */}
-              {safeHttpsUrl(venue?.branding?.reviewUrl) && (
-                <a
-                  href={safeHttpsUrl(venue?.branding?.reviewUrl) as string}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-hero-deep shadow transition hover:bg-hero-gold-bright"
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="celebrate-title"
+                initial={{ opacity: 0, scale: 0.9, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-sm rounded-2xl border border-solana-green/50 bg-hero-deep p-6 text-center shadow-2xl"
+              >
+                <button
+                  type="button"
+                  aria-label={t('loy.celebrate.close')}
+                  onClick={() => setCelebrating(false)}
+                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-hero-blue/40 text-slate-400 transition hover:border-hero-cyan hover:text-white"
                 >
-                  {t('loy.review.btn')}
-                </a>
-              )}
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+
+                <div className="text-5xl leading-none">🎉</div>
+                <p
+                  id="celebrate-title"
+                  className="mt-3 font-display text-2xl font-bold text-solana-green"
+                >
+                  {t('loy.celebrate.title')}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  {t('loy.celebrate.body')}{' '}
+                  <a href="/profile" className="text-hero-cyan underline">
+                    {t('loy.celebrate.link')}
+                  </a>
+                  {t('loy.celebrate.tail')}
+                </p>
+
+                {/* Review invite — shown to EVERYONE at the happiest moment (free
+                    reward in hand). No filtering: Google forbids review-gating. */}
+                {safeHttpsUrl(venue?.branding?.reviewUrl) && (
+                  <a
+                    href={safeHttpsUrl(venue?.branding?.reviewUrl) as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCelebrating(false)}
+                    className="mt-5 block w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-hero-deep shadow transition hover:bg-hero-gold-bright"
+                  >
+                    {t('loy.review.btn')}
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setCelebrating(false)}
+                  className="mt-3 text-xs text-slate-500 transition hover:text-slate-300"
+                >
+                  {t('loy.celebrate.close')}
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
