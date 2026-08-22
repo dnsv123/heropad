@@ -650,6 +650,12 @@ export default function Business() {
                   maxLength={8}
                   value={setupCode}
                   onChange={(e) => setSetupCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    const len = setupCode.trim().length;
+                    if (e.key === 'Enter' && !claiming && (len === 8 || len === 6)) {
+                      void handleCode();
+                    }
+                  }}
                   onFocus={(e) =>
                     e.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
                   }
@@ -897,6 +903,15 @@ export default function Business() {
                             maxLength={6}
                             value={redeemInput}
                             onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => {
+                              // Enter finishes the reward, same as the button.
+                              // A barista at a busy counter types the code and
+                              // hits Enter; reaching for a button is a pause
+                              // the queue notices.
+                              if (e.key === 'Enter' && !busy && CODE_RE.test(redeemInput)) {
+                                void redeem();
+                              }
+                            }}
                             placeholder="REWARD"
                             className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none sm:text-xl sm:tracking-[0.25em]"
                           />

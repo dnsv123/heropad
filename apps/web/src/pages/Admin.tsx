@@ -1049,6 +1049,11 @@ export default function Admin() {
                           <input
                             value={supportCode}
                             onChange={(e) => setSupportCode(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !busy && supportCode.trim().length === 6) {
+                                void lookupSubject();
+                              }
+                            }}
                             maxLength={6}
                             placeholder="J7JBXR"
                             className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-solana-purple focus:outline-none"
