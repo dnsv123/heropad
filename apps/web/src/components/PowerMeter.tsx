@@ -45,11 +45,6 @@ export default function PowerMeter({
     setImgSrc(`/loyalty/levels/level-${level}.webp`);
   }, [level]);
 
-  // Level gallery — tap the hero to browse all 10 states. Levels above the
-  // current progress are locked (dimmed) so there's something to look forward
-  // to. Missing artwork falls back to the default hero per-cell.
-  const [galleryOpen, setGalleryOpen] = useState(false);
-
   // Celebration particles — generated once per `required` so they don't jump
   // around on every re-render. (Math.random is fine in app code.)
   const particles = useMemo(
@@ -85,13 +80,7 @@ export default function PowerMeter({
         <motion.img
           src={imgSrc}
           alt={t('meter.alt')}
-          role="button"
-          tabIndex={0}
-          onClick={() => setGalleryOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') setGalleryOpen(true);
-          }}
-          className="absolute inset-0 h-full w-full cursor-pointer object-contain drop-shadow-[0_8px_24px_rgba(93,211,255,0.25)]"
+          className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_8px_24px_rgba(93,211,255,0.25)]"
           animate={isFull ? { y: [0, -14, 0], rotate: [0, -2, 2, 0] } : { y: [0, -7, 0] }}
           transition={{ duration: isFull ? 1.1 : 3.2, repeat: Infinity, ease: 'easeInOut' }}
           onError={(e) => {
@@ -198,87 +187,11 @@ export default function PowerMeter({
           </motion.span>
         )}
       </div>
-      <button
-        type="button"
-        onClick={() => setGalleryOpen(true)}
-        className="mx-auto mt-2 block text-xs text-slate-500 underline decoration-dotted transition hover:text-hero-cyan"
-      >
-        {t('meter.seelevels')}
-      </button>
-
-      {/* ---- Level gallery modal ---- */}
-      <AnimatePresence>
-        {galleryOpen && (
-          <motion.div
-            key="level-gallery-bg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setGalleryOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ duration: 0.25 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl border border-hero-blue/30 bg-hero-deep p-5 shadow-2xl"
-            >
-              <h3 className="text-center font-display text-lg font-semibold text-hero-cyan">
-                {t('meter.gallery.title')}
-              </h3>
-              <p className="mt-1 text-center text-xs text-slate-500">
-                {t('meter.gallery.sub', { n: level })}
-              </p>
-
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((lv) => {
-                  const unlocked = lv <= level;
-                  return (
-                    <div
-                      key={lv}
-                      className={`relative aspect-square overflow-hidden rounded-xl border p-1 ${
-                        lv === level
-                          ? 'border-hero-gold bg-hero-gold/10'
-                          : 'border-hero-blue/20 bg-hero-deep/60'
-                      }`}
-                    >
-                      <img
-                        src={`/loyalty/levels/level-${lv}.webp`}
-                        alt={`Level ${lv}`}
-                        loading="lazy"
-                        className={`h-full w-full object-contain ${
-                          unlocked ? '' : 'opacity-25 grayscale'
-                        }`}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = heroSrc;
-                        }}
-                      />
-                      {!unlocked && (
-                        <span className="absolute inset-0 flex items-center justify-center text-base">
-                          🔒
-                        </span>
-                      )}
-                      <span className="absolute bottom-0.5 right-1 text-[9px] font-semibold text-slate-400">
-                        {lv}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setGalleryOpen(false)}
-                className="mt-5 w-full rounded-full bg-hero-gold px-4 py-2 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
-              >
-                {t('meter.gallery.close')}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* The "see all power levels" link and its modal gallery are GONE: the
+         stamp card below now shows the level art inline, unlocked as you
+         collect, which is the same story told where the customer already
+         looks. A second, hidden copy of it was redundant — and one fewer
+         modal is one fewer thing to load. */}
     </div>
   );
 }
