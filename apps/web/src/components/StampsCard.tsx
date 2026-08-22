@@ -5,10 +5,12 @@ import { getItem, setItem } from '../services/storageService';
 import { useT } from '../i18n';
 
 // The classic stamp card, in HeroPad language. A grid of circles sized by the
-// venue's own threshold: earned ones carry the mini-SuperVictor badge in full
-// colour with a gold glow, unearned ones the same badge greyed out — the
-// "cardboard card" feel every customer already knows, with our hero in it.
-// The last cell is the FREE reward.
+// venue's own threshold — and each circle carries a DIFFERENT power-level
+// artwork, mapped proportionally onto the 1..10 set: a 5-stamp venue unlocks
+// levels 2·4·6·8·10, a 10-stamp one all ten. Earned = full colour with a gold
+// glow; unearned = the same art greyed — you can SEE what the next visit
+// unlocks. That turns the card into a small collection, not a repeated icon
+// (Valentin's call, replacing the cropped-head badge). Last cell = FREE.
 //
 // The landing animation: when a fresh stamp arrives, the badge appears BIG in
 // the middle of the card, then flies into its circle and settles. The flight
@@ -27,7 +29,11 @@ interface StampsCardProps {
   onFlightDone: () => void;
 }
 
-const BADGE = '/loyalty/stamp-badge.webp';
+/** Which of the 10 level artworks stamp #i (0-based) shows, for any threshold. */
+function levelArt(i: number, required: number): string {
+  const lv = Math.min(10, Math.max(1, Math.round(((i + 1) / required) * 10)));
+  return `/loyalty/levels/thumb-${lv}.webp`;
+}
 
 export default function StampsCard({
   stamps,
@@ -130,7 +136,7 @@ export default function StampsCard({
                     </span>
                   ) : (
                     <img
-                      src={BADGE}
+                      src={levelArt(i, required)}
                       alt=""
                       width={56}
                       height={56}
@@ -154,7 +160,7 @@ export default function StampsCard({
             {flight && (
               <motion.img
                 key={`fly-${flight.index}`}
-                src={BADGE}
+                src={levelArt(flight.index, required)}
                 alt=""
                 initial={{ x: 0, y: 0, scale: 2.4, opacity: 0 }}
                 animate={{
