@@ -614,8 +614,11 @@ async function collectSubjectData(identityId: string, wallets: string[]) {
       .eq('user_identity_id', identityId),
     hasWallet
       ? supa
+          // metadata included: it holds which venue each stamp credit came
+          // from and which trophy each award minted — subject data that an
+          // Art. 20 export owes the person.
           .from('bits_transactions')
-          .select('amount, reason, created_at')
+          .select('amount, reason, metadata, created_at')
           .in('wallet_address', wallets)
       : Promise.resolve({ data: [] as unknown[] }),
     hasWallet

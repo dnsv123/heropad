@@ -56,10 +56,11 @@ app.use(
       // Same-origin / curl with no Origin header → allow.
       if (!origin) return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      // Allow any *.vercel.app preview deployment of our project.
-      if (/^https:\/\/heropad-[a-z0-9-]+\.vercel\.app$/.test(origin)) {
-        return cb(null, true);
-      }
+      // The old `heropad-*.vercel.app` wildcard is GONE. Vercel project names
+      // are globally unique but freely claimable, so a stranger registering
+      // heropad-anything could hand themselves an allowlisted, credentialed
+      // origin. The custom domain is primary now; a preview deployment that
+      // genuinely needs API access gets its exact URL in CORS_ALLOWED_ORIGINS.
       console.warn(`[CORS] Blocked origin: ${origin}`);
       // Deny without throwing: throwing surfaces as a 500 "server_error",
       // making blocked origins look like outages in monitoring.

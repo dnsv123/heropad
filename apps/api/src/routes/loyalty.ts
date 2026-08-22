@@ -25,7 +25,7 @@ import {
   updateStaff,
 } from '../lib/staff-db.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
-import { creditBits } from '../lib/supabase-admin.js';
+import { creditBits, countBitsEventsToday } from '../lib/supabase-admin.js';
 import { claimVenueWithToken, claimVenueByCodeOnly } from './admin.js';
 import {
   getVenueBySlug,
@@ -193,6 +193,15 @@ const REFERRAL_BITS_FRIEND = (() => {
   return Number.isFinite(parsed) && parsed > 0 && parsed <= 100_000 ? parsed : 100;
 })();
 
+// How many friends one account can be PAID for per rolling 24h. Trophies have
+// had a daily budget from the start; referral BITS had none, so a merchant
+// with sock puppets could mint them without limit. A real person brings a
+// friend or three a day, never twenty.
+const REFERRAL_DAILY_CAP = (() => {
+  const parsed = Number(process.env.REFERRAL_DAILY_CAP);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
+})();
+
 /**
  * Pays the referral bonus if this customer was invited and their first stamp
  * just landed. Safe to call on every grant: consumeReferralReward is a
@@ -215,6 +224,19 @@ async function runReferralAward(customer: IdentityRow): Promise<void> {
   if (!friend.solana_wallet) return;
 
   const inviter = await getIdentityById(state.referredBy);
+
+  // The inviter's daily ceiling, checked BEFORE the one-shot gate is spent:
+  // a capped-out inviter must not burn the friend's only chance at the bonus.
+  if (inviter?.solana_wallet) {
+    const paidToday = await countBitsEventsToday(inviter.solana_wallet, 'referral_inviter');
+    if (paidToday >= REFERRAL_DAILY_CAP) {
+      console.warn(
+        `[loyalty.referral] inviter hit the daily cap (${REFERRAL_DAILY_CAP}) — deferring`
+      );
+      return;
+    }
+  }
+
   if (!(await consumeReferralReward(friend.id))) return; // someone else just paid it
 
   try {
@@ -222,15 +244,18 @@ async function runReferralAward(customer: IdentityRow): Promise<void> {
       inviterCode: inviter?.loyalty_code ?? null,
     });
   } catch (bitsErr) {
-    console.error('[loyalty.referral] friend credit failed:', bitsErr);
+    console.error('[loyalty.referral] friend credit failed:', (bitsErr as Error).message);
   }
   if (inviter?.solana_wallet) {
     try {
+      // Deliberately NOT the friend's loyalty code: that code is what a
+      // barista types to read someone's card, and the inviter would see it
+      // forever in their own BITS history. A marker is all this row needs.
       await creditBits(inviter.solana_wallet, REFERRAL_BITS_INVITER, 'referral_inviter', {
-        friendCode: friend.loyalty_code,
+        friend: 'linked',
       });
     } catch (bitsErr) {
-      console.error('[loyalty.referral] inviter credit failed:', bitsErr);
+      console.error('[loyalty.referral] inviter credit failed:', (bitsErr as Error).message);
     }
   } else {
     // Inviter erased their account or never linked a wallet — the friend's
@@ -644,13 +669,33 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
     const venue = await loadActiveVenue(req.params.slug, res);
     if (!venue) return;
     const hhMult = happyHourMultNow(venue.branding, venue.timezone ?? undefined);
+    // Allowlist, not passthrough: `branding` is a jsonb bag that seeds and
+    // manual Supabase edits also write to. Sending it whole means any key
+    // anyone ever adds becomes public with nobody reviewing the decision.
+    const b = venue.branding ?? {};
+    const publicBranding: Record<string, unknown> = {};
+    for (const key of [
+      'reward',
+      'icon',
+      'accent',
+      'tagline',
+      'reviewUrl',
+      'phone',
+      'email',
+      'instagram',
+      'facebook',
+      'website',
+      'happyHour',
+    ] as const) {
+      if (b[key] !== undefined) publicBranding[key] = b[key];
+    }
     return res.status(200).json({
       ok: true,
       venue: {
         slug: venue.slug,
         name: venue.name,
         stampsRequired: venue.stamps_required,
-        branding: venue.branding,
+        branding: publicBranding,
         // `hasOwner` is intentionally NOT exposed publicly — it would tell an
         // attacker exactly which venues are claimable. /business discovers it
         // through the authenticated merchant probe instead.
@@ -835,11 +880,14 @@ loyaltyRouter.post('/me/referral', requireAuth, async (req: Request, res: Respon
       return res.status(200).json({ ok: true, linked: false });
     }
     const inviter = await findIdentityByCode(parsed.data.code);
-    if (!inviter || inviter.id === identity.id) {
-      return res.status(200).json({ ok: true, linked: false });
+    if (inviter && inviter.id !== identity.id) {
+      await setReferredBy(identity.id, inviter.id);
     }
-    const linked = await setReferredBy(identity.id, inviter.id);
-    return res.status(200).json({ ok: true, linked });
+    // The SAME answer whatever happened. Reporting `linked` told the caller
+    // whether a code exists, which turned this into an enumeration oracle for
+    // the very codes baristas use to look people up. The client does not need
+    // the answer — it clears its pending code either way.
+    return res.status(200).json({ ok: true });
   } catch (err) {
     return serverError(res, 'referral', err);
   }
@@ -1871,6 +1919,21 @@ loyaltyRouter.post(
           ok: false,
           error: 'nothing_to_revoke',
           message: 'No stamps from today to remove for this customer.',
+        });
+      }
+      // Take the stamp BITS back with the stamp. Leaving them was a deliberate
+      // "too small to bother" call — and it was wrong: countStampsToday only
+      // counts LIVE stamps, so a grant→revoke loop reset the daily cap while
+      // every grant paid out again. The clawback closes the loop: the pair is
+      // now worth exactly zero, whatever the loop count.
+      if (STAMP_BITS_REWARD > 0 && customer.solana_wallet) {
+        void creditBits(
+          customer.solana_wallet,
+          -removedCount * STAMP_BITS_REWARD,
+          'stamp_revoked',
+          { venue: owned.venue.slug, count: removedCount }
+        ).catch((bitsErr) => {
+          console.error('[loyalty.revoke] BITS clawback failed:', (bitsErr as Error).message);
         });
       }
       const progress = await getVenueProgress(customer.id, owned.venue.id);

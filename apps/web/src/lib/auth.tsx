@@ -1,11 +1,15 @@
 /* eslint-disable react-refresh/only-export-components -- a context module: the
    provider and its hooks are one API and belong in one file. */
 import {
+  Component,
   createContext,
   lazy,
   Suspense,
+  useCallback,
   useContext,
+  useEffect,
   useState,
+  type ErrorInfo,
   type ReactNode,
 } from 'react';
 
@@ -15,17 +19,21 @@ import {
 // reading the landing page needs none of it. This module gives every consumer
 // the SAME hook shapes (`usePrivy`, `useSolanaWallets`) WITHOUT statically
 // importing the SDK: the app renders instantly against a stub, while the real
-// SDK loads in its own lazy chunk (./privy-bridge) and swaps itself in.
+// SDK loads in its own lazy chunk (./auth-sdk) and swaps itself in.
 //
 // The stub is not a dead end: any call made before the SDK is up (login, a
 // token request from a page that loaded fast) parks on a promise and replays
-// against the real SDK the moment it reports ready. In practice the chunk
-// arrives within ~1s of first paint, long before a human reaches the login
-// button.
+// against the real SDK the moment it reports ready.
 //
-// Consumers import { usePrivy, useSolanaWallets } from '../lib/auth' — the
-// call sites are byte-identical to the SDK's own API, so the rest of the app
-// neither knows nor cares which side of the bridge it is talking to.
+// FAILURE HANDLING (the part that matters as much as the split): a lazy chunk
+// can fail — a stale deploy 404s its hashed file, a phone drops the network,
+// an adblocker eats a script. React rethrows a rejected lazy() during render,
+// so without a boundary that failure would unmount the whole app to a white
+// screen, taking down a landing page that had already rendered perfectly.
+// Hence: an error boundary with one silent retry, a watchdog for the chunk
+// that loads but never becomes ready, and a gate that ALWAYS opens so parked
+// promises resolve (as "no session") instead of hanging forever. When both
+// attempts fail the app keeps working read-only and says so, with a retry.
 
 export interface AuthUser {
   email?: { address?: string | null } | null;
@@ -61,15 +69,22 @@ export interface SolanaValue {
   exportWallet: (opts: { address: string }) => Promise<void>;
 }
 
-// Live handles + the gate stub calls park on. The gate opens only when the
-// real SDK reports ready:true, so a replayed login() cannot fire into a
-// half-initialised SDK.
+/** Longest we wait for the SDK before telling the user sign-in is unavailable. */
+const SDK_WATCHDOG_MS = 20_000;
+
 let liveAuth: AuthValue | null = null;
 let liveSolana: SolanaValue | null = null;
 let openGate: () => void = () => {};
-const sdkReady = new Promise<void>((resolve) => {
+let sdkReady = new Promise<void>((resolve) => {
   openGate = resolve;
 });
+
+/** Re-arms the gate for a retry after a failed attempt. */
+function resetGate(): void {
+  sdkReady = new Promise<void>((resolve) => {
+    openGate = resolve;
+  });
+}
 
 const AUTH_STUB: AuthValue = {
   ready: false,
@@ -84,6 +99,7 @@ const AUTH_STUB: AuthValue = {
   },
   getAccessToken: async () => {
     await sdkReady;
+    // liveAuth is null only when the SDK never arrived: no session, no token.
     return liveAuth ? liveAuth.getAccessToken() : null;
   },
   linkEmail: () => {
@@ -121,31 +137,118 @@ export function useSolanaWallets(): SolanaValue {
   return useContext(SolanaCtx);
 }
 
-const PrivyBridge = lazy(() => import('./privy-bridge'));
+const AuthSdk = lazy(() => import('./auth-sdk'));
+
+/**
+ * Catches a failed chunk import so a missing SDK degrades the app instead of
+ * erasing it. Keyed remounts drive the retry from the parent.
+ */
+class BridgeBoundary extends Component<
+  { children: ReactNode; onFail: (err: unknown) => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[HeroPad] auth SDK failed to load:', error.message, info.componentStack);
+    this.props.onFail(error);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthValue>(AUTH_STUB);
   const [solana, setSolana] = useState<SolanaValue>(SOLANA_STUB);
+  /** Bumping this remounts the lazy boundary — that IS the retry. */
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  const handleFail = useCallback(() => {
+    // Open the gate even on failure: parked promises must resolve (to "no
+    // session") rather than hang forever behind a login that will never come.
+    openGate();
+    setFailed((already) => {
+      if (!already && attempt === 0) {
+        // One silent retry — most chunk failures are a transient network blip
+        // or a stale deploy, and a second request usually lands.
+        setTimeout(() => {
+          resetGate();
+          setAttempt(1);
+        }, 1200);
+        return false;
+      }
+      return true;
+    });
+  }, [attempt]);
+
+  // Watchdog: the chunk can load and still never report ready (SDK boot
+  // blocked by third-party storage rules, a hung network call). Without this
+  // the login button would sit disabled forever with no explanation.
+  useEffect(() => {
+    if (auth.ready || failed) return;
+    const id = window.setTimeout(() => {
+      if (!liveAuth?.ready) {
+        openGate();
+        setFailed(true);
+      }
+    }, SDK_WATCHDOG_MS);
+    return () => window.clearTimeout(id);
+  }, [auth.ready, failed, attempt]);
+
+  const retry = () => {
+    setFailed(false);
+    resetGate();
+    setAttempt((a) => a + 1);
+  };
 
   return (
     <AuthCtx.Provider value={auth}>
       <SolanaCtx.Provider value={solana}>
         {children}
-        {/* Mounts immediately, resolves in the background; fallback is
-            nothing because the app is already fully rendered above. */}
-        <Suspense fallback={null}>
-          <PrivyBridge
-            onAuth={(v) => {
-              liveAuth = v;
-              setAuth(v);
-              if (v.ready) openGate();
-            }}
-            onSolana={(v) => {
-              liveSolana = v;
-              setSolana(v);
-            }}
-          />
-        </Suspense>
+
+        {/* Mounts immediately, resolves in the background; the app above is
+            already fully rendered, so there is nothing to fall back to. */}
+        <BridgeBoundary key={attempt} onFail={handleFail}>
+          <Suspense fallback={null}>
+            <AuthSdk
+              onAuth={(v) => {
+                liveAuth = v;
+                setAuth(v);
+                if (v.ready) {
+                  setFailed(false);
+                  openGate();
+                }
+              }}
+              onSolana={(v) => {
+                liveSolana = v;
+                setSolana(v);
+              }}
+            />
+          </Suspense>
+        </BridgeBoundary>
+
+        {failed && (
+          <div
+            role="status"
+            className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-md rounded-xl border border-amber-400/40 bg-hero-deep/95 px-4 py-3 text-center text-xs text-amber-200 shadow-2xl backdrop-blur"
+          >
+            Autentificarea nu s-a putut încărca. Poți naviga în continuare.{' '}
+            <button
+              type="button"
+              onClick={retry}
+              className="ml-1 rounded-full border border-amber-300/50 px-2.5 py-0.5 font-semibold text-amber-100 transition hover:bg-amber-300/10"
+            >
+              Reîncearcă
+            </button>
+          </div>
+        )}
       </SolanaCtx.Provider>
     </AuthCtx.Provider>
   );

@@ -13,6 +13,10 @@ on:
     - cron: '17 */6 * * *'
   workflow_dispatch:
 
+# Least privilege: this job only curls a public URL.
+permissions:
+  contents: read
+
 jobs:
   ping:
     runs-on: ubuntu-latest

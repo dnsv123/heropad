@@ -215,6 +215,27 @@ export async function getBitsHistory(
   }));
 }
 
+/**
+ * How many credits of one KIND this wallet received in the last 24h. The
+ * ledger is the only honest source for "how much has this already paid out
+ * today" — a payout that has no such ceiling is a payout an abusive merchant
+ * can run in a loop.
+ */
+export async function countBitsEventsToday(
+  walletAddress: string,
+  reason: string
+): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await getSupabaseAdmin()
+    .from('bits_transactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('wallet_address', walletAddress)
+    .eq('reason', reason)
+    .gt('created_at', since);
+  if (error) throw new Error(`[Supabase] countBitsEventsToday: ${error.message}`);
+  return count ?? 0;
+}
+
 export async function getBitsBalance(walletAddress: string): Promise<{
   current: number;
   earned: number;

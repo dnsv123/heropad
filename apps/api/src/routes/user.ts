@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import rateLimit from 'express-rate-limit';
 
 import { getOwnedCollectibles } from '../lib/helius.js';
 import { getBitsBalance, getBitsHistory } from '../lib/supabase-admin.js';
@@ -24,6 +25,25 @@ import { queryString } from '../lib/query.js';
 // 10 req/s per key — caching protects us if a user spams refresh.
 
 export const userRouter = Router();
+
+// Every cache miss here fans out to Privy + Helius DAS + Supabase, and the
+// DAS key is rate-limited for the whole platform — so one account refreshing
+// in a loop could starve everyone else. This was the last unlimited router.
+userRouter.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 60,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        ok: false,
+        error: 'rate_limited',
+        message: 'Too many requests. Please slow down.',
+      });
+    },
+  })
+);
 
 interface CacheEntry {
   data: unknown;

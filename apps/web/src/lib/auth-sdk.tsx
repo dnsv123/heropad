@@ -10,6 +10,15 @@ import type { AuthUser, AuthValue, SolanaValue, SolanaWallet } from './auth';
 // ~600KB out of the entry chunk. It mounts the real provider off to the side
 // and feeds live values back through the bridge context; Privy's own modals
 // portal into document.body, so their position in the tree does not matter.
+//
+// Named auth-sdk, not privy-bridge, on purpose: the emitted chunk carries the
+// filename, and a URL containing "privy" is the kind of thing tracker-blocking
+// lists match — an adblocker killing this file would take sign-in with it.
+//
+// Note for future edits: the effects below intentionally depend on state
+// fields rather than the method identities, which churn every render. That is
+// safe ONLY because Privy's methods are store-backed and always act on the
+// current session — if that ever stops being true, the deps must change too.
 
 interface BridgeProps {
   onAuth: (v: AuthValue) => void;

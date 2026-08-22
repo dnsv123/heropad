@@ -23,6 +23,22 @@ export interface VenueBranding {
   website?: string;
 }
 
+/**
+ * Same defence-in-depth the review link already gets on the loyalty page: the
+ * API validates the scheme on write, but `venues.branding` also has non-API
+ * writers (seeds, manual Supabase edits), and React only WARNS on a
+ * `javascript:` href — it still renders it.
+ */
+function safeWebUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface HappyHourNext {
   state: 'active' | 'upcoming';
   seconds: number;
@@ -160,8 +176,13 @@ export default function VenueContact({
             👍 Facebook
           </a>
         )}
-        {b.website && (
-          <a href={b.website} target="_blank" rel="noopener noreferrer" className={chip}>
+        {safeWebUrl(b.website) && (
+          <a
+            href={safeWebUrl(b.website) as string}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={chip}
+          >
             🌐 {t('vc.website')}
           </a>
         )}

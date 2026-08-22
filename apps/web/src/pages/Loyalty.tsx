@@ -165,7 +165,7 @@ export default function Loyalty() {
         if (!pending || !REF_RE.test(pending)) return;
         const token = await getAccessToken();
         if (!token) return;
-        await postJson<{ code: string }, { ok: true; linked: boolean }>(
+        await postJson<{ code: string }, { ok: true }>(
           '/api/loyalty/me/referral',
           { code: pending },
           token

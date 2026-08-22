@@ -130,3 +130,6 @@ temp/
 *.local
 *.bak
 *.orig
+
+# Test claim codes + their HMAC signatures — never tracked (they are bearer credentials).
+codes
