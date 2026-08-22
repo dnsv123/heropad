@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy } from '../lib/auth';
 
 import { getJson } from '../services/apiClient';
 import { useT } from '../i18n';

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy } from '../lib/auth';
 
 import { getJson, type ApiClientError } from '../services/apiClient';
 import { useT } from '../i18n';

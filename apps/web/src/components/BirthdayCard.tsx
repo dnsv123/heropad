@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy } from '../lib/auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import { useT } from '../i18n';

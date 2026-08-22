@@ -1,31 +1,27 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { PrivyProvider } from '@privy-io/react-auth';
 
 import App from './App';
 import { I18nProvider } from './i18n';
-import { PRIVY_APP_ID, privyConfig } from './lib/privy';
+import { AuthProvider } from './lib/auth';
 import './styles/index.css';
 
-// Fail loudly in dev if VITE_PRIVY_APP_ID is missing — easier than a cryptic
-// runtime error from the Privy SDK. In production this is set in Vercel env.
-if (!PRIVY_APP_ID) {
-  console.error(
-    '[HeroPad] VITE_PRIVY_APP_ID is not set. Login will not work. ' +
-      'Add it to apps/web/.env (local) or to Vercel Project → Environment Variables.'
-  );
-}
+// NOTE: no Privy import here — that is the whole point. AuthProvider renders
+// the app instantly against a stub and pulls the real SDK in a lazy chunk
+// (lib/privy-bridge), which is what took ~600KB off the entry bundle and the
+// mobile Lighthouse score off its knees. The missing-app-id warning moved
+// into the bridge, next to the SDK it concerns.
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <PrivyProvider appId={PRIVY_APP_ID ?? ''} config={privyConfig}>
+    <AuthProvider>
       <I18nProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>
       </I18nProvider>
-    </PrivyProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
 

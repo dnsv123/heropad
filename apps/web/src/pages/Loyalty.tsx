@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePrivy } from '@privy-io/react-auth';
-import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { usePrivy } from '../lib/auth';
+import { useSolanaWallets } from '../lib/auth';
 
 import PowerMeter from '../components/PowerMeter';
 import StampsCard from '../components/StampsCard';

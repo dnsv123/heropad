@@ -1,4 +1,4 @@
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy } from '../lib/auth';
 
 import { useT } from '../i18n';
 import AccountCard from '../components/AccountCard';

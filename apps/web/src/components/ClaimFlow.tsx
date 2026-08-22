@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { usePrivy } from '@privy-io/react-auth';
-import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { usePrivy } from '../lib/auth';
+import { useSolanaWallets } from '../lib/auth';
 
 import { postClaim, type ApiCallError } from '../lib/api';
 import { explorerAddress } from '../lib/explorer';

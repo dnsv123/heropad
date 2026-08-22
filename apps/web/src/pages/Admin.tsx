@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy } from '../lib/auth';
 
 import { getJson, postJson } from '../services/apiClient';
 import AdminPartners from '../components/AdminPartners';

@@ -1,5 +1,5 @@
-import { usePrivy } from '@privy-io/react-auth';
-import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { usePrivy } from '../lib/auth';
+import { useSolanaWallets } from '../lib/auth';
 
 import Collectibles from './Collectibles';
 import { useT } from '../i18n';

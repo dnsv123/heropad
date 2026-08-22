@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { usePrivy } from '@privy-io/react-auth';
-import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { usePrivy } from '../lib/auth';
+import { useSolanaWallets } from '../lib/auth';
 
 import { useT } from '../i18n';
 
