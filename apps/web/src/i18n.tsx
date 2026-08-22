@@ -397,6 +397,8 @@ const en = {
   'fw.v8': 'Fitness & yoga',
   'fw.v9': 'Food trucks',
   'fw.v10': 'Book & board-game cafés',
+  'fw.v11': 'Tea houses',
+  'fw.v12': 'Pet shops',
   'fw.more': '…and any place where a customer can come back often.',
   'lp.title': 'Simple, public pricing',
   'lp.sub': 'No hidden quotes, no "let\'s talk". Unlimited customers on every plan.',
@@ -425,6 +427,11 @@ const en = {
   'col.r.refinv': 'Bring a friend — your bonus',
   'col.r.reffriend': 'Welcome bonus from a friend',
   'col.r.claim': 'Collectible claim',
+
+  // --- Stamp card (circles) ---
+  'st.title': 'Your stamps',
+  'st.hide': 'Hide',
+  'st.show': 'Show the stamps',
 
   // --- NFC figurine check-in ---
   'loy.tap.done': 'Checked in! The counter can see your code — no need to show it.',
@@ -846,6 +853,8 @@ const ro: Record<TranslationKey, string> = {
   'fw.v8': 'Fitness & yoga',
   'fw.v9': 'Food trucks',
   'fw.v10': 'Librării-cafenea',
+  'fw.v11': 'Ceainării',
+  'fw.v12': 'Pet shops',
   'fw.more': '…și orice loc unde clientul poate reveni des.',
   'lp.title': 'Prețuri simple, publice',
   'lp.sub': 'Fără oferte ascunse, fără „hai să vorbim". Clienți nelimitați la orice pachet.',
@@ -874,6 +883,11 @@ const ro: Record<TranslationKey, string> = {
   'col.r.refinv': 'Adu un prieten — bonusul tău',
   'col.r.reffriend': 'Bonus de bun venit de la un prieten',
   'col.r.claim': 'Revendicare colecționabil',
+
+  // --- Cardul cu ștampile (cerculețe) ---
+  'st.title': 'Ștampilele tale',
+  'st.hide': 'Ascunde',
+  'st.show': 'Arată ștampilele',
 
   // --- Check-in cu figurina NFC ---
   'loy.tap.done': 'Te-ai anunțat! Casa îți vede codul — nu mai e nevoie să-l arăți.',

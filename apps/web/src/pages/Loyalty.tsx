@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 import PowerMeter from '../components/PowerMeter';
+import StampsCard from '../components/StampsCard';
 import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
 import { getJson, postJson } from '../services/apiClient';
@@ -85,6 +86,9 @@ export default function Loyalty() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [meError, setMeError] = useState<string | null>(null);
   const [justCharged, setJustCharged] = useState(false);
+  /** 0-based index of a stamp that just landed — drives the badge flight. */
+  const [newStamp, setNewStamp] = useState<number | null>(null);
+  const flightDone = useCallback(() => setNewStamp(null), []);
   const [celebrating, setCelebrating] = useState(false);
   const [redeemCode, setRedeemCode] = useState<RedeemCodeState | null>(null);
   const [redeemBusy, setRedeemBusy] = useState(false);
@@ -232,6 +236,9 @@ export default function Loyalty() {
         setJustCharged(true);
         hapticTap(20);
         window.setTimeout(() => setJustCharged(false), 500);
+        // The freshest stamp flies into its circle (only while it fits the
+        // current card — a redeemed/rolled-over card animates nothing).
+        if (r.stamps <= r.required) setNewStamp(r.stamps - 1);
       }
       if (prevCards.current !== null && r.cardsCompleted > prevCards.current) {
         setCelebrating(true);
@@ -415,6 +422,17 @@ export default function Loyalty() {
 
         <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
           <PowerMeter current={Math.min(stamps, required)} required={required} justCharged={justCharged} />
+
+          {/* The cardboard-card feel, with our hero in it. */}
+          {me && (
+            <StampsCard
+              stamps={stamps}
+              required={required}
+              canRedeem={Boolean(me.canRedeem)}
+              newStamp={newStamp}
+              onFlightDone={flightDone}
+            />
+          )}
 
           {/* Full card → the customer generates a ONE-TIME redeem code on their
               own phone (proof of presence); the barista types that to redeem. */}
