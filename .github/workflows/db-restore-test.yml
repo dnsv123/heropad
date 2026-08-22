@@ -1,0 +1,92 @@
+# A backup you have never restored is a hope, not a backup — the db-backup
+# workflow says so itself. This workflow makes the restore a monthly FACT:
+# it downloads the most recent nightly dump, restores it into a throwaway
+# Postgres 17, and asserts the tables and the actual rows are there.
+#
+# Runs: monthly (1st, 04:23 UTC), on manual dispatch, and once whenever this
+# file itself changes (so every edit to the test proves itself immediately).
+name: db-restore-test
+
+on:
+  schedule:
+    - cron: '23 4 1 * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/db-restore-test.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: restore-test
+          POSTGRES_DB: restore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Download the latest successful backup artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow db-backup \
+            --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::No successful db-backup run found — nothing to restore."
+            exit 1
+          fi
+          echo "Restoring from db-backup run $RUN_ID"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --dir backup
+          ls -lhR backup
+
+      - name: Restore into the throwaway database
+        run: |
+          gunzip -c backup/*/heropad-backup-*.sql.gz > dump.sql
+          wc -c dump.sql
+          # The dump's policies may reference Supabase's roles, which a vanilla
+          # Postgres does not have — create them empty so the restore applies.
+          docker run --rm --network host postgres:17 \
+            psql "postgresql://postgres:restore-test@localhost:5432/restore_test" \
+            -c "CREATE ROLE anon NOLOGIN" \
+            -c "CREATE ROLE authenticated NOLOGIN" \
+            -c "CREATE ROLE service_role NOLOGIN"
+          docker run --rm --network host -v "$PWD:/w" -w /w postgres:17 \
+            psql "postgresql://postgres:restore-test@localhost:5432/restore_test" \
+            -v ON_ERROR_STOP=1 -q -f dump.sql > restore.log 2>&1 || {
+              echo "::group::restore errors (last 60 lines)"
+              tail -60 restore.log
+              echo "::endgroup::"
+              echo "::error::Restore FAILED — the nightly backup is not restorable."
+              exit 1
+            }
+          echo "Restore applied cleanly."
+
+      - name: Assert the data is really there
+        run: |
+          q() {
+            docker run --rm --network host postgres:17 \
+              psql "postgresql://postgres:restore-test@localhost:5432/restore_test" -tAc "$1"
+          }
+          TABLES=$(q "select count(*) from information_schema.tables where table_schema='public'")
+          IDENT=$(q "select count(*) from public.user_identity")
+          STAMPS=$(q "select count(*) from public.stamps")
+          VENUES=$(q "select count(*) from public.venues")
+          echo "tables=$TABLES · identities=$IDENT · stamps=$STAMPS · venues=$VENUES"
+          [ "$TABLES" -ge 15 ] || { echo "::error::Only $TABLES tables restored — expected 15+."; exit 1; }
+          [ "$VENUES" -ge 1 ]  || { echo "::error::venues came back empty."; exit 1; }
+          [ "$IDENT" -ge 1 ]   || { echo "::error::user_identity came back empty."; exit 1; }
+          [ "$STAMPS" -ge 1 ]  || { echo "::error::stamps came back empty."; exit 1; }
+          echo "✅ Backup restores cleanly and the data survives the round-trip."
