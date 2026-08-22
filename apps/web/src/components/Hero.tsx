@@ -18,13 +18,13 @@ export default function Hero() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
 
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-12 md:flex-row md:gap-12 md:py-24">
-        {/* Character art — first on mobile, right side on desktop. */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="relative order-first w-full max-w-[220px] flex-shrink-0 md:order-last md:max-w-sm md:flex-1"
-        >
+        {/* Character art — first on mobile, right side on desktop. NO entrance
+           animation on this container: the mascot is the LCP element, and an
+           initial opacity of 0 made the browser count LCP only after React
+           hydrated AND the fade finished — a 10s LCP on throttled mobile for
+           an image that was already downloaded. It now paints the instant it
+           arrives; the float loop below is transform-only and LCP-neutral. */}
+        <div className="relative order-first w-full max-w-[220px] flex-shrink-0 md:order-last md:max-w-sm md:flex-1">
           <motion.div
             aria-hidden
             className="absolute inset-0 rounded-3xl"
@@ -56,7 +56,7 @@ export default function Hero() {
               className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-hero-cyan/20"
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Copy column. */}
         <div className="flex-1 text-center md:text-left">
