@@ -22,6 +22,12 @@
 //                   against its own nomenclature, so it is a setting rather
 //                   than something to guess: check it with your accountant.
 //   OBLIO_UNIT      optional — unit of measure, default "buc"
+//   OBLIO_PRICE_INCLUDES_VAT
+//                   "1" (default) — the price IS what the client pays; any VAT
+//                   is contained in it. "0" — the price is net and VAT is
+//                   added on top (99 lei + 21% = 119.79 lei to pay).
+//                   A company-wide decision, not a per-client one, which is
+//                   why it lives here and not in the database.
 //
 // Reference: https://www.oblio.eu/api — endpoints and field names follow the
 // public documentation. Run one dry-run and one real invoice against a test
@@ -80,6 +86,7 @@ export function oblioStatus(): {
   dryRun: boolean;
   missing: string[];
   series: string | null;
+  priceIncludesVat: boolean;
 } {
   const missing = ['OBLIO_EMAIL', 'OBLIO_SECRET', 'OBLIO_CIF', 'OBLIO_SERIES'].filter(
     (k) => !env(k)
@@ -90,6 +97,7 @@ export function oblioStatus(): {
     dryRun: (env('OBLIO_DRY_RUN') ?? '1') !== '0',
     missing,
     series: env('OBLIO_SERIES'),
+    priceIncludesVat: (env('OBLIO_PRICE_INCLUDES_VAT') ?? '1') !== '0',
   };
 }
 
@@ -165,10 +173,12 @@ function buildPayload(input: OblioInvoiceInput): Record<string, unknown> {
         productType: 'Serviciu',
         vatName: env('OBLIO_VAT_NAME') ?? (input.vatPercentage > 0 ? 'Normala' : 'Neplatitor'),
         vatPercentage: input.vatPercentage,
-        // The public prices (99/199/299 lei) are what a café owner was told
-        // they would pay. Treating VAT as included keeps the invoice total
-        // equal to the number in the contract.
-        vatIncluded: true,
+        // Whether the public prices (99/199/299 lei) are the total a café
+        // pays, or a net figure with VAT added on top. Defaults to included,
+        // because that is what a founding partner shaking hands on "99 lei a
+        // month" heard — flipping it later without changing their contract
+        // would be a price rise nobody agreed to.
+        vatIncluded: status.priceIncludesVat,
       },
     ],
     mentions: input.periodLabel,

@@ -61,7 +61,13 @@ interface OverviewResponse {
   ok: true;
   period: string;
   periodLabel: string;
-  oblio: { configured: boolean; dryRun: boolean; missing: string[]; series: string | null };
+  oblio: {
+    configured: boolean;
+    dryRun: boolean;
+    missing: string[];
+    series: string | null;
+    priceIncludesVat: boolean;
+  };
   venues: BillingVenue[];
   invoices: Invoice[];
 }
@@ -81,6 +87,29 @@ interface IssueResult {
 
 const money = (n: number) =>
   `${n.toLocaleString('ro-RO', { maximumFractionDigits: 2 })} lei`;
+
+/**
+ * Romanian CUI check digit (key 753217532).
+ *
+ * A warning, never a block: foreign clients and a handful of legacy numbers
+ * don't follow it, and refusing to save a real client because our arithmetic
+ * disagrees would be worse than a wrong invoice we can reissue. It exists to
+ * catch the typo — one transposed digit sends the invoice to another company.
+ */
+function cuiLooksValid(raw: string): boolean {
+  const digits = raw.trim().toUpperCase().replace(/^RO/, '').replace(/\D/g, '');
+  // Below 4 digits the check digit stops discriminating — "361" passes the
+  // arithmetic by accident. Real company codes are 6–10 digits, so a very
+  // short one is a typo worth flagging rather than a number worth blessing.
+  if (digits.length < 4 || digits.length > 10) return false;
+  const key = [7, 5, 3, 2, 1, 7, 5, 3, 2];
+  const control = Number(digits[digits.length - 1]);
+  const body = digits.slice(0, -1).padStart(9, '0');
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += Number(body[i]) * key[i];
+  const computed = (sum * 10) % 11 % 10;
+  return computed === control;
+}
 
 const shortDate = (iso: string | null) => {
   if (!iso) return '—';
@@ -155,7 +184,7 @@ export default function AdminBilling({ onNotice }: Props) {
 
   const saveDetails = async (slug: string) => {
     if (fCompany.trim().length < 2 || fCui.trim().length < 2) {
-      onNotice('err', 'Company name and CUI are required — they go on the invoice.');
+      onNotice('err', 'Denumirea firmei și CUI-ul sunt obligatorii — fără ele nu există factură.');
       return;
     }
     setBusy(`save:${slug}`);
@@ -180,7 +209,20 @@ export default function AdminBilling({ onNotice }: Props) {
         },
         token ?? undefined
       );
-      onNotice('ok', 'Invoicing details saved.');
+      // Saved either way — filling this in over two sittings is normal. But
+      // "saved" must not be mistaken for "ready to invoice": an invoice
+      // missing the client's registered address is not a compliant one.
+      const missing = [
+        !fAddress.trim() && 'adresa',
+        !fCity.trim() && 'localitatea',
+        !fCounty.trim() && 'județul',
+      ].filter(Boolean);
+      onNotice(
+        'ok',
+        missing.length > 0
+          ? `Salvat — dar mai lipsesc ${missing.join(', ')}. Fără ele factura nu e conformă.`
+          : 'Date de facturare salvate — complete.'
+      );
       setEditing(null);
       await load();
     } catch (err) {
@@ -391,6 +433,11 @@ export default function AdminBilling({ onNotice }: Props) {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                  {v.billing && !(v.billing.address && v.billing.city && v.billing.county) && (
+                    <span className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-hero-gold">
+                      date incomplete
+                    </span>
+                  )}
                   {v.invoicedThisPeriod && (
                     <span className="rounded-full border border-solana-green/40 px-2 py-0.5 text-solana-green">
                       invoiced {data.period}
@@ -427,26 +474,56 @@ export default function AdminBilling({ onNotice }: Props) {
 
               {editing === v.slug && (
                 <div className="mt-4 space-y-3 border-t border-hero-blue/15 pt-4">
+                  {/* What the law actually asks for, said once, at the top —
+                      so the asterisks below mean something. */}
+                  <div className="rounded-lg border border-hero-blue/20 bg-hero-deep/60 p-3">
+                    <p className="text-[11px] font-semibold text-hero-cyan">
+                      Ce cere legea pe o factură (Cod fiscal, art. 319)
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                      Datele <b>furnizorului</b> (noi), numărul și data facturii, cota și
+                      suma TVA și totalul vin automat din contul tău Oblio. Aici completezi
+                      doar datele <b>beneficiarului</b> — cafeneaua. Obligatorii sunt
+                      denumirea, CUI-ul și adresa; restul ajută contabila și pe tine.
+                    </p>
+                  </div>
+
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="text-xs text-slate-500">
-                      Company name *
+                      Denumire firmă *
+                      <InfoTip text="Denumirea EXACTĂ din certificatul de înregistrare, cu forma juridică: „CAFE VICTOR SRL”, nu „Café Victor”. Numele comercial al localului nu ține loc de denumire legală pe o factură." />
                       <input
                         value={fCompany}
                         onChange={(e) => setFCompany(e.target.value)}
+                        placeholder="CAFE VICTOR SRL"
                         className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
                       CUI / CIF *
+                      <InfoTip text="Codul de înregistrare fiscală. Cu prefixul RO dacă firma e plătitoare de TVA, fără dacă nu e — prefixul chiar înseamnă ceva, nu e decorativ. Îl verifici oricând pe anaf.ro." />
                       <input
                         value={fCui}
                         onChange={(e) => setFCui(e.target.value)}
                         placeholder="RO12345678"
                         className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
+                      {fCui.trim().length >= 2 && !cuiLooksValid(fCui) && (
+                        <span className="mt-1 block text-[11px] text-hero-gold">
+                          ⚠ Cifra de control nu iese. Verifică-l — o cifră inversată
+                          trimite factura la altă firmă. (Poți salva oricum: firmele
+                          străine nu respectă formatul românesc.)
+                        </span>
+                      )}
+                      {fCui.trim().length >= 2 && cuiLooksValid(fCui) && (
+                        <span className="mt-1 block text-[11px] text-solana-green">
+                          ✓ Format valid
+                        </span>
+                      )}
                     </label>
                     <label className="text-xs text-slate-500">
-                      Reg. Com.
+                      Nr. Reg. Comerțului
+                      <InfoTip text="Formatul J32/123/2020 (J + județ / număr / an). Nu e obligatoriu prin lege pe factură, dar orice contabilă îl așteaptă și îl folosește la identificarea firmei." />
                       <input
                         value={fReg}
                         onChange={(e) => setFReg(e.target.value)}
@@ -455,36 +532,41 @@ export default function AdminBilling({ onNotice }: Props) {
                       />
                     </label>
                     <label className="text-xs text-slate-500">
-                      Invoice email
+                      Email pentru factură
+                      <InfoTip text="Unde pleacă PDF-ul. De obicei contabilitatea, nu cafeneaua — pune adresa pe care ți-o dă patronul pentru facturi. Dacă o lași goală, factura rămâne doar în Oblio și i-o trimiți tu." />
                       <input
                         value={fEmail}
                         onChange={(e) => setFEmail(e.target.value)}
-                        placeholder="contabilitate@..."
+                        placeholder="contabilitate@cafenea.ro"
                         className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
-                      Address
+                      Adresa sediului social *
+                      <InfoTip text="Sediul SOCIAL din actele firmei, nu adresa cafenelei — pot fi diferite, și pe factură se trece sediul social. Strada și numărul." />
                       <input
                         value={fAddress}
                         onChange={(e) => setFAddress(e.target.value)}
+                        placeholder="Str. Nicolae Bălcescu nr. 12"
                         className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <label className="text-xs text-slate-500">
-                        City
+                        Localitate *
                         <input
                           value={fCity}
                           onChange={(e) => setFCity(e.target.value)}
+                          placeholder="Sibiu"
                           className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                       </label>
                       <label className="text-xs text-slate-500">
-                        County
+                        Județ *
                         <input
                           value={fCounty}
                           onChange={(e) => setFCounty(e.target.value)}
+                          placeholder="Sibiu"
                           className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                       </label>
@@ -493,7 +575,8 @@ export default function AdminBilling({ onNotice }: Props) {
 
                   <div className="grid gap-3 sm:grid-cols-3">
                     <label className="text-xs text-slate-500">
-                      Billing day (1–28)
+                      Ziua de facturare (1–28)
+                      <InfoTip text="În ce zi a lunii se emite factura. Maxim 28, ca ziua să existe și în februarie. Jobul rulează în fiecare dimineață și facturează pe cine i-a venit ziua — dacă într-o zi pică ceva, se recuperează a doua zi." />
                       <input
                         type="number"
                         min={1}
@@ -504,7 +587,8 @@ export default function AdminBilling({ onNotice }: Props) {
                       />
                     </label>
                     <label className="text-xs text-slate-500">
-                      VAT %
+                      Cota TVA %
+                      <InfoTip text="0 dacă firma NOASTRĂ e neplătitoare de TVA — atunci nu ai voie să colectezi TVA, indiferent de clientul din față. Când devii plătitor, treci cota standard. Se schimbă per client doar în cazuri speciale (client extern)." />
                       <input
                         type="number"
                         min={0}
@@ -515,7 +599,8 @@ export default function AdminBilling({ onNotice }: Props) {
                       />
                     </label>
                     <label className="text-xs text-slate-500">
-                      Free trial ends
+                      Perioada gratuită se termină
+                      <InfoTip text="Cât timp data asta e în viitor, jobul automat SARE peste local. E plasa de siguranță pentru pilotul gratuit de 2 luni: o cafenea facturată din greșeală în perioada gratuită e cea mai proastă primă impresie posibilă." />
                       <input
                         type="date"
                         value={fTrialEnds}
@@ -524,6 +609,29 @@ export default function AdminBilling({ onNotice }: Props) {
                       />
                     </label>
                   </div>
+
+                  {/* The money line, spelled out. "99 lei" means two different
+                      totals depending on a setting, and that ambiguity is
+                      exactly what turns into an awkward call with a client. */}
+                  {v.monthlyFee > 0 && (
+                    <div className="rounded-lg border border-hero-gold/25 bg-hero-gold/5 px-3 py-2 text-[11px] leading-relaxed">
+                      <span className="text-slate-400">Pe factură va apărea: </span>
+                      <span className="font-semibold text-hero-gold">
+                        {data.oblio.priceIncludesVat
+                          ? `${money(v.monthlyFee)} total de plată${
+                              Number(fVat) > 0
+                                ? ` (din care ${money(
+                                    v.monthlyFee - v.monthlyFee / (1 + Number(fVat) / 100)
+                                  )} TVA)`
+                                : ', fără TVA'
+                            }`
+                          : `${money(v.monthlyFee)} + ${fVat}% TVA = ${money(
+                              v.monthlyFee * (1 + Number(fVat) / 100)
+                            )} de plată`}
+                      </span>
+                      <InfoTip text="Se schimbă din OBLIO_PRICE_INCLUDES_VAT pe Railway: 1 = prețul e totalul de plată, 0 = prețul e net și TVA-ul se adaugă peste. Atenție la fondatori — lor le-ai promis „99 lei pe lună”, deci contractul trebuie să spună explicit dacă e cu sau fără TVA." />
+                    </div>
+                  )}
 
                   <label className="flex items-center gap-2 text-xs text-slate-300">
                     <input
