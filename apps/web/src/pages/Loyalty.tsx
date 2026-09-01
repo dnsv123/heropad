@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +22,9 @@ import { useT } from '../i18n';
 // animation. Grants and redeems happen on /business (merchant device).
 
 const POLL_MS = 4000;
+
+/** How long a venue's "what's on this week" notice stays visible. */
+const ANNOUNCEMENT_TTL_DAYS = 14;
 
 interface VenueInfo {
   slug: string;
@@ -116,6 +119,21 @@ export default function Loyalty() {
     }
   }, [ready, authenticated, walletsReady, wallets.length, createWallet]);
   const walletMissing = ready && authenticated && walletsReady && wallets.length === 0;
+
+  // --- "What's on this week" --------------------------------------------------
+  // A notice the venue wrote for its regulars, with a two-week shelf life.
+  // The expiry is the feature: a busy owner posts "live music Thursday" and
+  // then forgets it exists, and a card still advertising a concert from last
+  // month is worse for them than no notice at all. Computed from the
+  // server-stamped write time, so a stale one cannot be revived client-side.
+  const freshAnnouncement = useMemo(() => {
+    const b = venue?.branding ?? {};
+    const text = typeof b.announcement === 'string' ? b.announcement.trim() : '';
+    const at = typeof b.announcementAt === 'string' ? Date.parse(b.announcementAt) : NaN;
+    if (!text || Number.isNaN(at)) return null;
+    const ageDays = (Date.now() - at) / 86_400_000;
+    return ageDays >= 0 && ageDays <= ANNOUNCEMENT_TTL_DAYS ? text : null;
+  }, [venue?.branding]);
 
   // --- Referral ("Adu un prieten") -------------------------------------------
   // A friend arriving via ?ref=CODE may still have to log in first, so the
@@ -387,6 +405,20 @@ export default function Loyalty() {
         {venue?.happyHour?.active && (
           <div className="mt-4 animate-pulse rounded-xl border-2 border-hero-gold bg-hero-gold/15 p-3 text-center text-sm font-bold text-hero-gold">
             {t('loy.hh.active', { m: venue.happyHour.mult })}
+          </div>
+        )}
+
+        {/* "What's on this week" — the venue's own line to its regulars.
+            Hidden once it goes stale so a card can never advertise last
+            month's concert; the venue clears it early by emptying the field. */}
+        {freshAnnouncement && (
+          <div className="mt-4 rounded-xl border border-hero-cyan/30 bg-hero-cyan/5 p-3">
+            <p className="text-[11px] uppercase tracking-wider text-hero-cyan">
+              {t('loy.announce.title', { name: venue?.name ?? '' })}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-200">
+              {freshAnnouncement}
+            </p>
           </div>
         )}
 

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
 
 import { getJson } from '../services/apiClient';
-import { explorerAddress, explorerTx } from '../lib/explorer';
+import { explorerAddress } from '../lib/explorer';
 import { useT } from '../i18n';
 
 // Profile → Power Pass widget. Three stat tiles; EACH opens its own specific
@@ -53,11 +53,7 @@ interface StatsResponse {
 
 type DetailKind = 'stamps' | 'rewards' | 'trophies' | null;
 
-const txUrl = explorerTx;
 const assetUrl = explorerAddress;
-function shortHash(h: string): string {
-  return `${h.slice(0, 4)}…${h.slice(-4)}`;
-}
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString('en-GB', {
@@ -297,9 +293,12 @@ export default function LoyaltyStats() {
                         </p>
                       ) : (
                         <div className="mt-4 grid grid-cols-2 gap-3">
-                          {stats.trophies.map((t) => (
+                          {/* `trophy`, not `t` — the map used to shadow the
+                              translate function, which made every label in
+                              here impossible to translate. */}
+                          {stats.trophies.map((trophy) => (
                             <div
-                              key={t.assetId}
+                              key={trophy.assetId}
                               className="rounded-xl border border-hero-gold/40 bg-hero-gold/5 p-3 text-center"
                             >
                               <div className="relative mx-auto aspect-square w-20">
@@ -309,7 +308,7 @@ export default function LoyaltyStats() {
                                 />
                                 <img
                                   src="/cnft/trophy-starter.webp"
-                                  alt={`SuperVictor Trophy — ${t.venueName} #${t.edition}`}
+                                  alt={`SuperVictor Trophy — ${trophy.venueName} #${trophy.edition}`}
                                   className="relative h-full w-full object-contain"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display =
@@ -321,30 +320,19 @@ export default function LoyaltyStats() {
                                 </span>
                               </div>
                               <p className="mt-2 text-xs font-semibold text-hero-gold">
-                                {t.venueName} #{t.edition}
+                                {trophy.venueName} #{trophy.edition}
                               </p>
                               <p className="mt-0.5 text-[10px] text-slate-500">
-                                {formatDate(t.redeemedAt)}
+                                {formatDate(trophy.redeemedAt)}
                               </p>
                               <div className="mt-2 flex justify-center gap-2 text-[10px]">
-                                {t.mintTx && (
-                                  <a
-                                    href={txUrl(t.mintTx)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-hero-gold transition hover:bg-hero-gold/10"
-                                    title={`Mint transaction ${shortHash(t.mintTx)}`}
-                                  >
-                                    Tx {shortHash(t.mintTx)} ↗
-                                  </a>
-                                )}
                                 <a
-                                  href={assetUrl(t.assetId)}
+                                  href={assetUrl(trophy.assetId)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="rounded-full border border-hero-cyan/40 px-2 py-0.5 text-hero-cyan transition hover:bg-hero-cyan/10"
                                 >
-                                  Asset ↗
+                                  {t('col.verify.s')}
                                 </a>
                               </div>
                             </div>

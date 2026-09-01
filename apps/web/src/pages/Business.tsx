@@ -118,6 +118,14 @@ export default function Business() {
   const [setInsta, setSetInsta] = useState('');
   const [setFb, setSetFb] = useState('');
   const [setSite, setSetSite] = useState('');
+  /**
+   * "What's on this week". Tracked with a touched flag like Happy Hour,
+   * because unlike the contact fields this one must be *clearable*: after the
+   * concert is over, an empty field has to mean "take it down", not "leave
+   * what was there".
+   */
+  const [setAnnounce, setSetAnnounce] = useState('');
+  const [announceTouched, setAnnounceTouched] = useState(false);
   const [hhDays, setHhDays] = useState<number[]>([]);
   const [hhStart, setHhStart] = useState('');
   const [hhEnd, setHhEnd] = useState('');
@@ -207,6 +215,7 @@ export default function Business() {
         setSetInsta(str(b.instagram));
         setSetFb(str(b.facebook));
         setSetSite(str(b.website));
+        setSetAnnounce(str(b.announcement));
         if (typeof r.venue.timezone === 'string') setTz(r.venue.timezone);
         const hh = b.happyHour as
           | { days?: number[]; start?: string; end?: string; mult?: number }
@@ -497,6 +506,7 @@ export default function Business() {
         instagram?: string;
         facebook?: string;
         website?: string;
+        announcement?: string;
       } = {};
       const n = parseInt(setRequired, 10);
       if (!Number.isNaN(n)) body.stampsRequired = n;
@@ -508,6 +518,9 @@ export default function Business() {
       if (setFb.trim().length > 0) body.facebook = setFb.trim();
       if (setSite.trim().length > 0) body.website = setSite.trim();
       if (tz) body.timezone = tz;
+      // Sent even when empty — that is how the venue takes a finished notice
+      // down. The other text fields deliberately skip empties instead.
+      if (announceTouched) body.announcement = setAnnounce.trim();
       if (hhTouched) {
         body.happyHour =
           hhDays.length > 0 && hhStart && hhEnd
@@ -1130,6 +1143,33 @@ export default function Business() {
                           />
                         </label>
                       </div>
+
+                      {/* "What's on this week" — the one thing here that
+                          changes weekly rather than once at setup, so it gets
+                          its own full-width row and a visible character
+                          budget. */}
+                      <label className="mt-3 block text-xs text-slate-500">
+                        {t('b.set.announce')}
+                        <input
+                          type="text"
+                          maxLength={160}
+                          value={setAnnounce}
+                          onChange={(e) => {
+                            setSetAnnounce(e.target.value);
+                            setAnnounceTouched(true);
+                          }}
+                          placeholder={t('b.set.announce.ph')}
+                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        />
+                        <span className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
+                          <span className="text-[11px] leading-relaxed text-slate-600">
+                            {t('b.set.announce.hint')}
+                          </span>
+                          <span className="shrink-0 font-mono text-[11px] text-slate-600">
+                            {setAnnounce.length}/160
+                          </span>
+                        </span>
+                      </label>
 
                       {/* Happy Hour scheduler */}
                       <div className="mt-3 rounded-xl border border-hero-gold/30 bg-hero-gold/5 p-3">

@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
 
 import { getJson } from '../services/apiClient';
-import { explorerAddress, explorerTx } from '../lib/explorer';
+import { explorerAddress } from '../lib/explorer';
 import { useT, type TranslationKey } from '../i18n';
 
 // /passport — the SuperVictor Passport: collect cafés, not just coffees.
@@ -49,10 +49,6 @@ const TIER_ART: Record<PassportTier['key'], string> = {
   silver: '/loyalty/passport/silver_round_medal.webp',
   gold: '/loyalty/passport/gold_round_medal.webp',
 };
-
-function shortHash(h: string): string {
-  return `${h.slice(0, 4)}…${h.slice(-4)}`;
-}
 
 export default function Passport() {
   const { ready, authenticated, login, getAccessToken } = usePrivy();
@@ -282,17 +278,11 @@ export default function Passport() {
                         </span>
                       )}
                     </span>
+                    {/* One human link instead of two hashes. The proof is
+                        still one tap away for anyone who wants it; nobody is
+                        asked to know what a transaction is to read their
+                        own trophy shelf. */}
                     <span className="flex gap-2 text-[10px]">
-                      {tier.mintTx && (
-                        <a
-                          href={explorerTx(tier.mintTx)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-hero-gold transition hover:bg-hero-gold/10"
-                        >
-                          Tx {shortHash(tier.mintTx)} ↗
-                        </a>
-                      )}
                       {tier.assetId && (
                         <a
                           href={explorerAddress(tier.assetId)}
@@ -300,7 +290,7 @@ export default function Passport() {
                           rel="noopener noreferrer"
                           className="rounded-full border border-hero-cyan/40 px-2 py-0.5 text-hero-cyan transition hover:bg-hero-cyan/10"
                         >
-                          Asset ↗
+                          {t('col.verify.s')}
                         </a>
                       )}
                     </span>

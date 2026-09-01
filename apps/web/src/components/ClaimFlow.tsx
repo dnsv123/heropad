@@ -72,7 +72,7 @@ function explainError(code: string, fallback: string): string {
     case 'unknown_code':
       return 'This code is not recognized. Make sure you scanned a real HeroPad item.';
     case 'already_claimed':
-      return 'This collectible has already been claimed. Each code is one-shot — by design.';
+      return 'This hero has already been claimed. Each code works exactly once — by design.';
     case 'bad_signature':
       return 'The signature did not verify. The QR/NFC may be damaged, copied incorrectly, or counterfeit.';
     case 'bad_code':
@@ -200,7 +200,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
       setStatus({
         phase: 'error',
         code: 'no_wallet',
-        message: 'You need a Solana wallet first. Go to Profile → Create wallet.',
+        message: 'Your digital vault is not ready yet. Open your Profile once — it sets itself up.',
       });
       return;
     }
@@ -297,7 +297,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
 
           <div className="space-y-3 rounded-xl border border-hero-blue/15 bg-hero-deep/40 p-4 text-xs">
             <div>
-              <p className="uppercase tracking-wider text-slate-500">cNFT asset</p>
+              <p className="uppercase tracking-wider text-slate-500">Certificate ID</p>
               <code className="mt-1 block break-all font-mono text-hero-cyan">
                 {status.mintAddress}
               </code>
@@ -309,7 +309,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
                 rel="noopener noreferrer"
                 className="rounded-full border border-hero-cyan/40 px-3 py-1.5 text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10"
               >
-                View on Solana Explorer ↗
+                Verify this hero ↗
               </a>
               <a
                 href="/profile"
@@ -392,10 +392,10 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
       <div className="flex flex-col gap-3 border-t border-hero-blue/15 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-500">
           {!authenticated
-            ? 'Login required to mint your collectible.'
+            ? 'Log in to add this hero to your collection.'
             : wallets.length === 0
-            ? 'Create a Solana wallet first (Profile page).'
-            : 'Logged in · ready to mint to your Solana wallet.'}
+            ? 'Your vault is still being set up — open your Profile once.'
+            : 'Logged in · ready to add it to your collection.'}
         </p>
 
         {!authenticated ? (

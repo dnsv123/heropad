@@ -66,8 +66,8 @@ export default function Claim() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-3 max-w-lg text-slate-400"
           >
-            Scanned a figurine, card, or pack? Drop the code below and we'll
-            mint your Solana cNFT in one step.
+            Scanned a figurine, card, or pack? Drop the code below and its
+            digital twin lands in your collection in one step.
           </motion.p>
 
           <motion.div

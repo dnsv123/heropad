@@ -3,19 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import type { CollectibleSummary } from '../lib/api';
 import { explorerAddress } from '../lib/explorer';
+import { useT } from '../i18n';
 
 interface CollectibleModalProps {
   item: CollectibleSummary | null;
   onClose: () => void;
 }
 
-// In-app cNFT detail viewer.
-// - Big image, traits, copy/explore/download actions.
+// In-app trophy / collectible detail viewer.
+// - Big image, details, copy/verify/download actions.
 // - Esc / outside-click closes.
 // - Body scroll locked while open so the page underneath doesn't scroll.
 // - Image download uses fetch+blob so it works cross-origin (CDNs that don't
 //   send Content-Disposition still produce a valid file).
 export default function CollectibleModal({ item, onClose }: CollectibleModalProps) {
+  const { t } = useT();
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -115,7 +117,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                  Image not available
+                  {t('col.noimg2')}
                 </div>
               )}
             </div>
@@ -139,7 +141,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
               {item.attributes.length > 0 && (
                 <div>
                   <p className="text-xs uppercase tracking-wider text-slate-500">
-                    Traits
+                    {t('col.traits')}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {item.attributes.map((a) => (
@@ -157,7 +159,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
 
               <div>
                 <p className="text-xs uppercase tracking-wider text-slate-500">
-                  Asset ID
+                  {t('col.certid')}
                 </p>
                 <code className="mt-1 block break-all rounded bg-hero-deep/80 p-2 font-mono text-[11px] text-hero-cyan">
                   {item.assetId}
@@ -170,7 +172,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                   onClick={handleCopy}
                   className="rounded-full border border-hero-blue/40 px-3 py-2 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
                 >
-                  {copied ? 'Copied!' : 'Copy Asset ID'}
+                  {copied ? t('w.copied') : t('col.copyid')}
                 </button>
                 <button
                   type="button"
@@ -178,7 +180,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                   disabled={!item.imageUrl || downloading}
                   className="rounded-full border border-hero-cyan/40 px-3 py-2 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
                 >
-                  {downloading ? 'Saving…' : 'Download image'}
+                  {downloading ? t('col.downloading') : t('col.download')}
                 </button>
                 <a
                   href={explorerUrl}
@@ -186,7 +188,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                   rel="noopener noreferrer"
                   className="col-span-2 flex items-center justify-center rounded-full bg-hero-gold px-4 py-2 text-xs font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
                 >
-                  View on Solana Explorer ↗
+                  {t('col.verify')}
                 </a>
               </div>
             </div>

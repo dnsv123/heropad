@@ -4,16 +4,23 @@ import { useSolanaWallets } from '../lib/auth';
 
 import { useT } from '../i18n';
 
-// Profile card showing the user's identity, all linked Solana wallets, and
-// account-management actions.
+// Profile card for the user's "digital vault" — where trophies live.
 //
-// Multi-wallet design:
+// Language policy (deliberate):
+//   The vault IS a Solana wallet, and every trophy IS a compressed NFT. We do
+//   not hide that — we just stop leading with it. A customer at a café wants
+//   to know their trophies are safe and theirs; a word like "wallet" or
+//   "mint" makes them think they need to understand crypto to drink coffee.
+//   So the surface speaks plainly, and the full technical truth lives one
+//   click away in "Technical details" — including key export, which is what
+//   makes "truly yours" more than a slogan. Never remove that disclosure:
+//   plain language is fine, an unverifiable claim is not.
+//
+// Multi-vault design:
 //   - Privy returns BOTH the embedded wallet (auto-provisioned via login) AND
 //     any external wallet the user linked (Phantom/Solflare). We render every
 //     Solana wallet in the array, each with its own copy + export controls.
-//   - There is no "primary" wallet — for the claim flow we currently default
-//     to wallets[0], but a user can pick which one to mint into via a future
-//     "Mint to" selector (Day 4 polish).
+//   - There is no "primary" wallet — the claim flow defaults to wallets[0].
 //
 // Export key:
 //   - useSolanaWallets().exportWallet({ address }) is the SOLANA export entry.
@@ -22,7 +29,7 @@ import { useT } from '../i18n';
 //   - Embedded wallets only — external wallets manage their own keys.
 
 export default function ProfileWallet() {
-  const { user } = usePrivy();
+  const { user, linkWallet } = usePrivy();
   const { t } = useT();
   const {
     wallets,
@@ -76,7 +83,7 @@ export default function ProfileWallet() {
     try {
       await createWallet();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Wallet creation failed.');
+      setCreateError(err instanceof Error ? err.message : 'Setup failed.');
     } finally {
       setCreating(false);
     }
@@ -98,7 +105,7 @@ export default function ProfileWallet() {
 
   if (!walletsReady) {
     // Browser wallet extensions (MetaMask etc.) can stall the Solana hook's
-    // initialization indefinitely. The wallet still EXISTS — its address is in
+    // initialization indefinitely. The vault still EXISTS — its address is in
     // user.linkedAccounts — so after a short grace period we show a read-only
     // view instead of an eternal spinner. Export needs the full hook, so that
     // action waits for a page where init succeeds.
@@ -111,17 +118,15 @@ export default function ProfileWallet() {
     if (linkedAddr) {
       return (
         <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
-          <div className="flex items-baseline justify-between">
-            <p className="text-xs uppercase tracking-wider text-slate-500">{t('w.section')}</p>
-            <p className="text-xs text-slate-600">1 wallet</p>
-          </div>
+          <p className="text-xs uppercase tracking-wider text-slate-500">{t('w.section')}</p>
+          <p className="mt-1 text-xs text-slate-500">{t('w.explain')}</p>
           <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <code className="max-w-full break-all rounded bg-hero-deep/80 px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
                 {linkedAddr}
               </code>
               <span className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-hero-gold">
-                Embedded
+                {t('w.badge.embedded')}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -132,10 +137,7 @@ export default function ProfileWallet() {
               >
                 {copiedAddr === linkedAddr ? t('w.copied') : t('w.copy')}
               </button>
-              <p className="text-[11px] text-slate-500">
-                Secured by your login · full controls (key export) load with the
-                wallet service — a browser extension may be delaying it.
-              </p>
+              <p className="text-[11px] text-slate-500">{t('w.secured')}</p>
             </div>
           </div>
         </div>
@@ -153,12 +155,8 @@ export default function ProfileWallet() {
     if (hasLinkedSolanaWallet) {
       return (
         <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-8 text-center">
-          <p className="text-slate-300">
-            Wallet provisioning… this usually takes a couple of seconds.
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
-            Refresh the page if it doesn't appear in 10s.
-          </p>
+          <p className="text-slate-300">{t('w.provisioning')}</p>
+          <p className="mt-2 text-xs text-slate-500">{t('w.provisioning.hint')}</p>
         </div>
       );
     }
@@ -185,16 +183,16 @@ export default function ProfileWallet() {
 
   return (
     <div className="space-y-6 rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
-      {/* Wallets — render each one with copy + export. */}
       <div className="space-y-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-3">
           <p className="text-xs uppercase tracking-wider text-slate-500">
             {t('w.section')}
           </p>
-          <p className="text-xs text-slate-600">
-            {wallets.length} {wallets.length === 1 ? 'wallet' : 'wallets'}
+          <p className="shrink-0 text-xs text-slate-600">
+            {wallets.length} {wallets.length === 1 ? t('w.count.one') : t('w.count.many')}
           </p>
         </div>
+        <p className="text-xs text-slate-500">{t('w.explain')}</p>
 
         {wallets.map((w) => {
           const addr = w.address;
@@ -215,7 +213,7 @@ export default function ProfileWallet() {
                       : 'border-solana-purple/40 text-solana-purple'
                   }`}
                 >
-                  {isEmbedded ? 'Embedded' : (w.walletClientType ?? 'External')}
+                  {isEmbedded ? t('w.badge.embedded') : t('w.badge.external')}
                 </span>
               </div>
 
@@ -227,43 +225,55 @@ export default function ProfileWallet() {
                 >
                   {copiedAddr === addr ? t('w.copied') : t('w.copy')}
                 </button>
-                {isEmbedded && (
-                  <button
-                    type="button"
-                    onClick={() => handleExportKey(addr)}
-                    disabled={exportingAddr === addr}
-                    className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-50"
-                  >
-                    {exportingAddr === addr ? t('w.exporting') : t('w.export')}
-                  </button>
-                )}
                 <p className="ml-auto self-center text-[11px] text-slate-500">
-                  {isEmbedded
-                    ? t('w.secured')
-                    : t('w.youhold')}
+                  {isEmbedded ? t('w.secured') : t('w.youhold')}
                 </p>
               </div>
             </div>
           );
         })}
-
-        {exportError && (
-          <p className="text-xs text-red-400">{exportError}</p>
-        )}
-        <div className="space-y-1.5 text-[11px] text-slate-500">
-          <p>
-            Embedded wallets are controlled by your login. External wallets
-            (Phantom, Solflare) you manage with their own seed phrase.
-          </p>
-          <p className="rounded-md border border-hero-blue/15 bg-hero-deep/40 px-2.5 py-2 text-slate-400">
-            <span className="text-hero-cyan">Importing in Phantom?</span>{' '}
-            Choose <strong className="text-slate-300">"Import private key"</strong>,
-            NOT "Import secret recovery phrase". Privy embedded wallets are
-            single-key (MPC), not seed-based.
-          </p>
-        </div>
       </div>
 
+      {/* The whole technical truth, one click away. Key export lives here
+          rather than on the surface: the people who need it go looking for
+          it, and the people who don't are never asked to care. */}
+      <details className="rounded-xl border border-hero-blue/15 bg-hero-deep/30">
+        <summary className="cursor-pointer px-4 py-2.5 text-xs text-slate-400 transition hover:text-slate-200">
+          {t('w.adv')}
+        </summary>
+        <div className="space-y-3 border-t border-hero-blue/10 px-4 py-3">
+          <p className="text-[11px] leading-relaxed text-slate-500">{t('w.adv.body')}</p>
+
+          <div className="flex flex-wrap gap-2">
+            {wallets
+              .filter((w) => w.walletClientType === 'privy')
+              .map((w) => (
+                <button
+                  key={w.address}
+                  type="button"
+                  onClick={() => handleExportKey(w.address)}
+                  disabled={exportingAddr === w.address}
+                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-50"
+                >
+                  {exportingAddr === w.address ? t('w.exporting') : t('w.export')}
+                </button>
+              ))}
+            <button
+              type="button"
+              onClick={linkWallet}
+              className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-solana-purple hover:text-white"
+            >
+              {t('w.adv.link')}
+            </button>
+          </div>
+
+          {exportError && <p className="text-xs text-red-400">{exportError}</p>}
+
+          <p className="rounded-md border border-hero-blue/15 bg-hero-deep/40 px-2.5 py-2 text-[11px] leading-relaxed text-slate-400">
+            {t('w.adv.import')}
+          </p>
+        </div>
+      </details>
     </div>
   );
 }

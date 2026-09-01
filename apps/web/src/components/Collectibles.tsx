@@ -21,7 +21,7 @@ const REASON_KEY: Record<string, TranslationKey> = {
   claim: 'col.r.claim',
 };
 
-/** Collection folders, decided by on-chain symbol. Order = display order. */
+/** Collection folders, decided by the certificate's symbol. Order = display order. */
 const FOLDERS: Array<{ key: string; icon: string; label: TranslationKey; match: (s: string) => boolean }> = [
   { key: 'venue', icon: '🏆', label: 'col.f.venue', match: (s) => s === 'SVTROPHY' },
   { key: 'passport', icon: '🗺️', label: 'col.f.passport', match: (s) => s === 'SVPASS' },
@@ -102,13 +102,13 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
   if (state.phase === 'error') {
     return (
       <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-        <p>Could not load your collection — {state.message}</p>
+        <p>{t('col.error')}</p>
         <button
           type="button"
           onClick={load}
           className="mt-2 rounded-full border border-red-300/40 px-3 py-1 text-xs hover:border-red-300"
         >
-          Retry
+          {t('col.retry')}
         </button>
       </div>
     );
@@ -232,7 +232,13 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
                 className="grid grid-cols-2 gap-3 px-4 pb-4 md:grid-cols-3"
               >
                 {f.items.map((c) => (
-                  <CollectibleCard key={c.assetId} item={c} onOpen={() => setActive(c)} />
+                  <CollectibleCard
+                    key={c.assetId}
+                    item={c}
+                    onOpen={() => setActive(c)}
+                    noImageLabel={t('col.noimg')}
+                    openLabel={t('col.view')}
+                  />
                 ))}
               </motion.div>
             </details>
@@ -247,9 +253,13 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
 function CollectibleCard({
   item,
   onOpen,
+  noImageLabel,
+  openLabel,
 }: {
   item: CollectibleSummary;
   onOpen: () => void;
+  noImageLabel: string;
+  openLabel: string;
 }) {
   return (
     <motion.button
@@ -275,7 +285,7 @@ function CollectibleCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
-            (no image)
+            {noImageLabel}
           </div>
         )}
       </div>
@@ -291,7 +301,7 @@ function CollectibleCard({
 
       <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-2 opacity-0 transition group-hover:opacity-100">
         <span className="rounded-full bg-hero-cyan/90 px-2 py-0.5 text-[10px] font-medium text-hero-deep">
-          View ↗
+          {openLabel}
         </span>
       </div>
     </motion.button>

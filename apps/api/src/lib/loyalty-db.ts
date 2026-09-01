@@ -703,6 +703,13 @@ export async function updateVenueSettings(
     timezone?: string;
     /** null clears the schedule. */
     happyHour?: HappyHourConfig | null;
+    /**
+     * "What's on this week" — one short line the venue writes for its own
+     * customers. Empty string clears it. The write timestamp is stamped
+     * server-side (never trusted from the client) so the customer page can
+     * hide a notice the venue forgot about.
+     */
+    announcement?: string;
   }
 ): Promise<void> {
   const supa = getSupabaseAdmin();
@@ -725,7 +732,8 @@ export async function updateVenueSettings(
     input.instagram !== undefined ||
     input.facebook !== undefined ||
     input.website !== undefined ||
-    input.happyHour !== undefined;
+    input.happyHour !== undefined ||
+    input.announcement !== undefined;
 
   if (brandingKeysTouched) {
     const { data, error } = await supa
@@ -753,6 +761,17 @@ export async function updateVenueSettings(
     if (input.happyHour !== undefined) {
       if (input.happyHour === null) delete branding.happyHour;
       else branding.happyHour = input.happyHour;
+    }
+    if (input.announcement !== undefined) {
+      if (input.announcement === '') {
+        delete branding.announcement;
+        delete branding.announcementAt;
+      } else {
+        branding.announcement = input.announcement;
+        // Stamped here, not sent by the client: this timestamp is what makes
+        // a stale notice disappear on its own, so it has to be trustworthy.
+        branding.announcementAt = new Date().toISOString();
+      }
     }
     patch.branding = branding;
   }

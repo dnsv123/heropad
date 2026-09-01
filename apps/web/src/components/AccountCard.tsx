@@ -7,7 +7,7 @@ import { useT } from '../i18n';
 // the very top of the Profile page.
 
 export default function AccountCard() {
-  const { user, linkEmail, linkGoogle, linkWallet } = usePrivy();
+  const { user, linkEmail, linkGoogle } = usePrivy();
   const { t } = useT();
 
   return (
@@ -40,6 +40,10 @@ export default function AccountCard() {
         </div>
       </div>
 
+      {/* Only the two sign-in methods a customer recognises. Linking an
+          external wallet moved to Profile → vault → Technical details:
+          it is an expert action, and offering it here made the account card
+          read like a crypto app. */}
       <div className="mt-4 flex flex-wrap gap-2 border-t border-hero-blue/15 pt-4">
         {!user?.email && (
           <button
@@ -59,13 +63,6 @@ export default function AccountCard() {
             {t('acct.link.google')}
           </button>
         )}
-        <button
-          type="button"
-          onClick={linkWallet}
-          className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-solana-purple hover:text-white"
-        >
-          {t('acct.link.wallet')}
-        </button>
       </div>
     </div>
   );
