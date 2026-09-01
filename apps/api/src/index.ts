@@ -14,6 +14,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 
 import { adminRouter } from './routes/admin.js';
+import { billingCronRouter } from './routes/billing.js';
 import { claimRouter } from './routes/claim.js';
 import { partnerRouter } from './routes/partner.js';
 import { loyaltyRouter } from './routes/loyalty.js';
@@ -103,6 +104,9 @@ app.get('/healthz', (_req, res) => {
 
 // Routes.
 app.use('/api/admin', adminRouter);
+// Scheduled invoicing. Not under /api/admin because the caller is a GitHub
+// Action with a shared secret, not a logged-in admin session.
+app.use('/api/billing', billingCronRouter);
 app.use('/api/claim', claimRouter);
 app.use('/api/loyalty', loyaltyRouter);
 app.use('/api/mint', mintRouter);
@@ -141,4 +145,11 @@ app.listen(port, () => {
   console.log(`[heropad-api] listening on http://localhost:${port}`);
   console.log('[heropad-api] env check:', envCheck, allEnvOk ? '✓ all good' : '✗ MISSING VARS');
   console.log(`[heropad-api] CORS allowlist: ${allowedOrigins.join(', ')}`);
+  // Not part of envCheck — the platform runs fine without Oblio. But whether
+  // invoicing is armed is not something anyone should have to go looking for.
+  const billingLive =
+    (process.env.OBLIO_DRY_RUN ?? '1') === '0' && Boolean(process.env.OBLIO_SECRET);
+  console.log(
+    `[heropad-api] billing: ${billingLive ? '🔴 LIVE — invoices are issued for real' : '🧪 dry run'}`
+  );
 });

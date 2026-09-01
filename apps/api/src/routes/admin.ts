@@ -23,6 +23,7 @@ import {
   updatePartner,
   upsertPayout,
 } from '../lib/partners-db.js';
+import { billingAdminRouter } from './billing.js';
 
 // Admin routes — the operator's control panel (Valentin only).
 // ---------------------------------------------------------------------------
@@ -74,6 +75,11 @@ function requireAdmin(req: Request, res: Response, next: () => void): void {
 }
 
 adminRouter.use(requireAuth, requireAdmin);
+
+// Invoicing lives in its own file but behind the same allowlist — mounted
+// here rather than in index.ts so it can never accidentally be exposed
+// without the admin gate.
+adminRouter.use('/billing', billingAdminRouter);
 
 function serverError(res: Response, scope: string, err: unknown): void {
   console.error(`[admin.${scope}]`, (err as Error).message);

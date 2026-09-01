@@ -1,0 +1,76 @@
+# Monthly subscription invoicing.
+#
+# Runs DAILY, not monthly, on purpose: each venue has its own billing day
+# (1–28), so the job asks "who is due today?" every morning. A venue already
+# invoiced this month is stopped by a unique index in Postgres, which also
+# means a day the runner was down is picked up automatically the next day
+# instead of skipping someone's invoice for a whole month.
+#
+# Safety: the API refuses to issue anything unless OBLIO_DRY_RUN=0 is set on
+# Railway. Until then this workflow is a no-op that reports what it *would*
+# have done — which is exactly how it should stay until one invoice has been
+# read by a human.
+#
+# Setup (one-time):
+#   1. Railway → API service → Variables:
+#        OBLIO_EMAIL, OBLIO_SECRET, OBLIO_CIF, OBLIO_SERIES
+#        BILLING_CRON_SECRET  (any long random string)
+#        OBLIO_DRY_RUN=1      (set to 0 only when you are ready to go live)
+#   2. GitHub → Settings → Secrets and variables → Actions:
+#        BILLING_CRON_SECRET  (the SAME value as on Railway)
+name: billing
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # 07:00 UTC daily — morning in Romania
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  invoice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run the invoicing batch
+        env:
+          SECRET: ${{ secrets.BILLING_CRON_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then
+            echo "::warning::BILLING_CRON_SECRET is not set in GitHub secrets — nothing to do."
+            exit 0
+          fi
+          URL="https://heropadapi-production.up.railway.app/api/billing/cron"
+
+          # Retry only on the transient shapes: no answer at all, or Railway
+          # swapping containers mid-deploy. A 403 (wrong secret) or a 500
+          # (an invoice actually failed) is real and must go red immediately —
+          # the whole point of an alert is that it means something.
+          for attempt in 1 2 3; do
+            CODE=$(curl -sS -m 60 -X POST -H "x-cron-secret: $SECRET" \
+              -o /tmp/billing.json -w '%{http_code}' "$URL" || echo 000)
+            case "$CODE" in
+              000|404|502|503)
+                echo "Attempt $attempt: HTTP $CODE — API not answering yet, retrying in 45s"
+                sleep 45
+                continue
+                ;;
+            esac
+            break
+          done
+
+          echo "HTTP $CODE"
+          cat /tmp/billing.json 2>/dev/null || true
+          echo
+
+          if [ "$CODE" = "200" ]; then
+            echo "Batch completed ✓"
+            exit 0
+          fi
+          if [ "$CODE" = "403" ]; then
+            echo "::error::Rejected — BILLING_CRON_SECRET here does not match the one on Railway."
+            exit 1
+          fi
+          echo "::error::Invoicing batch did not complete (HTTP $CODE). See the response above."
+          exit 1

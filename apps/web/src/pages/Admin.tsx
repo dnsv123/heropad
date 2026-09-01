@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '../lib/auth';
 
 import { getJson, postJson } from '../services/apiClient';
+import AdminBilling from '../components/AdminBilling';
 import AdminPartners from '../components/AdminPartners';
 import AdminGuide from '../components/AdminGuide';
 import EmojiPick from '../components/EmojiPick';
@@ -967,6 +968,14 @@ export default function Admin() {
                         onPartners={setPartnerCodes}
                       />
               </div>
+            ),
+          },
+          {
+            key: 'billing',
+            icon: '🧾',
+            label: 'Billing',
+            render: () => (
+              <AdminBilling onNotice={(kind, text) => setNotice({ kind, text })} />
             ),
           },
           {
