@@ -475,6 +475,7 @@ const en = {
   'w.badge.embedded': 'Yours',
   'w.badge.external': 'External',
   // --- Happy Hour / review / contact ---
+  'loy.reward.label': '🎁 Your reward at {n} stamps',
   'loy.announce.title': '📣 This week at {name}',
   'loy.hh.active': '⚡ HAPPY HOUR — every purchase counts x{m} right now!',
   'loy.review.btn': '⭐ Leave us a Google review',
@@ -958,6 +959,7 @@ const ro: Record<TranslationKey, string> = {
   'w.count.many': 'seifuri',
   'w.badge.embedded': 'Al tău',
   'w.badge.external': 'Extern',
+  'loy.reward.label': '🎁 Recompensa ta la {n} bonusuri',
   'loy.announce.title': '📣 Săptămâna asta la {name}',
   'loy.hh.active': '⚡ HAPPY HOUR — fiecare cumpărătură contează x{m} chiar acum!',
   'loy.review.btn': '⭐ Lasă-ne o recenzie pe Google',

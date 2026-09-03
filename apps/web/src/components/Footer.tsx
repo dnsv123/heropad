@@ -56,14 +56,10 @@ export default function Footer() {
           >
             Hall of Heroes
           </a>
-          <a
-            href="https://github.com/dnsv123/heropad"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-hero-cyan transition"
-          >
-            GitHub
-          </a>
+          {/* No GitHub link. This footer is read by café owners deciding
+              whether to pay for a product; a link to the source code is a
+              signal from the hackathon era, not from a company they are
+              about to sign with. */}
           <a
             href="https://x.com/SVictorUniverse"
             target="_blank"

@@ -372,8 +372,18 @@ export default function Loyalty() {
     };
   }, [ready, authenticated, fetchMe]);
 
-  const required = me?.required ?? venue?.stampsRequired ?? 10;
+  // No fallback threshold. There used to be a `?? 10` here, and for the two
+  // seconds before the venue loaded, a customer who had just scanned the QR
+  // at a 5-stamp café was told they needed 10 — then watched the number
+  // change. The first three seconds of the relationship are not the place for
+  // a number we are guessing. Until we know, we show a skeleton.
+  const required = me?.required ?? venue?.stampsRequired ?? null;
   const stamps = me?.stamps ?? 0;
+  /** The venue's reward, e.g. "A free donut" — the entire point of the card. */
+  const rewardLabel =
+    typeof venue?.branding?.reward === 'string' && venue.branding.reward.trim()
+      ? venue.branding.reward.trim()
+      : null;
 
   return (
     <section className="relative overflow-hidden">
@@ -421,16 +431,6 @@ export default function Loyalty() {
             </p>
           </div>
         )}
-
-        {/* The venue's own details: a loyalty card is also a small storefront
-            for the café whose card it is. */}
-        <VenueContact
-          name={venue?.name ?? ''}
-          branding={(venue?.branding ?? null)}
-          gpsLat={venue?.gpsLat}
-          gpsLng={venue?.gpsLng}
-          happyHourNext={venue?.happyHourNext ?? null}
-        />
 
         {/* Celebration — a CENTRED modal, not a block in the page.
            It used to render inline below the venue card and auto-dismiss after
@@ -512,10 +512,36 @@ export default function Loyalty() {
         </AnimatePresence>
 
         <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
-          <PowerMeter current={Math.min(stamps, required)} required={required} justCharged={justCharged} />
+          {required === null ? (
+            // Skeleton, not a guess. Same height as the meter so nothing jumps.
+            <div className="flex flex-col items-center gap-4 py-6" aria-busy="true">
+              <div className="h-28 w-28 animate-pulse rounded-full bg-hero-blue/15" />
+              <div className="h-4 w-40 animate-pulse rounded-full bg-hero-blue/15" />
+            </div>
+          ) : (
+            <PowerMeter
+              current={Math.min(stamps, required)}
+              required={required}
+              justCharged={justCharged}
+            />
+          )}
+
+          {/* THE REWARD. A progress bar without a destination is just a bar —
+              "2 more stamps" only motivates when you can see what is at the
+              end of it. This is the venue's own promise, in its own words. */}
+          {rewardLabel && required !== null && (
+            <div className="mt-4 rounded-xl border border-hero-gold/35 bg-hero-gold/10 px-4 py-3 text-center">
+              <p className="text-[11px] uppercase tracking-wider text-hero-gold/80">
+                {t('loy.reward.label', { n: required })}
+              </p>
+              <p className="mt-0.5 font-display text-lg font-semibold text-hero-gold">
+                {rewardLabel}
+              </p>
+            </div>
+          )}
 
           {/* The cardboard-card feel, with our hero in it. */}
-          {me && (
+          {me && required !== null && (
             <StampsCard
               stamps={stamps}
               required={required}
@@ -649,6 +675,21 @@ export default function Loyalty() {
             <p className="mt-2 text-[11px] text-slate-600">{t('ref.hint')}</p>
           </div>
         )}
+
+        {/* The venue's own details — BELOW the card, deliberately.
+            This used to sit between the venue name and the stamps, which
+            meant the first thing a customer saw after scanning at the counter
+            was a countdown to tomorrow's Happy Hour and a "get directions"
+            button for the room they were standing in. The card they came for
+            was fifth on the screen. A loyalty page is also a small storefront
+            for the café — but the storefront comes after the card. */}
+        <VenueContact
+          name={venue?.name ?? ''}
+          branding={(venue?.branding ?? null)}
+          gpsLat={venue?.gpsLat}
+          gpsLng={venue?.gpsLng}
+          happyHourNext={venue?.happyHourNext ?? null}
+        />
 
         {/* Asked once, only after the customer has stamps worth coming back for. */}
         <ConsentPrompt show={Boolean(me && me.totalStamps >= 2)} />

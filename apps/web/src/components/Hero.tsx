@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { useT } from '../i18n';
+import { contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Landing hero — Power Pass first (the product we sell today), the SuperVictor
 // universe as the wrapper. Two-column on desktop, stacked on mobile; mascot
@@ -9,7 +9,7 @@ import { useT } from '../i18n';
 //
 // CTA strategy:
 //   - Primary gold: "For businesses" → scrolls to the #business section.
-//   - Secondary outline: claim flow (the original phygital audience).
+//   - Secondary outline: talk to us (WhatsApp when configured, else email).
 export default function Hero() {
   const { t } = useT();
 
@@ -107,12 +107,20 @@ export default function Hero() {
               />
             </a>
 
-            <Link
-              to="/claim"
+            {/* The second CTA is the demo, not "Claim a hero".
+                This landing page sells to café owners, and to one of them
+                "Claim a hero" means nothing — it belonged to a figurine we
+                do not sell yet. It is still reachable from the Ecosystem
+                section and the menu, where someone holding a figurine will
+                look for it. */}
+            <a
+              href={contactHref()}
+              target={contactIsWhatsApp() ? '_blank' : undefined}
+              rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
               className="rounded-full border border-hero-cyan/40 px-6 py-3 font-medium text-slate-200 transition hover:border-hero-cyan hover:text-white"
             >
-              {t('eco.claim.t')}
-            </Link>
+              {t('biz.cta')}
+            </a>
           </motion.div>
 
           <motion.p

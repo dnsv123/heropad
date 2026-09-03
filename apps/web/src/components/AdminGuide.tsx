@@ -61,11 +61,129 @@ export default function AdminGuide() {
         <p className={li}>Atenție la cele DOUĂ coduri: codul de <b>recomandare</b> (îl alegi la Brought by) ≠ codul de <b>activare</b> (login-ul lui, o singură folosință).</p>
       </div>
 
+      {/* ---- Grila de comisioane ---- */}
+      <div className={card}>
+        <h2 className={h}>💰 Cât câștigă un partener (grila de comisioane)</h2>
+        <p className={p}>
+          <b className="text-white">„Tiers" = praguri.</b> În loc de un procent fix pentru
+          toată lumea, procentul crește pe măsură ce partenerul aduce mai multe localuri.
+          Și e <b className="text-white">retroactiv</b>: când atinge pragul, procentul nou
+          se aplică la <i>toate</i> localurile lui, nu doar la următorul. Un prag care se
+          aplică doar de-acum-încolo nu motivează pe nimeni — ăsta e singurul detaliu care
+          face diferența între o grilă care mișcă oameni și una decorativă.
+        </p>
+
+        <p className="mt-4 text-sm font-semibold text-white">Cei 3 fondatori (deja promis)</p>
+        <p className={li}>
+          25% de la primul local, <b>pe viață</b> — adică atât timp cât localul adus de ei
+          rămâne activ și plătitor. Asta rămâne exact cum ai spus. Peste ea poți adăuga
+          creșterea: <span className={num}>30% de la 5 localuri</span> active. E generos,
+          îi motivează, și nu-ți strică marja.
+        </p>
+
+        <p className="mt-4 text-sm font-semibold text-white">Partenerii următori (de la al 4-lea)</p>
+        <div className="mt-2 overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="text-slate-500">
+                <th className="py-2 pr-3 font-medium">Localuri active</th>
+                <th className="py-2 pr-3 font-medium">Comision</th>
+                <th className="py-2 pr-3 font-medium">La 199 lei/local</th>
+                <th className="py-2 font-medium">Îi rămâne lui pe lună</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-300">
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3">1 – 4</td>
+                <td className="py-2 pr-3 text-hero-gold">20%</td>
+                <td className="py-2 pr-3">39,80 lei / local</td>
+                <td className="py-2">159,20 lei / local</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3">5 – 9</td>
+                <td className="py-2 pr-3 text-hero-gold">25%</td>
+                <td className="py-2 pr-3">49,75 lei / local</td>
+                <td className="py-2">149,25 lei / local</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3">10+</td>
+                <td className="py-2 pr-3 text-hero-gold">30%</td>
+                <td className="py-2 pr-3">59,70 lei / local</td>
+                <td className="py-2">139,30 lei / local</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+          Un partener cu 10 localuri încasează ~597 lei/lună. Cu 20 de localuri, ~1.194
+          lei/lună. Sunt bani serioși pentru cineva care își face treaba — exact cât
+          trebuie ca să merite efortul.
+        </p>
+
+        <p className="mt-4 text-sm font-semibold text-white">De ce mă opresc la 30% și nu 35%</p>
+        <p className={li}>
+          Peste 30% începi să lucrezi pentru partener. Din 199 lei: 35% = 70 lei comision,
+          plus costuri de platformă, plus impozit — rămâi cu sub jumătate din prețul
+          afișat, recurent, <i>pe viață</i>. Dacă vrei să premiezi un partener foarte bun
+          la 15+ localuri, dă-i un <b>bonus fix anual</b> (ex. 2.000 lei), nu încă un
+          procent. Bonusurile se opresc; procentele nu se opresc niciodată.
+        </p>
+
+        <p className="mt-4 text-sm font-semibold text-white">
+          „Pe viață" — ce înseamnă și cât costă
+        </p>
+        <p className={li}>
+          Înseamnă: <b>cât timp localul adus de el e activ și plătește.</b> Pleacă localul
+          → se oprește comisionul. Asta e formularea corectă și e deja cum funcționează în
+          cod.
+        </p>
+        <p className={li}>
+          Dar fii conștient ce cumperi: un partener care aduce 20 de localuri și apoi nu
+          mai face nimic încasează ~1.200 lei/lună, la nesfârșit, pentru muncă făcută o
+          dată. La 100 de localuri aduse prin parteneri, plătești ~6.000 lei/lună din care
+          nu mai poți reinvesti. Pentru primii 3 merită — le vinzi o promisiune mare când
+          n-ai încă un nume. De la al 4-lea partener,{' '}
+          <b className="text-white">comisionul recurent limitat la 24 de luni</b> e
+          standardul în industrie și e perfect vandabil: „24 de luni de comision din
+          fiecare local pe care îl aduci".
+        </p>
+
+        <p className="mt-4 text-sm font-semibold text-white">
+          Dacă un partener aduce alt partener
+        </p>
+        <p className={li}>
+          Ideea ta (5% din ce aduce el, el primește 20%) e corectă matematic — costul tău
+          rămâne 25% indiferent cine aduce localul. Problema nu e matematica, e omul:
+          partenerul recrutat ia 20% pentru aceeași muncă pentru care altul ia 25%, iar
+          asta <i>se află întotdeauna</i>. Ai creat caste permanente pentru 5 procente.
+        </p>
+        <p className={li}>
+          În plus, în România „câștigi din ce aduce omul tău" sună a schemă piramidală. Tu
+          nu ești — banii vin din abonamentele cafenelelor, nu din taxe de la recruți — dar
+          un agent de vânzări serios te poate refuza din reflex, și ăia sunt exact oamenii
+          pe care îi vrei.
+        </p>
+        <p className={li}>
+          <b className="text-white">Varianta pe care ți-o recomand:</b> toți partenerii pe
+          aceeași grilă, iar recrutarea o plătești ca <b>bonus unic</b> — aduci un partener
+          care își semnează primul local, primești 500 lei o dată. Se cheamă „bonus de
+          recomandare", ceea ce face orice firmă normală, costă previzibil, și nu
+          penalizează pe nimeni pe viață pentru felul în care a intrat.
+        </p>
+
+        <p className="mt-4 rounded-lg border border-hero-gold/25 bg-hero-gold/5 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
+          ⚠️ <b className="text-hero-gold">Scrie în contract acum, nu peste un an:</b> ce
+          procent, la ce praguri, pe ce durată, și ce se întâmplă dacă localul pleacă sau
+          dacă partenerul devine inactiv. Ai 3 oameni acum — e cel mai ieftin moment din
+          toată istoria firmei să pui regulile pe hârtie.
+        </p>
+      </div>
+
       {/* ---- Onboarding client ---- */}
       <div className={card}>
         <h2 className={h}>🙋 Onboarding CLIENT (se face singur)</h2>
         <p className={li}>Trei uși, toate spre același loc: <b>figurina NFC</b> (tap → cardul se deschide + check-in automat la casă) · <b>QR-ul de pe tejghea</b> · <b>linkul direct</b> (ex. trimis de un prieten cu ?ref=coduljui — bonusul „Adu un prieten").</p>
-        <p className={li}>Prima dată: login cu Gmail (~10 sec) → contul, codul personal de 6 caractere și portofelul digital se creează singure. Nimic de instalat, niciodată.</p>
+        <p className={li}>Prima dată: login cu Gmail (~10 sec) → contul, codul personal de 6 caractere și seiful digital se creează singure. Nimic de instalat, niciodată.</p>
         <p className={li}>Codul lui e mereu în <b>Profil</b> (card mare + QR), la fel rolurile, Power Pass-ul, Pașaportul și lista tuturor localurilor partenere.</p>
       </div>
 

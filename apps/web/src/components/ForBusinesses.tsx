@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
 
 import { useT } from '../i18n';
+import { contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Landing → "#business": the merchant-facing pitch section. This is where the
-// hero's primary CTA lands. Benefits + pilot offer + a mailto CTA (a proper
-// contact form comes with the merchant self-service phase).
+// hero's primary CTA lands. Benefits + pilot offer + a contact CTA (WhatsApp
+// when a number is configured, email otherwise).
 export default function ForBusinesses() {
   const { t } = useT();
 
@@ -94,7 +95,9 @@ export default function ForBusinesses() {
             {t('biz.pricing')}
           </p>
           <a
-            href="mailto:dinescuioanvalentin@gmail.com?subject=HeroPad%20Power%20Pass%20—%20Demo"
+            href={contactHref()}
+            target={contactIsWhatsApp() ? '_blank' : undefined}
+            rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
             className="rounded-full bg-hero-gold px-8 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
           >
             {t('biz.cta')}

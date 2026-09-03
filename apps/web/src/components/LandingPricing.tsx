@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 
 import { useT } from '../i18n';
+import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Landing → public pricing. We tell café owners "competitors hide their price
 // behind Let's-talk; we publish ours" — so the site has to actually publish
@@ -54,7 +55,9 @@ export default function LandingPricing() {
       <p className="mt-4 text-center text-sm text-slate-400">
         {t('lp.chain')}{' '}
         <a
-          href="mailto:dinescuioanvalentin@gmail.com?subject=HeroPad%20Chain%20—%20multi-loca%C8%9Bie"
+          href={chainContactHref()}
+          target={contactIsWhatsApp() ? '_blank' : undefined}
+          rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
           className="text-hero-cyan underline transition hover:text-hero-gold"
         >
           {t('lp.chain.cta')}
@@ -63,7 +66,9 @@ export default function LandingPricing() {
       <p className="mt-2 text-center text-xs text-slate-500">{t('lp.note')}</p>
       <div className="mt-5 text-center">
         <a
-          href="mailto:dinescuioanvalentin@gmail.com?subject=HeroPad%20Power%20Pass%20—%20Demo"
+          href={contactHref()}
+          target={contactIsWhatsApp() ? '_blank' : undefined}
+          rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
           className="rounded-full bg-hero-gold px-8 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
         >
           {t('biz.cta')}
