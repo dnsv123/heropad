@@ -126,6 +126,9 @@ export default function Business() {
    */
   const [setAnnounce, setSetAnnounce] = useState('');
   const [announceTouched, setAnnounceTouched] = useState(false);
+  /** BITS reward hand-over: the 6-character code the customer reads out. */
+  const [rewardCode, setRewardCode] = useState('');
+  const [rewardBusy, setRewardBusy] = useState(false);
   const [hhDays, setHhDays] = useState<number[]>([]);
   const [hhStart, setHhStart] = useState('');
   const [hhEnd, setHhEnd] = useState('');
@@ -343,6 +346,28 @@ export default function Business() {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
       setClaiming(false);
+    }
+  }
+
+  /** The customer read out a BITS reward code — hand the item over. */
+  async function fulfilReward() {
+    const code = rewardCode.trim().toUpperCase();
+    if (!CODE_RE.test(code)) return;
+    setRewardBusy(true);
+    setNotice(null);
+    try {
+      const token = await getAccessToken();
+      const r = await postJson<
+        { code: string },
+        { ok: true; item: { name: string }; priceBits: number }
+      >(`/api/rewards/counter/${slug}/fulfil`, { code }, token ?? undefined);
+      hapticTap(20);
+      setRewardCode('');
+      setNotice({ kind: 'ok', text: t('b.rw.ok', { item: r.item.name, n: r.priceBits }) });
+    } catch (err) {
+      setNotice({ kind: 'err', text: (err as Error).message });
+    } finally {
+      setRewardBusy(false);
     }
   }
 
@@ -731,6 +756,41 @@ export default function Business() {
                   </div>
                 </div>
               )}
+
+              {/* BITS reward hand-over. Its own small card, its own input:
+                  it must never be confused with the customer code or the
+                  free-item redeem code, both also 6 characters. */}
+              <details className="mb-3 rounded-2xl border border-solana-green/30 bg-solana-green/5">
+                <summary className="cursor-pointer px-4 py-2.5 text-xs font-semibold text-solana-green">
+                  {t('b.rw.title')}
+                </summary>
+                <div className="border-t border-solana-green/15 px-4 py-3">
+                  <p className="text-[11px] leading-relaxed text-slate-400">{t('b.rw.hint')}</p>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="text"
+                      autoCapitalize="characters"
+                      maxLength={6}
+                      value={rewardCode}
+                      onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && CODE_RE.test(rewardCode)) void fulfilReward();
+                      }}
+                      placeholder={t('b.rw.ph')}
+                      className="w-full rounded-xl border border-solana-green/30 bg-hero-deep/80 px-3 py-2 font-mono text-lg tracking-[0.2em] text-slate-100 focus:border-solana-green focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      disabled={rewardBusy || !CODE_RE.test(rewardCode)}
+                      onClick={() => void fulfilReward()}
+                      className="shrink-0 rounded-xl bg-solana-green px-4 py-2 text-sm font-semibold text-hero-deep transition hover:brightness-110 disabled:opacity-40"
+                    >
+                      {rewardBusy ? '…' : t('b.rw.btn')}
+                    </button>
+                  </div>
+                </div>
+              </details>
 
               {queued.length > 0 && (
                 <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-4 py-2.5">

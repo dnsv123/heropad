@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
 import { useSolanaWallets } from '../lib/auth';
@@ -690,6 +690,14 @@ export default function Loyalty() {
           gpsLng={venue?.gpsLng}
           happyHourNext={venue?.happyHourNext ?? null}
         />
+
+        {/* BITS need a shop, or they are just a number. One line, one link. */}
+        <Link
+          to="/rewards"
+          className="mt-4 block rounded-xl border border-solana-green/30 bg-solana-green/5 px-4 py-3 text-center text-sm font-semibold text-solana-green transition hover:bg-solana-green/10"
+        >
+          {t('loy.bits.shop')}
+        </Link>
 
         {/* Asked once, only after the customer has stamps worth coming back for. */}
         <ConsentPrompt show={Boolean(me && me.totalStamps >= 2)} />

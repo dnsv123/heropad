@@ -222,6 +222,52 @@ export default function AdminGuide() {
         </p>
       </div>
 
+      {/* ---- Economia BITS ---- */}
+      <div className={card}>
+        <h2 className={h}>⚡ Economia BITS — cine plătește pin-ul</h2>
+        <p className={p}>
+          <b className="text-white">Fiecare BITS emis e o promisiune de produs fizic, adică un
+          cost real.</b> Un pin de ~25 lei la 300 BITS, cu 10 BITS/vizită, înseamnă ~0,80
+          lei „datorie" pe fiecare vizită. O cafenea cu 500 de vizite pe lună produce ~400
+          lei de premii — mai mult decât abonamentul ei. Cu cât merge mai bine, cu atât
+          pierzi mai mult. Așa mor programele de loialitate.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-white">Trei straturi, în ordinea asta</p>
+        <p className={li}>
+          <span className={num}>1.</span> <b>BITS → digital</b> (cost zero): skin în V-DASH,
+          ramă specială pe card, trofeu de ediție limitată. Aici poți fi generos la nesfârșit.
+        </p>
+        <p className={li}>
+          <span className={num}>2.</span> <b>BITS → fizic mic</b>, cu buget: pin, sticker.
+          Bugetul de premii per local ≤ 20–25% din abonament, adică ~1 pin pe lună pe local.
+          Puțin, dar onest — și faci prețul în BITS să reflecte asta (≈ 20–30 de vizite).
+        </p>
+        <p className={li}>
+          <span className={num}>3.</span> <b>BITS → reducere la premium</b> (tricou în tub,
+          comic, challenge coin): clientul plătește cu cardul, BITS taie 10–20%. Modelul
+          Vograce. Cere checkout cu card → după Netopia.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-white">Faza 1 (pilot, 3 localuri)</p>
+        <p className={li}>
+          <b>Tu plătești pin-urile.</b> E marketing, nu marfă: buget de ~500 € pentru 150–250
+          de pin-uri hard enamel, 3–4 modele. Clientul le ia gratis cu BITS. Nimeni nu
+          încasează nimic, deci fără Netopia, fără casă de marcat, fără nimic nou.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-white">Faza 2 (după validare)</p>
+        <p className={li}>
+          <b>Cafeneaua cumpără pin-urile de la tine</b> (ex. 15 lei/buc, en-gros) și le dă
+          clienților ei ca premii. Pentru ea e material promoțional deductibil. Pentru tine e
+          venit cu marjă. Și e upsell natural: pachetul Growth include „30 de premii fizice pe
+          lună". Face upgrade-ul tangibil — patronul vede cutia, nu un rând pe factură.
+        </p>
+        <p className="mt-3 rounded-lg border border-hero-cyan/25 bg-hero-cyan/5 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
+          💡 <b className="text-hero-cyan">Marketplace global:</b> nu-l construim. Avem deja un
+          Shopify — el face checkout, card, transport, tot. Integrarea ieftină când vine
+          momentul: BITS generează un cod de reducere Shopify („500 BITS = −20% pe shop").
+          Zero checkout de scris, zero Netopia.
+        </p>
+      </div>
+
       {/* ---- Onboarding client ---- */}
       <div className={card}>
         <h2 className={h}>🙋 Onboarding CLIENT (se face singur)</h2>

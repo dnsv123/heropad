@@ -4,6 +4,7 @@ import { usePrivy } from '../lib/auth';
 import { getJson, postJson } from '../services/apiClient';
 import AdminBilling from '../components/AdminBilling';
 import AdminPartners from '../components/AdminPartners';
+import AdminRewards from '../components/AdminRewards';
 import AdminGuide from '../components/AdminGuide';
 import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
@@ -968,6 +969,14 @@ export default function Admin() {
                         onPartners={setPartnerCodes}
                       />
               </div>
+            ),
+          },
+          {
+            key: 'rewards',
+            icon: '🎁',
+            label: 'Rewards',
+            render: () => (
+              <AdminRewards onNotice={(kind, text) => setNotice({ kind, text })} />
             ),
           },
           {

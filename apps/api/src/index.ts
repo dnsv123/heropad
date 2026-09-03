@@ -15,6 +15,7 @@ import helmet from 'helmet';
 
 import { adminRouter } from './routes/admin.js';
 import { billingCronRouter } from './routes/billing.js';
+import { rewardsRouter } from './routes/rewards.js';
 import { claimRouter } from './routes/claim.js';
 import { partnerRouter } from './routes/partner.js';
 import { loyaltyRouter } from './routes/loyalty.js';
@@ -107,6 +108,7 @@ app.use('/api/admin', adminRouter);
 // Scheduled invoicing. Not under /api/admin because the caller is a GitHub
 // Action with a shared secret, not a logged-in admin session.
 app.use('/api/billing', billingCronRouter);
+app.use('/api/rewards', rewardsRouter);
 app.use('/api/claim', claimRouter);
 app.use('/api/loyalty', loyaltyRouter);
 app.use('/api/mint', mintRouter);

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
 
@@ -176,6 +177,12 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
             </button>
           )}
         </div>
+        <Link
+          to="/rewards"
+          className="mt-3 block rounded-lg border border-solana-green/30 px-3 py-2 text-center text-xs font-semibold text-solana-green transition hover:bg-solana-green/10"
+        >
+          {t('loy.bits.shop')}
+        </Link>
         {ledgerOpen && (
           <div className="mt-3 max-h-64 space-y-1 overflow-y-auto border-t border-solana-green/15 pt-3">
             {bitsHistory.map((e, i) => (

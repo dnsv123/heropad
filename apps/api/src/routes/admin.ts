@@ -24,6 +24,7 @@ import {
   upsertPayout,
 } from '../lib/partners-db.js';
 import { billingAdminRouter } from './billing.js';
+import { rewardsAdminRouter } from './rewards.js';
 
 // Admin routes — the operator's control panel (Valentin only).
 // ---------------------------------------------------------------------------
@@ -80,6 +81,7 @@ adminRouter.use(requireAuth, requireAdmin);
 // here rather than in index.ts so it can never accidentally be exposed
 // without the admin gate.
 adminRouter.use('/billing', billingAdminRouter);
+adminRouter.use('/rewards', rewardsAdminRouter);
 
 function serverError(res: Response, scope: string, err: unknown): void {
   console.error(`[admin.${scope}]`, (err as Error).message);

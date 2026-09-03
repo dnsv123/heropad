@@ -22,6 +22,7 @@ const Partner = lazy(() => import('./pages/Partner'));
 const Claim = lazy(() => import('./pages/Claim'));
 const Play = lazy(() => import('./pages/Play'));
 const Passport = lazy(() => import('./pages/Passport'));
+const Rewards = lazy(() => import('./pages/Rewards'));
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/loyalty/:slug" element={<Loyalty />} />
           <Route path="/loyalty" element={<Loyalty />} />
           <Route path="/passport" element={<Passport />} />
+          <Route path="/rewards" element={<Rewards />} />
           <Route path="/business" element={<Business />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/partner" element={<Partner />} />
