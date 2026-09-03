@@ -13,7 +13,7 @@
 // leading 0 — e.g. 0752 123 456 becomes "40752123456"). While it is empty,
 // every contact button quietly falls back to email, exactly as before.
 
-const WHATSAPP_NUMBER = '';
+const WHATSAPP_NUMBER = '40752364020';
 
 const CONTACT_EMAIL = 'dinescuioanvalentin@gmail.com';
 

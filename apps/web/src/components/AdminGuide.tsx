@@ -73,54 +73,97 @@ export default function AdminGuide() {
           face diferența între o grilă care mișcă oameni și una decorativă.
         </p>
 
-        <p className="mt-4 text-sm font-semibold text-white">Cei 3 fondatori (deja promis)</p>
-        <p className={li}>
-          25% de la primul local, <b>pe viață</b> — adică atât timp cât localul adus de ei
-          rămâne activ și plătitor. Asta rămâne exact cum ai spus. Peste ea poți adăuga
-          creșterea: <span className={num}>30% de la 5 localuri</span> active. E generos,
-          îi motivează, și nu-ți strică marja.
-        </p>
+        {/* ==== CE SPUI ÎN CALL — decis 1 sept 2026 ==== */}
+        <div className="mt-3 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4">
+          <p className="text-sm font-bold text-hero-gold">📞 Oferta, exact cum o spui</p>
 
-        <p className="mt-4 text-sm font-semibold text-white">Partenerii următori (de la al 4-lea)</p>
+          <p className="mt-3 text-sm font-semibold text-white">
+            Fondatori (primii 3–4 parteneri)
+          </p>
+          <p className={li}>
+            <span className={num}>25%</span> din abonamentul fiecărui local adus, care
+            crește la <span className={num}>30%</span> când ajunge la{' '}
+            <b className="text-white">10 localuri active</b>. Retroactiv: la al 10-lea,
+            TOATE trec pe 30%.
+          </p>
+          <p className={li}>
+            Durata: <b className="text-white">pe viață</b> — cât timp localul adus de el
+            rămâne activ și plătește. Pleacă localul, se oprește comisionul.
+          </p>
+
+          <p className="mt-3 text-sm font-semibold text-white">
+            Partenerii următori (de la al 5-lea încolo)
+          </p>
+          <p className={li}>
+            <span className={num}>20%</span>, care crește la{' '}
+            <span className={num}>30%</span> la{' '}
+            <b className="text-white">10 localuri active</b>, tot retroactiv.
+          </p>
+          <p className={li}>
+            Durata: <b className="text-white">24 de luni pentru fiecare local</b>. Atenție
+            la formulare — cele 24 de luni curg <i>separat pentru fiecare local</i>, de la
+            data la care acel local începe să plătească. Aduce un local în ianuarie și
+            altul în octombrie: fiecare are propriii lui 24 de luni. Așa se spune, ca să
+            nu înțeleagă „24 de luni și gata, indiferent câte aduc".
+          </p>
+
+          <p className="mt-3 text-sm font-semibold text-white">Bonus de recomandare</p>
+          <p className={li}>
+            Aduce un alt partener, iar acela își semnează primul local →{' '}
+            <span className={num}>500 lei</span>, o singură dată. Fără procente pe două
+            niveluri: toți partenerii sunt pe aceeași grilă, nimeni nu ia mai puțin pentru
+            că a fost recrutat.
+          </p>
+        </div>
+
+        <p className="mt-4 text-sm font-semibold text-white">Cifrele, la 199 lei/local</p>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-slate-500">
                 <th className="py-2 pr-3 font-medium">Localuri active</th>
-                <th className="py-2 pr-3 font-medium">Comision</th>
-                <th className="py-2 pr-3 font-medium">La 199 lei/local</th>
-                <th className="py-2 font-medium">Îi rămâne lui pe lună</th>
+                <th className="py-2 pr-3 font-medium">Fondator</th>
+                <th className="py-2 pr-3 font-medium">Partener nou</th>
+                <th className="py-2 font-medium">Îi intră lunar (la 30%)</th>
               </tr>
             </thead>
             <tbody className="text-slate-300">
               <tr className="border-t border-hero-blue/10">
-                <td className="py-2 pr-3">1 – 4</td>
-                <td className="py-2 pr-3 text-hero-gold">20%</td>
-                <td className="py-2 pr-3">39,80 lei / local</td>
-                <td className="py-2">159,20 lei / local</td>
+                <td className="py-2 pr-3">1</td>
+                <td className="py-2 pr-3 text-hero-gold">25% · 49,75 lei</td>
+                <td className="py-2 pr-3">20% · 39,80 lei</td>
+                <td className="py-2">—</td>
               </tr>
               <tr className="border-t border-hero-blue/10">
-                <td className="py-2 pr-3">5 – 9</td>
-                <td className="py-2 pr-3 text-hero-gold">25%</td>
-                <td className="py-2 pr-3">49,75 lei / local</td>
-                <td className="py-2">149,25 lei / local</td>
+                <td className="py-2 pr-3">5</td>
+                <td className="py-2 pr-3 text-hero-gold">25% · 248,75 lei</td>
+                <td className="py-2 pr-3">20% · 199 lei</td>
+                <td className="py-2">—</td>
               </tr>
               <tr className="border-t border-hero-blue/10">
-                <td className="py-2 pr-3">10+</td>
-                <td className="py-2 pr-3 text-hero-gold">30%</td>
-                <td className="py-2 pr-3">59,70 lei / local</td>
-                <td className="py-2">139,30 lei / local</td>
+                <td className="py-2 pr-3">
+                  <b className="text-white">10</b>
+                </td>
+                <td className="py-2 pr-3 text-hero-gold">30% · 597 lei</td>
+                <td className="py-2 pr-3 text-hero-gold">30% · 597 lei</td>
+                <td className="py-2 text-solana-green">597 lei</td>
+              </tr>
+              <tr className="border-t border-hero-blue/10">
+                <td className="py-2 pr-3">20</td>
+                <td className="py-2 pr-3 text-hero-gold">30% · 1.194 lei</td>
+                <td className="py-2 pr-3 text-hero-gold">30% · 1.194 lei</td>
+                <td className="py-2 text-solana-green">1.194 lei</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-          Un partener cu 10 localuri încasează ~597 lei/lună. Cu 20 de localuri, ~1.194
-          lei/lună. Sunt bani serioși pentru cineva care își face treaba — exact cât
-          trebuie ca să merite efortul.
+          Fraza care vinde: <b className="text-slate-300">„La 10 localuri ești pe 30%, iar
+          creșterea se aplică la toate, nu doar la următorul — adică îți sar toate
+          comisioanele deodată."</b> Aia e ținta care îi ține în mișcare.
         </p>
 
-        <p className="mt-4 text-sm font-semibold text-white">De ce mă opresc la 30% și nu 35%</p>
+        <p className="mt-4 text-sm font-semibold text-white">Dacă întreabă „de ce nu 35%?"</p>
         <p className={li}>
           Peste 30% începi să lucrezi pentru partener. Din 199 lei: 35% = 70 lei comision,
           plus costuri de platformă, plus impozit — rămâi cu sub jumătate din prețul
