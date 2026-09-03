@@ -7,6 +7,12 @@ import { getBitsBalance, getSupabaseAdmin } from '../lib/supabase-admin.js';
 import { ensureIdentity, getVenueBySlug } from '../lib/loyalty-db.js';
 import { getStaffSeat } from '../lib/staff-db.js';
 import {
+  createPinOrder,
+  fulfilledCountsByVenueItem,
+  listPinOrders,
+  setPinOrderStatus,
+} from '../lib/pin-orders-db.js';
+import {
   claimReward,
   expireOverdueClaims,
   fulfilClaim,
@@ -282,5 +288,156 @@ rewardsAdminRouter.post('/', async (req: Request, res: Response) => {
     return res.status(200).json({ ok: true, item: row });
   } catch (err) {
     return serverError(res, 'admin-save', err);
+  }
+});
+
+// --- Admin: physical lots to venues (pins) ----------------------------------
+
+/** Default wholesale price per pin, lei. Overridable per order. */
+const PIN_UNIT_PRICE_DEFAULT = 15;
+/** Starter kit: this many of EACH active model, free. */
+const STARTER_PER_MODEL = 5;
+
+// GET /api/admin/rewards/orders — venues × models with derived stock, plus
+// every lot ever created.
+rewardsAdminRouter.get('/orders', async (_req: Request, res: Response) => {
+  try {
+    const supa = getSupabaseAdmin();
+    const { data: venues, error } = await supa
+      .from('venues')
+      .select('id, slug, name, billing_status, active')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const [items, orders, fulfilled] = await Promise.all([
+      listRewardItems(true),
+      listPinOrders(),
+      fulfilledCountsByVenueItem(),
+    ]);
+
+    // Stock per (venue, item): lots that physically left us, minus hand-overs.
+    const shipped = new Map<string, number>();
+    for (const o of orders) {
+      if (o.status === 'planned') continue;
+      const k = `${o.venue_id}|${o.reward_id}`;
+      shipped.set(k, (shipped.get(k) ?? 0) + o.qty);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      defaults: { unitPrice: PIN_UNIT_PRICE_DEFAULT, starterPerModel: STARTER_PER_MODEL },
+      items: items.map((i) => ({ id: i.id, slug: i.slug, name: i.name, imageUrl: i.image_url, active: i.active })),
+      venues: (venues ?? []).map((v: Record<string, unknown>) => {
+        const vid = v.id as string;
+        const starterSent = orders.some((o) => o.venue_id === vid && o.kind === 'starter');
+        return {
+          id: vid,
+          slug: v.slug,
+          name: v.name,
+          billingStatus: v.billing_status ?? 'trial',
+          active: v.active,
+          starterSent,
+          stock: items.map((i) => {
+            const k = `${vid}|${i.id}`;
+            return {
+              itemId: i.id,
+              shipped: shipped.get(k) ?? 0,
+              handedOver: fulfilled.get(k) ?? 0,
+              left: (shipped.get(k) ?? 0) - (fulfilled.get(k) ?? 0),
+            };
+          }),
+        };
+      }),
+      orders: orders.map((o) => ({ ...o, unit_price: Number(o.unit_price) })),
+    });
+  } catch (err) {
+    return serverError(res, 'orders-list', err);
+  }
+});
+
+const OrderBody = z.object({
+  venueSlug: z.string().trim().min(1),
+  itemSlug: z.string().trim().min(1),
+  qty: z.number().int().min(1).max(1000),
+  kind: z.enum(['starter', 'purchase']).default('purchase'),
+  unitPrice: z.number().min(0).max(1000).optional(),
+  note: z.string().trim().max(300).optional(),
+});
+
+// POST /api/admin/rewards/orders — one lot: one model, one venue.
+rewardsAdminRouter.post('/orders', async (req: Request, res: Response) => {
+  try {
+    const parsed = OrderBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ ok: false, error: 'invalid_body', message: parsed.error.issues.map((i) => i.message).join('; ') });
+    }
+    const d = parsed.data;
+    const venue = await getVenueBySlug(d.venueSlug);
+    const item = await getRewardItemBySlug(d.itemSlug);
+    if (!venue || !item) {
+      return res.status(404).json({ ok: false, error: 'not_found', message: 'Unknown venue or item.' });
+    }
+    const row = await createPinOrder({
+      venueId: venue.id,
+      rewardId: item.id,
+      qty: d.qty,
+      kind: d.kind,
+      unitPrice: d.kind === 'starter' ? 0 : d.unitPrice ?? PIN_UNIT_PRICE_DEFAULT,
+      note: d.note ?? null,
+    });
+    return res.status(200).json({ ok: true, order: row });
+  } catch (err) {
+    return serverError(res, 'orders-create', err);
+  }
+});
+
+// POST /api/admin/rewards/orders/starter — the free kit: N of every active
+// model, in one click. Refuses if the venue already got one.
+rewardsAdminRouter.post('/orders/starter', async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.body?.venueSlug ?? '').trim();
+    const venue = slug ? await getVenueBySlug(slug) : null;
+    if (!venue) {
+      return res.status(404).json({ ok: false, error: 'not_found', message: 'Unknown venue.' });
+    }
+    const existing = (await listPinOrders()).some(
+      (o) => o.venue_id === venue.id && o.kind === 'starter'
+    );
+    if (existing) {
+      return res.status(409).json({ ok: false, error: 'already_sent', message: 'This venue already has a starter kit.' });
+    }
+    const items = await listRewardItems();
+    const created = [];
+    for (const it of items) {
+      created.push(
+        await createPinOrder({
+          venueId: venue.id,
+          rewardId: it.id,
+          qty: STARTER_PER_MODEL,
+          kind: 'starter',
+          unitPrice: 0,
+          note: 'Set de start',
+        })
+      );
+    }
+    return res.status(200).json({ ok: true, created: created.length });
+  } catch (err) {
+    return serverError(res, 'orders-starter', err);
+  }
+});
+
+const StatusBody = z.object({ status: z.enum(['planned', 'sent', 'paid']) });
+
+// POST /api/admin/rewards/orders/:id/status
+rewardsAdminRouter.post('/orders/:id/status', async (req: Request, res: Response) => {
+  try {
+    const parsed = StatusBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ ok: false, error: 'invalid_body', message: 'Send { status }.' });
+    }
+    await setPinOrderStatus(req.params.id, parsed.data.status);
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return serverError(res, 'orders-status', err);
   }
 });

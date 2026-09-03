@@ -5,6 +5,7 @@ import { getJson, postJson } from '../services/apiClient';
 import AdminBilling from '../components/AdminBilling';
 import AdminPartners from '../components/AdminPartners';
 import AdminRewards from '../components/AdminRewards';
+import AdminOrders from '../components/AdminOrders';
 import AdminGuide from '../components/AdminGuide';
 import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
@@ -977,6 +978,14 @@ export default function Admin() {
             label: 'Rewards',
             render: () => (
               <AdminRewards onNotice={(kind, text) => setNotice({ kind, text })} />
+            ),
+          },
+          {
+            key: 'orders',
+            icon: '📦',
+            label: 'Orders',
+            render: () => (
+              <AdminOrders onNotice={(kind, text) => setNotice({ kind, text })} />
             ),
           },
           {
