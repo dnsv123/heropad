@@ -74,6 +74,11 @@ export default function Header() {
           </NavLink>
           {/* "Claim" intentionally hidden from nav until physical QR/NFC
               products ship — the page stays live via /claim + Ecosystem card. */}
+          {/* The shelf sits in the main nav on purpose: BITS only mean
+              something if what they buy is one tap away from anywhere. */}
+          <NavLink to="/rewards" className={navLinkClass}>
+            {t('nav.rewards')}
+          </NavLink>
           <NavLink to="/v-dash" className={navLinkClass}>
             {t('nav.vdash')}
           </NavLink>
@@ -157,6 +162,9 @@ export default function Header() {
           <div className="flex flex-col gap-3 text-sm">
             <NavLink to="/" end className={navLinkClass} onClick={() => setMobileOpen(false)}>
               {t('nav.home')}
+            </NavLink>
+            <NavLink to="/rewards" className={navLinkClass} onClick={() => setMobileOpen(false)}>
+              {t('nav.rewards')}
             </NavLink>
             <NavLink to="/v-dash" className={navLinkClass} onClick={() => setMobileOpen(false)}>
               {t('nav.vdash')}
