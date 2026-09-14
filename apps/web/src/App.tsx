@@ -12,6 +12,18 @@ function AuthRouteWatcher() {
   }, [pathname]);
   return null;
 }
+
+/** Removes the static first screen from index.html once React has actually
+ *  committed the real one — an effect, so it cannot run early. */
+function PreheroRemover() {
+  useEffect(() => {
+    // One frame after commit, so the browser has painted React's tree
+    // before the placeholder underneath it disappears.
+    const id = requestAnimationFrame(() => document.getElementById('prehero')?.remove());
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return null;
+}
 // Cookieless, anonymous page analytics — consistent with the privacy policy's
 // "no advertising cookies and no third-party trackers" promise (GA4 would
 // break it and drag in a consent banner). No-ops until the Vercel dashboard
@@ -52,6 +64,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-hero-deep text-slate-100">
       <AuthRouteWatcher />
+      <PreheroRemover />
       <Header />
       <main className="flex-1">
         <Suspense fallback={null}>

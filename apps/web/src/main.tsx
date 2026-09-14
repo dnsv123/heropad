@@ -25,15 +25,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   </React.StrictMode>
 );
 
-// The static first screen in index.html has done its job once React has
-// painted the real one. Two frames: the first lets React commit, the second
-// lets the browser paint it — then the placeholder goes, with nothing
-// underneath it moving.
-requestAnimationFrame(() => {
-  requestAnimationFrame(() => {
-    document.getElementById('prehero')?.remove();
-  });
-});
+// The static first screen in index.html (#prehero) is removed from inside
+// App, in an effect that runs after React's first commit. It used to be two
+// requestAnimationFrames from here — but createRoot().render() is
+// asynchronous, and on a slow phone the commit landed AFTER those frames:
+// the placeholder vanished, the screen went blank, React painted a moment
+// later, and Lighthouse scored the blank-then-paint as a layout shift of 1.
 
 // Register the service worker only in production. In dev, Vite HMR conflicts
 // with SW caching and we don't need offline support while iterating.
