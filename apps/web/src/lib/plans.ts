@@ -122,6 +122,7 @@ export const PLANS: PlanDef[] = [
     features: [
       'Tot din Growth',
       'Figurina SuperVictor cu NFC inclusă',
+      'CADOU: vitrina BITS + primele 20 de pin-uri SuperVictor — la fondatori e cadou, nu „inclus"',
       '99 lei/lună PE VIAȚĂ, cât timp rămân activi — scris în contract',
       'Numele lor pe landing la „Founding Partners"',
     ],
@@ -163,10 +164,24 @@ export const ADDONS: AddonDef[] = [
   },
   {
     key: 'pin_pack',
-    label: 'Pachet de 25 de pin-uri',
+    label: 'Pachet de 25 de pin-uri SuperVictor',
     price: 375,
     once: true,
-    hint: 'Un model, 25 de bucăți, 15 lei/pin. Se ține în Orders, nu în abonament.',
+    hint: 'Un model din catalogul nostru, 25 de bucăți, 15 lei/pin. Se ține în Orders.',
+  },
+  {
+    key: 'cobranded_pin',
+    label: 'Pin-ul lor — 100 buc, prima comandă',
+    price: 1490,
+    once: true,
+    hint: 'Logo-ul localului pe pin. Include MATRIȚA (forma metalică, ~400 lei, se face o singură dată). Recomanda ~1.090 lei.',
+  },
+  {
+    key: 'cobranded_pin_reorder',
+    label: 'Pin-ul lor — 100 buc, recomandă',
+    price: 1090,
+    once: true,
+    hint: 'Același design, matrița există deja — de aceea e mai ieftin.',
   },
 ];
 

@@ -298,11 +298,30 @@ export default function AdminGuide() {
             „gratis" înseamnă „fără valoare"; „inclus" înseamnă „ai plătit pentru el".
           </p>
           <p className={li}>
-            <span className={num}>La tejghea:</span> „Branded include figurina NFC, vitrina și{' '}
-            <b className="text-white">primele 20 de pin-uri SuperVictor</b>. Clienții le iau cu
+            <span className={num}>Fondatorii (primii 3):</span> vitrina + 20 de pin-uri sunt{' '}
+            <b className="text-white">CADOU</b>. La ei chiar e cadou și așa îl spui — e parte din
+            „primii 3 primesc tot".
+          </p>
+          <p className={li}>
+            <span className={num}>La tejghea, restul:</span> „Branded include figurina NFC, vitrina
+            și <b className="text-white">primele 20 de pin-uri SuperVictor</b>. Clienții le iau cu
             BITS. Când se termină — și se termină, dacă merge — ai două opțiuni: un pachet de 25
-            la 375 lei, sau <b className="text-white">pin-ul tău</b>, cu logo-ul cafenelei, 100 de
-            bucăți, 899 lei. Patronii aleg al doilea. E brandul lor în buzunarul clienților lor."
+            la 375 lei, sau <b className="text-white">pin-ul tău</b>, cu logo-ul cafenelei: 100 de
+            bucăți, <b className="text-white">1.490 lei prima dată</b>, 1.090 lei la recomandă.
+            Patronii aleg al doilea. E brandul lor în buzunarul clienților lor."
+          </p>
+          <p className={li}>
+            <span className={num}>De ce prima comandă e mai scumpă — și cum o explici:</span> un
+            pin hard enamel se face dintr-o <b className="text-white">matriță</b> — o formă
+            metalică gravată cu designul lui, ~400 lei, care se face o singură dată și rămâne la
+            fabrică. Costul nostru real: 100 buc ≈ 1.390 lei prima dată (cu matriță), ≈ 990 lei la
+            recomandă (fără). Spus patronului: „Prima sută include forma metalică a pin-ului tău.
+            De la a doua sută, doar pin-urile." Înțelege oricine a comandat vreodată ștampile.
+          </p>
+          <p className={li}>
+            <span className={num}>Marja:</span> ~100 lei pe comandă, subțire. Pin-ul co-branded nu e
+            produsul pe care faci bani — e produsul care îl leagă pe patron de tine: brandul lui
+            există fizic doar prin sistemul tău. Banii sunt în abonament.
           </p>
           <p className={li}>
             <span className={num}>Dacă nu cumpără:</span> vitrina arată „Epuizat" la modelul ăla și
