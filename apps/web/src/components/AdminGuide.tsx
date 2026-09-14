@@ -41,6 +41,36 @@ export default function AdminGuide() {
         <p className={li}><span className={num}>5.</span> După creare poți edita oricând: nume, adresă, emoji-ul din pașaport, GPS, facturare — din cardul localului. Ownerul își editează singur recompensa, pragul, Happy Hour și contactele, din /business → Settings.</p>
       </div>
 
+      {/* ---- Planurile ---- */}
+      <div className={card}>
+        <h2 className={h}>📦 Planurile — un buton, un local configurat</h2>
+        <p className={p}>
+          Pe cardul fiecărui local (tab-ul Venues) sunt butoanele{' '}
+          <b className="text-white">Starter · Branded · Growth · Chain · Founding</b>. Apeși unul
+          → vezi <b>ce primește</b> (lista pe care o citești patronului), <b>ce pregătești tu</b>{' '}
+          (pașii fizici) și <b>extra-opțiunile</b> (+/−). Apoi „Aplică": pilot gratuit sau plătește
+          de acum. Un singur tap setează prețul, conturile de angajat și perioada gratuită.
+        </p>
+        <p className={li}>
+          <span className={num}>Regula prețului:</span> butonul scrie <span className={mono}>monthly_fee</span> =
+          baza planului + extra-opțiunile lunare. Din cifra aia ies factura Oblio și comisionul
+          partenerului. Câmpul „Fee / month" de sub butoane rămâne ca <i>suprascriere</i> (discount
+          negociat) — nu ca metodă de configurare.
+        </p>
+        <p className={li}>
+          <span className={num}>Prețurile</span> sunt într-un singur fișier (<span className={mono}>apps/web/src/lib/plans.ts</span>).
+          Dacă le schimbi, se schimbă doar pentru localurile pe care le aplici DE ATUNCI — cele
+          existente rămân la ce li s-a promis, pentru că prețul și extra-opțiunile se scriu pe
+          local la momentul aplicării.
+        </p>
+        <p className={li}>
+          <span className={num}>La tejghea, în 20 de secunde:</span> „Starter e 99 pe lună — card
+          digital, stand QR, statistici, doi angajați. Branded, 199, adaugă figurina cu NFC și
+          brandul vostru pe card. Growth, 349, adaugă Happy Hour, recenzii Google și zilele de
+          naștere. Primele două luni sunt gratuite la toate." Apoi apeși butonul.
+        </p>
+      </div>
+
       {/* ---- Onboarding angajat ---- */}
       <div className={card}>
         <h2 className={h}>👥 Onboarding ANGAJAT (îl face OWNERUL, nu tu)</h2>

@@ -10,6 +10,7 @@ import AdminGuide from '../components/AdminGuide';
 import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
 import InfoTip from '../components/InfoTip';
+import PlanPicker from '../components/PlanPicker';
 
 // /admin — the operator console (Valentin only; access is an allowlist of
 // Privy DIDs in ADMIN_PRIVY_IDS on the API).
@@ -35,6 +36,9 @@ interface VenueRow {
   billingStatus: string;
   paidSince: string | null;
   partnerCode: string | null;
+  /** The package, and the addons that explain the fee. null = not set yet. */
+  plan: string | null;
+  addons: Array<{ key: string; label: string; price: number; qty: number; once?: boolean }>;
   staffSeats: number;
   staffActive: number;
   staffPending: number;
@@ -629,6 +633,17 @@ export default function Admin() {
                                   />
                                 </label>
                               </div>
+
+                              {/* The plan, as a button. Sets fee + seats + trial in one
+                                  tap; the list underneath is what gets read out loud at
+                                  the counter. The manual fee field below still works —
+                                  it is the override, not the default. */}
+                              <PlanPicker
+                                currentPlan={v.plan}
+                                currentAddons={v.addons ?? []}
+                                currentFee={v.monthlyFee}
+                                onApply={(patch) => saveBilling(v, patch)}
+                              />
 
                               {/* Billing + who brought this venue — the inputs to commission */}
                               <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">

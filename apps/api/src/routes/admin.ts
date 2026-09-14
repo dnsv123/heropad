@@ -108,7 +108,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     const { data: venues, error } = await supa
       .from('venues')
       .select(
-        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats, created_at'
+        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats, plan, addons, created_at'
       )
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -128,6 +128,8 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
       monthly_fee: number | string | null;
       billing_status: string | null;
       paid_since: string | null;
+      plan: string | null;
+      addons: unknown;
       referred_by: string | null;
       staff_seats: number | null;
       created_at: string;
@@ -208,6 +210,8 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         monthlyFee: Number(v.monthly_fee ?? 0),
         billingStatus: v.billing_status ?? 'trial',
         paidSince: v.paid_since,
+        plan: v.plan ?? null,
+        addons: Array.isArray(v.addons) ? v.addons : [],
         partnerCode: v.referred_by ? (partnerCodeById.get(v.referred_by) ?? null) : null,
         createdAt: v.created_at,
         staffSeats: Number(v.staff_seats ?? 2),
@@ -296,6 +300,22 @@ const UpdateBody = z.object({
   paidSince: z.string().trim().max(20).nullable().optional(),
   /** Referral code of the partner who brought this venue; '' clears it. */
   partnerCode: z.string().trim().max(40).nullable().optional(),
+  // Plan + addons: the breakdown behind monthly_fee. The fee stays the
+  // number everything else reads; these explain it.
+  plan: z.enum(['starter', 'branded', 'growth', 'chain', 'founding']).nullable().optional(),
+  addons: z
+    .array(
+      z.object({
+        key: z.string().trim().min(1).max(40),
+        label: z.string().trim().min(1).max(80),
+        price: z.number().min(0).max(100000),
+        qty: z.number().int().min(1).max(100),
+        once: z.boolean().optional(),
+      })
+    )
+    .max(20)
+    .optional(),
+  staffSeats: z.number().int().min(1).max(50).optional(),
 });
 
 // POST /api/admin/venues/:slug — edit venue details (incl. GPS for the map).
@@ -331,6 +351,9 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
       patch.branding = branding;
     }
     if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
+    if (i.plan !== undefined) patch.plan = i.plan;
+    if (i.addons !== undefined) patch.addons = i.addons;
+    if (i.staffSeats !== undefined) patch.staff_seats = i.staffSeats;
     if (i.billingStatus !== undefined) {
       patch.billing_status = i.billingStatus;
       // Stamp the start of billing the first time it goes active, so the
