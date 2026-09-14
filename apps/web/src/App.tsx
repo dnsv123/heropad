@@ -1,5 +1,17 @@
-import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+
+import { noteRoute } from './lib/auth';
+
+/** Tells the auth bridge where we are, so the SDK loads the moment a route
+ *  that may need a session is entered — and never on the landing alone. */
+function AuthRouteWatcher() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    noteRoute(pathname);
+  }, [pathname]);
+  return null;
+}
 // Cookieless, anonymous page analytics — consistent with the privacy policy's
 // "no advertising cookies and no third-party trackers" promise (GA4 would
 // break it and drag in a consent banner). No-ops until the Vercel dashboard
@@ -35,6 +47,7 @@ import Terms from './pages/Terms';
 export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-hero-deep text-slate-100">
+      <AuthRouteWatcher />
       <Header />
       <main className="flex-1">
         <Suspense fallback={null}>

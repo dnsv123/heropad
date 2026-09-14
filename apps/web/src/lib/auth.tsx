@@ -79,6 +79,63 @@ let sdkReady = new Promise<void>((resolve) => {
   openGate = resolve;
 });
 
+// ON-DEMAND LOADING (the second half of the split).
+// ---------------------------------------------------------------------------
+// Splitting the SDK into a lazy chunk kept it out of the entry bundle, but the
+// bridge still mounted it immediately — so a café owner reading the landing
+// page on a phone downloaded and executed 700KB of wallet code they would
+// never touch. Lighthouse called it "unused JavaScript: 485KB"; the phone
+// called it 1.3 seconds of main thread before anything could be tapped.
+//
+// Now the chunk loads only when there is a reason:
+//   - the page is not the landing (every other route may need a session), or
+//   - Privy left a session in storage (a returning user expects to be logged
+//     in without clicking anything), or
+//   - someone actually calls login()/getAccessToken()/… — the stub asks for
+//     the SDK and parks the call on the gate exactly as before.
+//
+// Until then the stub reports `ready: true, authenticated: false`, which is
+// the truthful state of a visitor with no session: the Login button renders
+// immediately instead of a "Loading…" placeholder that waits on code nobody
+// asked for.
+
+let sdkWanted = false;
+const wantListeners = new Set<() => void>();
+
+/** Ask for the real SDK. Idempotent; safe from anywhere, before mount. */
+function requestSdk(): void {
+  if (sdkWanted) return;
+  sdkWanted = true;
+  for (const fn of wantListeners) fn();
+}
+
+/** Privy persists its session under `privy:*` keys. Any of them = a returner. */
+function hasStoredSession(): boolean {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('privy:') && localStorage.getItem(k)) return true;
+    }
+  } catch {
+    /* storage blocked (private mode) — treat as no session */
+  }
+  return false;
+}
+
+/**
+ * Called by the router-aware watcher on every navigation: any route other
+ * than the landing may need a session, so it asks for the SDK.
+ */
+export function noteRoute(pathname: string): void {
+  if (pathname !== '/') requestSdk();
+}
+
+function initiallyWanted(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.location.pathname !== '/') return true;
+  return hasStoredSession();
+}
+
 /** Re-arms the gate for a retry after a failed attempt. */
 function resetGate(): void {
   sdkReady = new Promise<void>((resolve) => {
@@ -91,40 +148,54 @@ const AUTH_STUB: AuthValue = {
   authenticated: false,
   user: null,
   login: () => {
+    requestSdk();
     void sdkReady.then(() => liveAuth?.login());
   },
   logout: async () => {
+    requestSdk();
     await sdkReady;
     await liveAuth?.logout();
   },
   getAccessToken: async () => {
+    requestSdk();
     await sdkReady;
     // liveAuth is null only when the SDK never arrived: no session, no token.
     return liveAuth ? liveAuth.getAccessToken() : null;
   },
   linkEmail: () => {
+    requestSdk();
     void sdkReady.then(() => liveAuth?.linkEmail());
   },
   linkGoogle: () => {
+    requestSdk();
     void sdkReady.then(() => liveAuth?.linkGoogle());
   },
   linkWallet: () => {
+    requestSdk();
     void sdkReady.then(() => liveAuth?.linkWallet());
   },
 };
+
+/** The stub as seen while the SDK is deliberately NOT loaded: an honest "no
+ *  session" that lets the Login button render at once. */
+const AUTH_IDLE: AuthValue = { ...AUTH_STUB, ready: true };
 
 const SOLANA_STUB: SolanaValue = {
   ready: false,
   wallets: [],
   createWallet: async () => {
+    requestSdk();
     await sdkReady;
     return liveSolana?.createWallet();
   },
   exportWallet: async (opts) => {
+    requestSdk();
     await sdkReady;
     await liveSolana?.exportWallet(opts);
   },
 };
+
+const SOLANA_IDLE: SolanaValue = { ...SOLANA_STUB, ready: true };
 
 const AuthCtx = createContext<AuthValue>(AUTH_STUB);
 const SolanaCtx = createContext<SolanaValue>(SOLANA_STUB);
@@ -169,6 +240,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /** Bumping this remounts the lazy boundary — that IS the retry. */
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
+  /** Whether the SDK chunk should exist at all right now. */
+  const [wanted, setWanted] = useState<boolean>(() => {
+    const w = initiallyWanted();
+    if (w) sdkWanted = true;
+    return w;
+  });
+
+  // A stub call (login, token) from anywhere flips this; so does client-side
+  // navigation away from the landing — see <AuthRouteWatcher/> in App.tsx,
+  // which lives inside the router and reports each pathname.
+  useEffect(() => {
+    const onWant = () => setWanted(true);
+    wantListeners.add(onWant);
+    if (sdkWanted) setWanted(true);
+    return () => {
+      wantListeners.delete(onWant);
+    };
+  }, []);
 
   const handleFail = useCallback(() => {
     // Open the gate even on failure: parked promises must resolve (to "no
@@ -192,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // blocked by third-party storage rules, a hung network call). Without this
   // the login button would sit disabled forever with no explanation.
   useEffect(() => {
-    if (auth.ready || failed) return;
+    if (!wanted || auth.ready || failed) return;
     const id = window.setTimeout(() => {
       if (!liveAuth?.ready) {
         openGate();
@@ -200,7 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, SDK_WATCHDOG_MS);
     return () => window.clearTimeout(id);
-  }, [auth.ready, failed, attempt]);
+  }, [wanted, auth.ready, failed, attempt]);
 
   const retry = () => {
     setFailed(false);
@@ -209,30 +298,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthCtx.Provider value={auth}>
-      <SolanaCtx.Provider value={solana}>
+    <AuthCtx.Provider value={wanted ? auth : AUTH_IDLE}>
+      <SolanaCtx.Provider value={wanted ? solana : SOLANA_IDLE}>
         {children}
 
-        {/* Mounts immediately, resolves in the background; the app above is
-            already fully rendered, so there is nothing to fall back to. */}
-        <BridgeBoundary key={attempt} onFail={handleFail}>
-          <Suspense fallback={null}>
-            <AuthSdk
-              onAuth={(v) => {
-                liveAuth = v;
-                setAuth(v);
-                if (v.ready) {
-                  setFailed(false);
-                  openGate();
-                }
-              }}
-              onSolana={(v) => {
-                liveSolana = v;
-                setSolana(v);
-              }}
-            />
-          </Suspense>
-        </BridgeBoundary>
+        {/* Mounted only once wanted; resolves in the background. The app
+            above is already fully rendered, so there is nothing to fall
+            back to. */}
+        {wanted && (
+          <BridgeBoundary key={attempt} onFail={handleFail}>
+            <Suspense fallback={null}>
+              <AuthSdk
+                onAuth={(v) => {
+                  liveAuth = v;
+                  setAuth(v);
+                  if (v.ready) {
+                    setFailed(false);
+                    openGate();
+                  }
+                }}
+                onSolana={(v) => {
+                  liveSolana = v;
+                  setSolana(v);
+                }}
+              />
+            </Suspense>
+          </BridgeBoundary>
+        )}
 
         {failed && (
           <div
