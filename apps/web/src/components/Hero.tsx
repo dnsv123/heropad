@@ -58,44 +58,28 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Copy column. */}
+        {/* Copy column — rendered AT REST, no entrance fade.
+            index.html paints this exact block as static HTML before React
+            boots (see #prehero there), so the copy is already on screen at
+            full opacity. A fade-in here would make it vanish and reappear
+            the moment React took over — a blink, on the one screen that
+            sells the product. The markup and classes below are mirrored in
+            index.html; change one, change both. */}
         <div className="flex-1 text-center md:text-left">
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
-          >
-            {t('hero.eyebrow')}
-          </motion.p>
+          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">{t('hero.eyebrow')}</p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-3 font-display text-4xl font-bold tracking-tight md:mt-4 md:text-6xl"
-          >
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:mt-4 md:text-6xl">
             <span className="bg-gradient-to-r from-hero-gold via-hero-gold-bright to-hero-cyan bg-clip-text text-transparent">
               HeroPad
             </span>{' '}
             <span className="text-white">⚡ Power&nbsp;Pass</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mx-auto mt-3 max-w-xl text-base text-slate-300 md:mx-0 md:mt-4 md:text-lg"
-          >
+          <p className="mx-auto mt-3 max-w-xl text-base text-slate-300 md:mx-0 md:mt-4 md:text-lg">
             {t('hero.subtitle')}
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:justify-start"
-          >
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:justify-start">
             <a
               href="#business"
               className="group relative overflow-hidden rounded-full bg-hero-gold px-6 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
@@ -121,14 +105,9 @@ export default function Hero() {
             >
               {t('biz.cta')}
             </a>
-          </motion.div>
+          </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="mt-6 text-xs text-slate-500 md:mt-8"
-          >
+          <p className="mt-6 text-xs text-slate-500 md:mt-8">
             <a
               href="https://supervictornft.com"
               target="_blank"
@@ -137,7 +116,7 @@ export default function Hero() {
             >
               {t('hero.project')}
             </a>
-          </motion.p>
+          </p>
         </div>
       </div>
     </section>

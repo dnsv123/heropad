@@ -21,8 +21,12 @@ import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Profile from './pages/Profile';
-import Loyalty from './pages/Loyalty';
+// Profile and Loyalty used to be eager "because customers land there". They
+// do — but never from the landing page in the same session, and the landing
+// is the page whose first paint sells the product. Lazy here takes the QR
+// library and two pages' worth of components off the critical path.
+const Profile = lazy(() => import('./pages/Profile'));
+const Loyalty = lazy(() => import('./pages/Loyalty'));
 // Merchant + admin screens load on demand: they pull in the QR scanner and
 // jsQR (~250 KB) which a CUSTOMER opening their loyalty card must never pay
 // for on café cellular. Privy stays eager in main.tsx — only routes split.
@@ -35,8 +39,8 @@ const Claim = lazy(() => import('./pages/Claim'));
 const Play = lazy(() => import('./pages/Play'));
 const Passport = lazy(() => import('./pages/Passport'));
 const Rewards = lazy(() => import('./pages/Rewards'));
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
 
 // Top-level layout: shared <Header/> + <Footer/> on every page, page content
 // rendered between them via React Router. The flex column + min-h-screen

@@ -65,6 +65,44 @@
     <title>HeroPad Power Pass — Fidelizare digitală pentru localuri</title>
   </head>
   <body class="bg-hero-deep text-slate-100 antialiased">
+    <!-- PRE-RENDERED FIRST SCREEN.
+         The app is client-rendered, so without this the browser had nothing
+         to paint until ~150KB of JS had downloaded and run: FCP 2.7s, and the
+         mascot — already downloaded — waited 2.8s more for React to place it.
+         This block is the landing's first screen as static HTML, painted from
+         HTML + CSS alone. main.tsx removes it the moment React has rendered
+         the real thing on top. Layout and classes mirror components/Hero.tsx
+         and Header.tsx exactly so the swap moves nothing (CLS 0).
+         Copy is Romanian: the audience is Romanian café owners; an EN visitor
+         sees RO for the ~1s before React swaps in their language. -->
+    <div id="prehero" aria-hidden="true">
+      <div class="border-b border-hero-blue/20 bg-hero-deep/80">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
+          <span class="flex items-center gap-2 font-display text-lg font-bold tracking-tight md:text-xl"><span class="bg-gradient-to-r from-hero-cyan via-white to-hero-gold bg-clip-text text-transparent">HeroPad</span></span>
+          <span class="h-9 w-24 rounded-full bg-hero-blue/20 md:w-40"></span>
+        </div>
+      </div>
+      <section class="relative overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 -z-10 bg-hero-glow"></div>
+        <div class="mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-12 md:flex-row md:gap-12 md:py-24">
+          <div class="relative order-first w-full max-w-[220px] flex-shrink-0 md:order-last md:max-w-sm md:flex-1">
+            <div class="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-hero-blue/30 bg-gradient-to-br from-hero-deep via-hero-blue/20 to-hero-deep">
+              <img src="/super-victor-hero.webp" srcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" sizes="(min-width: 768px) 384px, 220px" width="480" height="753" alt="" fetchpriority="high" class="absolute inset-0 h-full w-full object-contain p-3 md:p-5" />
+            </div>
+          </div>
+          <div class="flex-1 text-center md:text-left">
+            <p class="text-xs uppercase tracking-[0.3em] text-hero-cyan">Fidelizare pe care clienții chiar o iubesc</p>
+            <h1 class="mt-3 font-display text-4xl font-bold tracking-tight md:mt-4 md:text-6xl"><span class="bg-gradient-to-r from-hero-gold via-hero-gold-bright to-hero-cyan bg-clip-text text-transparent">HeroPad</span> <span class="text-white">⚡ Power&nbsp;Pass</span></h1>
+            <p class="mx-auto mt-3 max-w-xl text-base text-slate-300 md:mx-0 md:mt-4 md:text-lg">Power Pass transformă fiecare vizită la locurile tale preferate — cafeneaua, brutăria, frizeria, sala — într-o încărcare de supererou. Fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.</p>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:justify-start">
+              <span class="rounded-full bg-hero-gold px-6 py-3 font-semibold text-hero-deep shadow-hero-gold">Pentru afaceri</span>
+              <span class="rounded-full border border-hero-cyan/40 px-6 py-3 font-medium text-slate-200">Programează un demo gratuit</span>
+            </div>
+            <p class="mt-6 text-xs text-slate-500 md:mt-8"><span class="text-hero-cyan">Un proiect SuperVictor Universe.</span></p>
+          </div>
+        </div>
+      </section>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

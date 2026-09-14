@@ -25,6 +25,16 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   </React.StrictMode>
 );
 
+// The static first screen in index.html has done its job once React has
+// painted the real one. Two frames: the first lets React commit, the second
+// lets the browser paint it — then the placeholder goes, with nothing
+// underneath it moving.
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.getElementById('prehero')?.remove();
+  });
+});
+
 // Register the service worker only in production. In dev, Vite HMR conflicts
 // with SW caching and we don't need offline support while iterating.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
