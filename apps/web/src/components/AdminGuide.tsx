@@ -290,6 +290,36 @@ export default function AdminGuide() {
           venit cu marjă. Și e upsell natural: pachetul Growth include „30 de premii fizice pe
           lună". Face upgrade-ul tangibil — patronul vede cutia, nu un rând pe factură.
         </p>
+        <div className="mt-4 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4">
+          <p className="text-sm font-bold text-hero-gold">📌 Pin-urile — oferta, exact cum o spui</p>
+          <p className={li}>
+            <b className="text-white">Regula:</b> HeroPad nu dă pin-uri gratis. Setul de start nu e
+            gratis — e <b>inclus în abonament</b>. Schimbă cuvântul și se schimbă discuția:
+            „gratis" înseamnă „fără valoare"; „inclus" înseamnă „ai plătit pentru el".
+          </p>
+          <p className={li}>
+            <span className={num}>La tejghea:</span> „Branded include figurina NFC, vitrina și{' '}
+            <b className="text-white">primele 20 de pin-uri SuperVictor</b>. Clienții le iau cu
+            BITS. Când se termină — și se termină, dacă merge — ai două opțiuni: un pachet de 25
+            la 375 lei, sau <b className="text-white">pin-ul tău</b>, cu logo-ul cafenelei, 100 de
+            bucăți, 899 lei. Patronii aleg al doilea. E brandul lor în buzunarul clienților lor."
+          </p>
+          <p className={li}>
+            <span className={num}>Dacă nu cumpără:</span> vitrina arată „Epuizat" la modelul ăla și
+            atât. Nu mai trimiți nimic. Ai aflat cu ~60 lei că pin-urile nu prind în localul ăla.
+            Clientul care vrea totuși unul îl ia de pe <b>shop.supervictor</b> — cu BITS ca reducere
+            + plată, transport plătit de el sau <b className="text-white">ridicare gratuită din
+            orice local partener</b>. Ridicarea din local e argument de vânzare: shop-ul tău îi
+            trimite clienți în cafenea.
+          </p>
+          <p className={li}>
+            <span className={num}>Cele trei fluxuri de bani, fără al patrulea:</span> (1) abonamentul
+            include setul de start · (2) localul cumpără pachete sau pin-ul lui · (3) clientul cumpără
+            de pe shop. Nu există „HeroPad trimite iar gratis". Dacă cineva îți cere, răspunsul e
+            „sigur — 375 lei pachetul".
+          </p>
+        </div>
+
         <p className="mt-3 rounded-lg border border-hero-cyan/25 bg-hero-cyan/5 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
           💡 <b className="text-hero-cyan">Marketplace global:</b> nu-l construim. Avem deja un
           Shopify — el face checkout, card, transport, tot. Integrarea ieftină când vine

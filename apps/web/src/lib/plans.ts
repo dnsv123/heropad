@@ -60,7 +60,7 @@ export const PLANS: PlanDef[] = [
       'Tot din Starter',
       'Figurina SuperVictor cu NFC pe tejghea — tap = check-in instant, zero tastare',
       'Co-branding: logo-ul și culorile localului pe cardul clientului',
-      'Set de start de pin-uri (5 din fiecare model) pentru vitrina BITS',
+      'Vitrina BITS pe tejghea + setul de start: 20 de pin-uri SuperVictor, incluse (nu gratis — incluse)',
       '3 conturi de angajat',
     ],
     prepare: [
