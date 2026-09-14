@@ -216,6 +216,14 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
               </button>
             </div>
           </div>
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            <b className="text-slate-400">Ce face „Aplică":</b> scrie prețul, conturile de
+            angajat și planul pe local; „plătește de acum" pune billing pe <i>active</i> cu data
+            de azi (de aici curge comisionul partenerului). <b className="text-slate-400">Nu
+            emite nicio factură</b> — factura pleacă din tab-ul Billing, după ce completezi
+            datele de firmă ale localului, automat în ziua lui de facturare sau manual cu
+            „Issue".
+          </p>
         </div>
       )}
     </div>

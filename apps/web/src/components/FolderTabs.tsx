@@ -46,9 +46,12 @@ export default function FolderTabs({
 
   return (
     <div className="mt-6">
-      {/* Tab strip. Scrolls sideways rather than wrapping: a folder with its
-          tabs on two rows stops looking like a folder. */}
-      <div className="-mb-px flex gap-1 overflow-x-auto pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Tab strip. WRAPS onto a second row when there are more tabs than
+          width. It used to scroll sideways with the scrollbar hidden, which
+          on a desktop with a mouse meant the ninth tab simply did not exist
+          — there was nothing to drag. A folder with two rows of tabs looks a
+          little less like a folder; a tab you cannot reach looks like a bug. */}
+      <div className="-mb-px flex flex-wrap gap-x-1 gap-y-1 pb-0">
         {tabs.map((tab) => {
           const on = tab.key === current?.key;
           return (
