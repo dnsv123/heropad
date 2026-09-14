@@ -11,6 +11,7 @@ import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
 import InfoTip from '../components/InfoTip';
 import PlanPicker from '../components/PlanPicker';
+import BrandEditor from '../components/BrandEditor';
 
 // /admin — the operator console (Valentin only; access is an allowlist of
 // Privy DIDs in ADMIN_PRIVY_IDS on the API).
@@ -27,6 +28,9 @@ interface VenueRow {
   reward: string | null;
   /** Emoji on the venue's passport-album tile (☕ when unset). */
   icon: string | null;
+  /** Co-branding: logo data URL + accent hex, both optional. */
+  logo: string | null;
+  accent: string | null;
   active: boolean;
   claimed: boolean;
   setupCode: string | null;
@@ -643,6 +647,15 @@ export default function Admin() {
                                 currentAddons={v.addons ?? []}
                                 currentFee={v.monthlyFee}
                                 onApply={(patch) => saveBilling(v, patch)}
+                              />
+
+                              {/* Co-branding — what "Branded" physically delivers on the
+                                  customer's card. Logo + one colour, previewed live. */}
+                              <BrandEditor
+                                venueName={v.name}
+                                logo={v.logo}
+                                accent={v.accent}
+                                onSave={(patch) => saveBilling(v, patch)}
                               />
 
                               {/* Billing + who brought this venue — the inputs to commission */}

@@ -202,6 +202,8 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         stampsRequired: v.stamps_required,
         reward: typeof v.branding?.reward === 'string' ? v.branding.reward : null,
         icon: typeof v.branding?.icon === 'string' ? v.branding.icon : null,
+        logo: typeof v.branding?.logo === 'string' ? v.branding.logo : null,
+        accent: typeof v.branding?.accent === 'string' ? v.branding.accent : null,
         active: v.active,
         claimed: Boolean(v.owner_identity_id),
         setupCode: v.claim_token,
@@ -316,6 +318,22 @@ const UpdateBody = z.object({
     .max(20)
     .optional(),
   staffSeats: z.number().int().min(1).max(50).optional(),
+  // Co-branding (Branded and up). The logo travels as a data URL the admin
+  // page already resized to ≤512px WebP/PNG — small enough to live in the
+  // branding jsonb next to everything else about the venue, with no storage
+  // bucket to provision, sign, or clean up. '' clears either field.
+  logo: z
+    .union([
+      z
+        .string()
+        .max(160_000)
+        .regex(/^data:image\/(webp|png|svg\+xml);base64,[A-Za-z0-9+/=]+$/, 'logo must be a WebP/PNG/SVG data URL'),
+      z.literal(''),
+    ])
+    .optional(),
+  accent: z
+    .union([z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a #RRGGBB colour'), z.literal('')])
+    .optional(),
 });
 
 // POST /api/admin/venues/:slug — edit venue details (incl. GPS for the map).
@@ -341,12 +359,20 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     if (i.gpsLat !== undefined) patch.gps_lat = i.gpsLat;
     if (i.gpsLng !== undefined) patch.gps_lng = i.gpsLng;
     if (i.active !== undefined) patch.active = i.active;
-    if (i.reward !== undefined || i.icon !== undefined) {
+    if (i.reward !== undefined || i.icon !== undefined || i.logo !== undefined || i.accent !== undefined) {
       const branding = { ...(venue.branding ?? {}) };
       if (i.reward !== undefined) branding.reward = i.reward;
       if (i.icon !== undefined) {
         if (i.icon === '') delete branding.icon;
         else branding.icon = i.icon;
+      }
+      if (i.logo !== undefined) {
+        if (i.logo === '') delete branding.logo;
+        else branding.logo = i.logo;
+      }
+      if (i.accent !== undefined) {
+        if (i.accent === '') delete branding.accent;
+        else branding.accent = i.accent.toUpperCase();
       }
       patch.branding = branding;
     }

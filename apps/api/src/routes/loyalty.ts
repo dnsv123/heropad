@@ -678,6 +678,7 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
       'reward',
       'icon',
       'accent',
+      'logo',
       'tagline',
       'reviewUrl',
       'phone',

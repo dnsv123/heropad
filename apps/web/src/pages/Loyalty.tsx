@@ -385,6 +385,19 @@ export default function Loyalty() {
       ? venue.branding.reward.trim()
       : null;
 
+  // Co-branding (Branded and up). One logo, one colour. The colour touches
+  // only the eyebrow, the reward chip and the card's glow — never the
+  // background — so a café with a dark or garish brand still gets a card
+  // that reads. Unset → the default gold/cyan, i.e. pure SuperVictor.
+  const brandLogo =
+    typeof venue?.branding?.logo === 'string' && venue.branding.logo.startsWith('data:image/')
+      ? venue.branding.logo
+      : null;
+  const brandAccent =
+    typeof venue?.branding?.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(venue.branding.accent)
+      ? venue.branding.accent
+      : null;
+
   return (
     <section className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
@@ -392,7 +405,21 @@ export default function Loyalty() {
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
         {/* Venue header */}
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">{t('loy.eyebrow')}</p>
+          <p
+            className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
+            style={brandAccent ? { color: brandAccent } : undefined}
+          >
+            {t('loy.eyebrow')}
+          </p>
+          {brandLogo && (
+            <img
+              src={brandLogo}
+              alt=""
+              className="mx-auto mt-3 h-12 max-w-[140px] object-contain"
+              width={140}
+              height={48}
+            />
+          )}
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
             {venue?.name ?? '…'}
           </h1>
@@ -511,7 +538,14 @@ export default function Loyalty() {
           )}
         </AnimatePresence>
 
-        <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
+        <div
+          className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8"
+          style={
+            brandAccent
+              ? { borderColor: `${brandAccent}66`, boxShadow: `0 0 48px -14px ${brandAccent}80` }
+              : undefined
+          }
+        >
           {required === null ? (
             // Skeleton, not a guess. Same height as the meter so nothing jumps.
             <div className="flex flex-col items-center gap-4 py-6" aria-busy="true">
@@ -530,11 +564,24 @@ export default function Loyalty() {
               "2 more stamps" only motivates when you can see what is at the
               end of it. This is the venue's own promise, in its own words. */}
           {rewardLabel && required !== null && (
-            <div className="mt-4 rounded-xl border border-hero-gold/35 bg-hero-gold/10 px-4 py-3 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-hero-gold/80">
+            <div
+              className="mt-4 rounded-xl border border-hero-gold/35 bg-hero-gold/10 px-4 py-3 text-center"
+              style={
+                brandAccent
+                  ? { borderColor: `${brandAccent}59`, background: `${brandAccent}1A` }
+                  : undefined
+              }
+            >
+              <p
+                className="text-[11px] uppercase tracking-wider text-hero-gold/80"
+                style={brandAccent ? { color: `${brandAccent}CC` } : undefined}
+              >
                 {t('loy.reward.label', { n: required })}
               </p>
-              <p className="mt-0.5 font-display text-lg font-semibold text-hero-gold">
+              <p
+                className="mt-0.5 font-display text-lg font-semibold text-hero-gold"
+                style={brandAccent ? { color: brandAccent } : undefined}
+              >
                 {rewardLabel}
               </p>
             </div>

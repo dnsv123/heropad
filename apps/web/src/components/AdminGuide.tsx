@@ -71,6 +71,33 @@ export default function AdminGuide() {
         </p>
       </div>
 
+      {/* ---- Brand ---- */}
+      <div className={card}>
+        <h2 className={h}>🎨 Brand — ce înseamnă „co-branding" concret</h2>
+        <p className={p}>
+          Pe cardul localului (tab-ul Venues), butonul <b className="text-white">+ Add brand</b>.
+          Două lucruri, atât: <b>logo-ul</b> lor și <b>o culoare</b>. Vezi pe loc cum arată la
+          client înainte să salvezi.
+        </p>
+        <p className={li}>
+          <span className={num}>Logo — ce le ceri:</span> „fișierul pe care îl folosiți pe Instagram
+          sau pe meniu". Ideal <b>SVG</b>, altfel <b>PNG cu fundal transparent</b>, minim 512 px pe
+          latura lungă. Îl micșorăm noi la 512 px. Pe card apare la ~48 px înălțime — deci
+          simbolul, nu sloganul; un logo cu text mărunt nu se va citi.
+        </p>
+        <p className={li}>
+          <span className={num}>Culoarea — una singură:</span> cea din logo sau de pe firmă, în
+          hex (ex. #E63946). Se aplică pe eticheta „⚡ Power Pass", pe recompensă și pe strălucirea
+          cardului. <b>Nu pe fundal</b> — fundalul rămâne navy, ca să se citească orice. Dacă au o
+          culoare foarte închisă, alege-o pe cea secundară, mai deschisă.
+        </p>
+        <p className={li}>
+          <span className={num}>Ce NU se schimbă:</span> SuperVictor rămâne pe card, ștampilele
+          rămân ale lui. Co-branding = brandul lor <i>alături</i> de al nostru, nu în locul lui.
+          Asta protejează personajul (decizie din iulie) și e ce cumpără ei la Branded.
+        </p>
+      </div>
+
       {/* ---- Onboarding angajat ---- */}
       <div className={card}>
         <h2 className={h}>👥 Onboarding ANGAJAT (îl face OWNERUL, nu tu)</h2>
