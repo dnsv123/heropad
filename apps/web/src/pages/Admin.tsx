@@ -31,6 +31,7 @@ interface VenueRow {
   /** Co-branding: logo data URL + accent hex, both optional. */
   logo: string | null;
   accent: string | null;
+  tagline: string | null;
   active: boolean;
   claimed: boolean;
   setupCode: string | null;
@@ -655,6 +656,7 @@ export default function Admin() {
                                 venueName={v.name}
                                 logo={v.logo}
                                 accent={v.accent}
+                                tagline={v.tagline}
                                 onSave={(patch) => saveBilling(v, patch)}
                               />
 

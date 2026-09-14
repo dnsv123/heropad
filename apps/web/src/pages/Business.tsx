@@ -640,13 +640,35 @@ export default function Business() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
 
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-hero-gold">Business</p>
-          <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
-            {venue?.name ?? '…'}
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">{t('b.sub')}</p>
-        </div>
+        {/* The counter wears the café's brand too — the owner sees their own
+            logo on their own screen, which is half of what "Branded" sells. */}
+        {(() => {
+          const b = venue?.branding ?? {};
+          const logo = typeof b.logo === 'string' && b.logo.startsWith('data:image/') ? b.logo : null;
+          const accent =
+            typeof b.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(b.accent) ? b.accent : null;
+          return (
+            <div className="text-center">
+              {logo ? (
+                <div className="flex items-center justify-center gap-3">
+                  <img src={logo} alt="" className="h-10 max-w-[110px] object-contain" width={110} height={40} />
+                  <h1 className="font-display text-2xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
+                </div>
+              ) : (
+                <>
+                  <p
+                    className="text-xs uppercase tracking-[0.3em] text-hero-gold"
+                    style={accent ? { color: accent } : undefined}
+                  >
+                    Business
+                  </p>
+                  <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
+                </>
+              )}
+              <p className="mt-1 text-sm text-slate-400">{t('b.sub')}</p>
+            </div>
+          );
+        })()}
 
         <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
           {!ready ? null : !authenticated ? (

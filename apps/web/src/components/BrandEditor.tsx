@@ -48,13 +48,15 @@ interface Props {
   venueName: string;
   logo: string | null;
   accent: string | null;
-  onSave: (patch: { logo?: string; accent?: string }) => Promise<void> | void;
+  tagline: string | null;
+  onSave: (patch: { logo?: string; accent?: string; tagline?: string }) => Promise<void> | void;
 }
 
-export default function BrandEditor({ venueName, logo, accent, onSave }: Props) {
+export default function BrandEditor({ venueName, logo, accent, tagline, onSave }: Props) {
   const [open, setOpen] = useState(false);
   const [draftLogo, setDraftLogo] = useState<string | null>(logo);
   const [draftAccent, setDraftAccent] = useState<string>(accent ?? '#F5C842');
+  const [draftTagline, setDraftTagline] = useState<string>(tagline ?? '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -76,6 +78,7 @@ export default function BrandEditor({ venueName, logo, accent, onSave }: Props) 
       await onSave({
         logo: draftLogo ?? '',
         accent: draftAccent.toUpperCase(),
+        tagline: draftTagline.trim(),
       });
       setOpen(false);
     } catch (e) {
@@ -90,7 +93,8 @@ export default function BrandEditor({ venueName, logo, accent, onSave }: Props) 
     try {
       setDraftLogo(null);
       setDraftAccent('#F5C842');
-      await onSave({ logo: '', accent: '' });
+      setDraftTagline('');
+      await onSave({ logo: '', accent: '', tagline: '' });
       setOpen(false);
     } finally {
       setBusy(false);
@@ -117,6 +121,7 @@ export default function BrandEditor({ venueName, logo, accent, onSave }: Props) 
               setOpen((o) => !o);
               setDraftLogo(logo);
               setDraftAccent(accent ?? '#F5C842');
+              setDraftTagline(tagline ?? '');
             }}
             className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan hover:bg-hero-cyan/10"
           >
@@ -167,6 +172,20 @@ export default function BrandEditor({ venueName, logo, accent, onSave }: Props) 
               </div>
             </div>
 
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                O linie a lor (opțional)
+                <InfoTip text={'Sloganul sau ce sunt ei într-o propoziție, sub numele localului: „Specialty coffee din 2019”, „Gogoși calde, toată ziua”. Max 60 de caractere. E cel mai ieftin lucru care face cardul să sune a ei, nu a noastră.'} />
+              </p>
+              <input
+                value={draftTagline}
+                maxLength={60}
+                onChange={(e) => setDraftTagline(e.target.value)}
+                placeholder="Specialty coffee din 2019"
+                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+              />
+            </div>
+
             {err && <p className="text-xs text-red-300">{err}</p>}
 
             <div className="flex gap-2">
@@ -198,13 +217,22 @@ export default function BrandEditor({ venueName, logo, accent, onSave }: Props) 
               className="mt-1 rounded-2xl border bg-hero-deep p-4"
               style={{ borderColor: `${draftAccent}66`, boxShadow: `0 0 40px -12px ${draftAccent}80` }}
             >
-              <p className="text-center text-[10px] uppercase tracking-[0.3em]" style={{ color: draftAccent }}>
-                ⚡ Power Pass
-              </p>
-              <div className="mt-2 flex items-center justify-center gap-3">
-                {draftLogo && <img src={draftLogo} alt="" className="h-10 max-w-[96px] object-contain" />}
+              {/* Branded = one compact row: logo + name, then their line.
+                  The "⚡ Power Pass" eyebrow steps aside — the brand is the
+                  eyebrow now. Mirrors pages/Loyalty.tsx. */}
+              <div className="flex items-center justify-center gap-3">
+                {draftLogo ? (
+                  <img src={draftLogo} alt="" className="h-9 max-w-[88px] object-contain" />
+                ) : (
+                  <span className="text-[10px] uppercase tracking-[0.3em]" style={{ color: draftAccent }}>
+                    ⚡ Power Pass
+                  </span>
+                )}
                 <p className="font-display text-xl font-bold text-white">{venueName}</p>
               </div>
+              {draftTagline.trim() && (
+                <p className="mt-1 text-center text-xs text-slate-400">{draftTagline.trim()}</p>
+              )}
               <div
                 className="mt-3 rounded-xl border px-3 py-2 text-center"
                 style={{ borderColor: `${draftAccent}59`, background: `${draftAccent}1A` }}

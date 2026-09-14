@@ -204,6 +204,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         icon: typeof v.branding?.icon === 'string' ? v.branding.icon : null,
         logo: typeof v.branding?.logo === 'string' ? v.branding.logo : null,
         accent: typeof v.branding?.accent === 'string' ? v.branding.accent : null,
+        tagline: typeof v.branding?.tagline === 'string' ? v.branding.tagline : null,
         active: v.active,
         claimed: Boolean(v.owner_identity_id),
         setupCode: v.claim_token,
@@ -334,6 +335,8 @@ const UpdateBody = z.object({
   accent: z
     .union([z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'accent must be a #RRGGBB colour'), z.literal('')])
     .optional(),
+  /** One line under the venue name on the customer's card — their words. */
+  tagline: z.union([z.string().trim().max(60), z.literal('')]).optional(),
 });
 
 // POST /api/admin/venues/:slug — edit venue details (incl. GPS for the map).
@@ -359,8 +362,18 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     if (i.gpsLat !== undefined) patch.gps_lat = i.gpsLat;
     if (i.gpsLng !== undefined) patch.gps_lng = i.gpsLng;
     if (i.active !== undefined) patch.active = i.active;
-    if (i.reward !== undefined || i.icon !== undefined || i.logo !== undefined || i.accent !== undefined) {
+    if (
+      i.reward !== undefined ||
+      i.icon !== undefined ||
+      i.logo !== undefined ||
+      i.accent !== undefined ||
+      i.tagline !== undefined
+    ) {
       const branding = { ...(venue.branding ?? {}) };
+      if (i.tagline !== undefined) {
+        if (i.tagline === '') delete branding.tagline;
+        else branding.tagline = i.tagline;
+      }
       if (i.reward !== undefined) branding.reward = i.reward;
       if (i.icon !== undefined) {
         if (i.icon === '') delete branding.icon;

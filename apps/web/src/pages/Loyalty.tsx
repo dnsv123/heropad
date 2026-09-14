@@ -405,24 +405,37 @@ export default function Loyalty() {
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
         {/* Venue header */}
         <div className="text-center">
-          <p
-            className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
-            style={brandAccent ? { color: brandAccent } : undefined}
-          >
-            {t('loy.eyebrow')}
-          </p>
-          {brandLogo && (
-            <img
-              src={brandLogo}
-              alt=""
-              className="mx-auto mt-3 h-12 max-w-[140px] object-contain"
-              width={140}
-              height={48}
-            />
+          {/* Branded venue: ONE row — logo beside the name — and their own
+              line underneath. The "⚡ Power Pass" eyebrow steps aside; the
+              logo is the eyebrow now. Three stacked lines (eyebrow, logo,
+              name) ate a third of a phone screen for no extra meaning. */}
+          {brandLogo ? (
+            <div className="flex items-center justify-center gap-3">
+              <img
+                src={brandLogo}
+                alt=""
+                className="h-10 max-w-[110px] object-contain"
+                width={110}
+                height={40}
+              />
+              <h1 className="font-display text-2xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
+            </div>
+          ) : (
+            <>
+              <p
+                className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
+                style={brandAccent ? { color: brandAccent } : undefined}
+              >
+                {t('loy.eyebrow')}
+              </p>
+              <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
+                {venue?.name ?? '…'}
+              </h1>
+            </>
           )}
-          <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
-            {venue?.name ?? '…'}
-          </h1>
+          {typeof venue?.branding?.tagline === 'string' && venue.branding.tagline.trim() && (
+            <p className="mt-1 text-sm text-slate-400">{venue.branding.tagline.trim()}</p>
+          )}
           {venueError && (
             <p className="mt-2 text-sm text-red-300">{venueError}</p>
           )}
