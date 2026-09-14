@@ -29,9 +29,36 @@ interface Claim {
   price_bits: number;
   status: string;
   venue_id: string | null;
+  venue_name: string | null;
   expires_at: string;
   fulfilled_at: string | null;
   created_at: string;
+}
+
+interface VenueOpt {
+  slug: string;
+  name: string;
+}
+
+/** Resize a picked image to ≤600px and hand back a WebP data URL. */
+async function fileToDataUrl(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 600 / Math.max(bitmap.width, bitmap.height));
+  const w = Math.round(bitmap.width * scale);
+  const h = Math.round(bitmap.height * scale);
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  if (!ctx) throw new Error('Canvas unavailable.');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  let url = c.toDataURL('image/webp', 0.88);
+  if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/png');
+  if (url.length > 190_000) {
+    url = c.toDataURL('image/webp', 0.7);
+    if (url.length > 190_000) throw new Error('Image too large even after resizing — try a simpler PNG.');
+  }
+  return url;
 }
 
 const EMPTY = {
@@ -63,6 +90,8 @@ export default function AdminRewards({
   const { getAccessToken } = usePrivy();
   const [items, setItems] = useState<Item[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [venues, setVenues] = useState<VenueOpt[]>([]);
+  const [imgErr, setImgErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -72,12 +101,13 @@ export default function AdminRewards({
     setLoading(true);
     try {
       const token = await getAccessToken();
-      const r = await getJson<{ ok: true; items: Item[]; claims: Claim[] }>(
+      const r = await getJson<{ ok: true; items: Item[]; claims: Claim[]; venues: VenueOpt[] }>(
         '/api/admin/rewards',
         token ?? undefined
       );
       setItems(r.items);
       setClaims(r.claims);
+      setVenues(r.venues ?? []);
     } catch (err) {
       onNotice('err', (err as Error).message);
     } finally {
@@ -173,10 +203,11 @@ export default function AdminRewards({
           {editingSlug ? `✏️ Edit: ${editingSlug}` : '➕ Add a reward'}
         </h2>
         <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-          Put the image in <code className="text-hero-cyan">apps/web/public/rewards/</code> as
-          WebP (square, ~600px) and reference it as{' '}
-          <code className="text-hero-cyan">/rewards/name.webp</code>. Price it so the item is
-          worth roughly 15–30 visits — see the How-to for the BITS economy.
+          Pick a photo below — it is resized to 600px and stored with the item, nothing to
+          upload anywhere. Price it in BITS against what the app pays out: a stamp = 2, a
+          completed card = 1000, a friend brought = 300, passport bronze/silver/gold =
+          250/500/1000. A standard pin around 1500 (≈ one and a half cards); a rare edition
+          3000+.
         </p>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -208,15 +239,42 @@ export default function AdminRewards({
               className={input}
             />
           </label>
-          <label className="text-xs text-slate-500">
-            Image path
+          <div className="text-xs text-slate-500">
+            Photo
+            <div className="mt-1 flex items-center gap-3">
+              {form.imageUrl && (
+                <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-lg bg-hero-deep/80 object-contain" />
+              )}
+              <input
+                type="file"
+                accept="image/png,image/webp,image/jpeg"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setImgErr(null);
+                  try {
+                    setForm((prev) => ({ ...prev, imageUrl: '' }));
+                    const url = await fileToDataUrl(f);
+                    setForm((prev) => ({ ...prev, imageUrl: url }));
+                  } catch (err) {
+                    setImgErr((err as Error).message);
+                  }
+                }}
+                className="block w-full text-xs text-slate-400 file:mr-3 file:rounded-full file:border-0 file:bg-solana-green/15 file:px-3 file:py-1 file:text-xs file:text-solana-green"
+              />
+            </div>
+            {imgErr && <p className="mt-1 text-[11px] text-red-300">{imgErr}</p>}
+            <p className="mt-1 text-[10px] text-slate-600">
+              Square PNG/JPG/WebP, transparent or navy background looks best. Or type a path
+              like <code>/rewards/name.webp</code>:
+            </p>
             <input
-              value={form.imageUrl}
+              value={form.imageUrl.startsWith('data:') ? '' : form.imageUrl}
               onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="/rewards/pin-supervictor.webp"
-              className={input}
+              placeholder="(optional) /rewards/pin-supervictor.webp"
+              className={`${input} mt-1`}
             />
-          </label>
+          </div>
           <label className="text-xs text-slate-500">
             Price (BITS) *
             <input
@@ -239,18 +297,44 @@ export default function AdminRewards({
               className={input}
             />
           </label>
+          <div className="text-xs text-slate-500">
+            Pick up at
+            <InfoTip text="Tick only the venues that physically HAVE this item in their display. A barista at a venue not ticked cannot hand it over — the code is refused there. Nothing ticked = any partner venue." />
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {venues.map((v) => {
+                const selected = form.venueSlugs
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                const on = selected.includes(v.slug);
+                return (
+                  <button
+                    key={v.slug}
+                    type="button"
+                    onClick={() => {
+                      const next = on ? selected.filter((s) => s !== v.slug) : [...selected, v.slug];
+                      setForm({ ...form, venueSlugs: next.join(', ') });
+                    }}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
+                      on
+                        ? 'border-solana-green bg-solana-green/15 text-solana-green'
+                        : 'border-hero-blue/30 text-slate-400 hover:border-slate-300 hover:text-slate-200'
+                    }`}
+                  >
+                    {on ? '✓ ' : ''}
+                    {v.name}
+                  </button>
+                );
+              })}
+              {venues.length === 0 && <span className="text-[11px] text-slate-600">No active venues.</span>}
+            </div>
+            <p className="mt-1 text-[10px] text-slate-600">
+              {form.venueSlugs.trim() ? `Only: ${form.venueSlugs}` : 'Any partner venue'}
+            </p>
+          </div>
           <label className="text-xs text-slate-500">
-            Pick up at (venue slugs, comma-separated; empty = any)
-            <InfoTip text="Only venues that physically HAVE the item in their display. A barista at a venue not on this list cannot hand it over — the code is refused there." />
-            <input
-              value={form.venueSlugs}
-              onChange={(e) => setForm({ ...form, venueSlugs: e.target.value })}
-              placeholder="cafe-victor, cafe-111"
-              className={input}
-            />
-          </label>
-          <label className="text-xs text-slate-500">
-            Sort order
+            Position on the shelf
+            <InfoTip text="Lower number = shown first. 0 puts it at the top. Use it to keep the cheapest reward first and the rare one last, so the shelf reads like a ladder." />
             <input
               type="number"
               value={form.sortOrder}
@@ -363,7 +447,8 @@ export default function AdminRewards({
                   <th className="py-2 pr-3 font-medium">BITS</th>
                   <th className="py-2 pr-3 font-medium">Status</th>
                   <th className="py-2 pr-3 font-medium">Claimed</th>
-                  <th className="py-2 font-medium">Handed over</th>
+                  <th className="py-2 pr-3 font-medium">Handed over</th>
+                  <th className="py-2 font-medium">Where</th>
                 </tr>
               </thead>
               <tbody>
@@ -388,7 +473,8 @@ export default function AdminRewards({
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-slate-500">{shortDate(c.created_at)}</td>
-                    <td className="py-2 text-slate-500">{shortDate(c.fulfilled_at)}</td>
+                    <td className="py-2 pr-3 text-slate-500">{shortDate(c.fulfilled_at)}</td>
+                    <td className="py-2 text-slate-300">{c.venue_name ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -89,6 +89,16 @@ export default function Rewards() {
     void loadMine();
   }, [loadMine]);
 
+  // While a code is open, poll: the moment the barista types it, the ticket
+  // moves from "Your codes" to "Earlier" on this screen without a reload —
+  // the customer sees the hand-over land while it happens.
+  const hasPending = claims.some((c) => c.status === 'pending');
+  useEffect(() => {
+    if (!hasPending) return;
+    const id = window.setInterval(() => void loadMine(), 8000);
+    return () => window.clearInterval(id);
+  }, [hasPending, loadMine]);
+
   const claim = async (item: CatalogItem) => {
     setBusy(item.slug);
     setNotice(null);

@@ -9,6 +9,7 @@ import PartnerVenues from '../components/PartnerVenues';
 import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
 import CollectionCard from '../components/CollectionCard';
+import MyRewards from '../components/MyRewards';
 
 // /profile is auth-gated. Unauthenticated visitors see a CTA that triggers
 // Privy login; once logged in they see ProfileWallet. We avoid `<Navigate />`
@@ -59,6 +60,7 @@ export default function Profile() {
             <div className="mt-8">
               <BirthdayCard />
             </div>
+            <MyRewards />
             <div className="mt-8">
               <ProfileWallet />
             </div>

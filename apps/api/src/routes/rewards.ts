@@ -224,7 +224,17 @@ const ItemBody = z.object({
     .regex(/^[a-z0-9-]+$/, 'slug: lowercase letters, digits and dashes only'),
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(500).optional(),
-  imageUrl: z.string().trim().max(300).optional(),
+  // Either a path under /public or a WebP/PNG data URL the admin page
+  // already resized (≤600px) — same approach as venue logos, no bucket.
+  imageUrl: z
+    .string()
+    .trim()
+    .max(200_000)
+    .refine(
+      (s) => s === '' || s.startsWith('/') || /^data:image\/(webp|png);base64,[A-Za-z0-9+/=]+$/.test(s),
+      'imageUrl must be a /path or a WebP/PNG data URL'
+    )
+    .optional(),
   priceBits: z.number().int().min(1).max(1_000_000),
   /** null = unlimited */
   stock: z.number().int().min(0).nullable().optional(),
@@ -237,15 +247,26 @@ const ItemBody = z.object({
 rewardsAdminRouter.get('/', async (_req: Request, res: Response) => {
   try {
     const [items, claims] = await Promise.all([listRewardItems(true), listAllClaims()]);
-    const venueIds = [...new Set(items.flatMap((i) => i.venue_ids ?? []))];
-    const names = await venueNamesById(venueIds);
+    // Every active venue, so the editor can offer checkboxes instead of
+    // asking for slugs to be typed from memory.
+    const { data: venueRows, error: vErr } = await getSupabaseAdmin()
+      .from('venues')
+      .select('id, slug, name, active')
+      .order('name', { ascending: true });
+    if (vErr) throw new Error(vErr.message);
+    const allVenues = (venueRows ?? []) as Array<{ id: string; slug: string; name: string; active: boolean }>;
+    const names = new Map(allVenues.map((v) => [v.id, { slug: v.slug, name: v.name }]));
     return res.status(200).json({
       ok: true,
+      venues: allVenues.filter((v) => v.active).map((v) => ({ slug: v.slug, name: v.name })),
       items: items.map((i) => ({
         ...i,
         venueSlugs: (i.venue_ids ?? []).map((id) => names.get(id)?.slug).filter(Boolean),
       })),
-      claims,
+      claims: claims.map((c) => ({
+        ...c,
+        venue_name: c.venue_id ? names.get(c.venue_id)?.name ?? null : null,
+      })),
     });
   } catch (err) {
     return serverError(res, 'admin-list', err);
