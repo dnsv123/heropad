@@ -115,10 +115,15 @@ async function getToken(): Promise<string> {
     throw new OblioConfigError('OBLIO_EMAIL / OBLIO_SECRET are not set.');
   }
 
+  // form-urlencoded, not JSON: this is the shape hoh-backend has used against
+  // Oblio in production since May 2026 (see hoh-backend/src/services/
+  // oblioService.ts). Same company, same account — no reason to rediscover
+  // what already works.
   const res = await fetch(`${OBLIO_BASE}/authorize/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: email, client_secret: secret }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: email, client_secret: secret }).toString(),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     throw new OblioApiError(`Oblio auth failed with HTTP ${res.status}.`);
@@ -171,18 +176,27 @@ function buildPayload(input: OblioInvoiceInput): Record<string, unknown> {
         currency: input.currency,
         quantity: 1,
         productType: 'Serviciu',
-        vatName: env('OBLIO_VAT_NAME') ?? (input.vatPercentage > 0 ? 'Normala' : 'Neplatitor'),
+        // 'Normala' + 0% is what hoh-backend sends for the same non-VAT
+        // company and what Oblio has accepted on ~70 invoices since May 2026.
+        // The account's VAT-exempt status flows through on Oblio's side.
+        vatName: env('OBLIO_VAT_NAME') ?? 'Normala',
         vatPercentage: input.vatPercentage,
         // Whether the public prices (99/199/299 lei) are the total a café
         // pays, or a net figure with VAT added on top. Defaults to included,
         // because that is what a founding partner shaking hands on "99 lei a
         // month" heard — flipping it later without changing their contract
         // would be a price rise nobody agreed to.
-        vatIncluded: status.priceIncludesVat,
+        vatIncluded: status.priceIncludesVat ? 1 : 0,
       },
     ],
     mentions: input.periodLabel,
     sendEmail: input.sendEmail ? 1 : 0,
+    useStock: 0,
+    // e-Factura: Oblio generates the XML and submits it to ANAF SPV through
+    // the fiscal mandate already set up with the accountant for SVU Journey
+    // SRL. Our clients are Romanian companies, so this is always on — the
+    // "e-factura cu ce o facem?" question is answered by this one flag.
+    einvoice: (input.client.country ?? 'Romania').toLowerCase() === 'romania' ? 1 : 0,
   };
 }
 
