@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { noteRoute } from './lib/auth';
@@ -13,14 +13,21 @@ function AuthRouteWatcher() {
   return null;
 }
 
-/** Removes the static first screen from index.html once React has actually
- *  committed the real one — an effect, so it cannot run early. */
+/**
+ * Removes the static first screen from index.html the instant React has
+ * committed the real one — and BEFORE the browser paints that commit.
+ *
+ * Why a layout effect and not an effect + frame: the placeholder sits above
+ * #root in the DOM. If even one frame is painted with both present, the
+ * page shows two heroes stacked and then jumps a full viewport when the
+ * placeholder goes — Lighthouse scored exactly that as CLS 1. A layout
+ * effect runs after the DOM mutation and before paint, so no such frame
+ * can exist: the browser's first paint of React's tree is already without
+ * the placeholder, in the same position.
+ */
 function PreheroRemover() {
-  useEffect(() => {
-    // One frame after commit, so the browser has painted React's tree
-    // before the placeholder underneath it disappears.
-    const id = requestAnimationFrame(() => document.getElementById('prehero')?.remove());
-    return () => cancelAnimationFrame(id);
+  useLayoutEffect(() => {
+    document.getElementById('prehero')?.remove();
   }, []);
   return null;
 }
