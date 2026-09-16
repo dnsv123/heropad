@@ -27,6 +27,7 @@ import {
 import { mintCnftToWallet } from '../lib/metaplex.js';
 import { creditBits, countBitsEventsToday } from '../lib/supabase-admin.js';
 import { claimVenueWithToken, claimVenueByCodeOnly } from './admin.js';
+import { listPendingClaimsForCounter } from '../lib/rewards-db.js';
 import {
   getVenueBySlug,
   getVenueById,
@@ -1719,6 +1720,9 @@ loyaltyRouter.get(
         birthday.day !== null &&
         birthday.month !== null &&
         isBirthdayToday(birthday.day, birthday.month, owned.venue.timezone ?? undefined);
+      // Rewards this customer claimed with BITS and can pick up HERE — the
+      // barista gets a button per item instead of a code to type.
+      const rewards = await listPendingClaimsForCounter(customer.id, owned.venue.id);
       return res.status(200).json({
         ok: true,
         code: customer.loyalty_code,
@@ -1727,6 +1731,7 @@ loyaltyRouter.get(
         cardsCompleted: progress.cardsCompleted,
         canRedeem: progress.current >= owned.venue.stamps_required,
         birthdayToday,
+        rewards,
       });
     } catch (err) {
       return serverError(res, 'customer', err);

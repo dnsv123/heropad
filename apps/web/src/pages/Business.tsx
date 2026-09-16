@@ -59,6 +59,8 @@ interface CustomerInfo {
   canRedeem: boolean;
   /** Computed server-side in the venue's time zone; the date never arrives. */
   birthdayToday?: boolean;
+  /** Rewards claimed with BITS that can be handed over at THIS counter. */
+  rewards?: Array<{ code: string; itemName: string; imageUrl: string | null; priceBits: number }>;
 }
 
 interface ApiErr {
@@ -349,9 +351,13 @@ export default function Business() {
     }
   }
 
-  /** The customer read out a BITS reward code — hand the item over. */
-  async function fulfilReward() {
-    const code = rewardCode.trim().toUpperCase();
+  /**
+   * Hand a BITS reward over. Called with a code when it comes from the
+   * customer's own card (one tap, no typing) and without one when the
+   * barista typed it into the fallback field.
+   */
+  async function fulfilReward(fromCard?: string) {
+    const code = (fromCard ?? rewardCode).trim().toUpperCase();
     if (!CODE_RE.test(code)) return;
     setRewardBusy(true);
     setNotice(null);
@@ -364,6 +370,11 @@ export default function Business() {
       hapticTap(20);
       setRewardCode('');
       setNotice({ kind: 'ok', text: t('b.rw.ok', { item: r.item.name, n: r.priceBits }) });
+      // The button just pressed must disappear: drop that claim from the
+      // loaded customer without a round trip.
+      setCustomer((c) =>
+        c ? { ...c, rewards: (c.rewards ?? []).filter((x) => x.code !== code) } : c
+      );
     } catch (err) {
       setNotice({ kind: 'err', text: (err as Error).message });
     } finally {
@@ -923,6 +934,38 @@ export default function Business() {
                     {customer.birthdayToday && (
                       <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
                         🎂 {t('b.birthday')}
+                      </div>
+                    )}
+
+                    {/* Rewards this customer already paid for with BITS and
+                        can collect here: one button each. The code they hold
+                        is sent under the hood — nobody types it. */}
+                    {(customer.rewards ?? []).length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        {(customer.rewards ?? []).map((r) => (
+                          <div
+                            key={r.code}
+                            className="flex items-center gap-3 rounded-xl border border-solana-green/40 bg-solana-green/10 px-3 py-2"
+                          >
+                            {r.imageUrl && (
+                              <img src={r.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-contain" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] uppercase tracking-wider text-solana-green">
+                                {t('b.rw.card')}
+                              </p>
+                              <p className="truncate text-sm font-semibold text-white">{r.itemName}</p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={rewardBusy}
+                              onClick={() => void fulfilReward(r.code)}
+                              className="shrink-0 rounded-full bg-solana-green px-4 py-2 text-sm font-semibold text-hero-deep transition hover:brightness-110 disabled:opacity-40"
+                            >
+                              {rewardBusy ? '…' : t('b.rw.btn')}
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex items-baseline justify-between">

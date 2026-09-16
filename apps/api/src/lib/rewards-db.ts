@@ -352,3 +352,31 @@ export async function listAllClaims(limit = 200): Promise<
     return { ...rest, item_name: ri?.name ?? '—', item_slug: ri?.slug ?? '' };
   });
 }
+
+/**
+ * The counter side of "no typing": when a barista looks a customer up (tap,
+ * QR or code), every reward this customer has claimed and not yet picked up
+ * comes back too — so the hand-over is one button, and the 6-character code
+ * stays as the fallback for a customer whose phone is in their pocket.
+ * Items restricted to other venues are left out: a barista must never be
+ * shown a button for something they cannot give.
+ */
+export async function listPendingClaimsForCounter(
+  identityId: string,
+  venueId: string
+): Promise<Array<{ code: string; itemName: string; imageUrl: string | null; priceBits: number }>> {
+  const supa = getSupabaseAdmin();
+  const { data, error } = await supa
+    .from('reward_claims')
+    .select(`code, price_bits, reward_items!inner(name, image_url, venue_ids)`)
+    .eq('user_identity_id', identityId)
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString());
+  if (error) throw new Error(`[Supabase] listPendingClaimsForCounter: ${error.message}`);
+  type Item = { name: string; image_url: string | null; venue_ids: string[] | null };
+  type Row = { code: string; price_bits: number; reward_items: Item | Item[] };
+  return ((data ?? []) as unknown as Row[])
+    .map((r) => ({ code: r.code, price: r.price_bits, ri: Array.isArray(r.reward_items) ? r.reward_items[0] : r.reward_items }))
+    .filter((r) => r.ri && (!r.ri.venue_ids || r.ri.venue_ids.length === 0 || r.ri.venue_ids.includes(venueId)))
+    .map((r) => ({ code: r.code, itemName: r.ri.name, imageUrl: r.ri.image_url, priceBits: r.price }));
+}
