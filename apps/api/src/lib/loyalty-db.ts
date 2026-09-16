@@ -710,6 +710,8 @@ export async function updateVenueSettings(
      * hide a notice the venue forgot about.
      */
     announcement?: string;
+    /** "Order ahead" link. Empty string clears it. */
+    orderUrl?: string;
   }
 ): Promise<void> {
   const supa = getSupabaseAdmin();
@@ -733,7 +735,8 @@ export async function updateVenueSettings(
     input.facebook !== undefined ||
     input.website !== undefined ||
     input.happyHour !== undefined ||
-    input.announcement !== undefined;
+    input.announcement !== undefined ||
+    input.orderUrl !== undefined;
 
   if (brandingKeysTouched) {
     const { data, error } = await supa
@@ -752,7 +755,7 @@ export async function updateVenueSettings(
     }
     // Contact block. An empty string clears the field rather than storing "",
     // so the customer page can simply test for presence.
-    for (const key of ['phone', 'email', 'instagram', 'facebook', 'website'] as const) {
+    for (const key of ['phone', 'email', 'instagram', 'facebook', 'website', 'orderUrl'] as const) {
       const value = input[key];
       if (value === undefined) continue;
       if (value === '') delete branding[key];

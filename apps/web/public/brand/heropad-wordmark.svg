@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" width="520" height="120" role="img" aria-label="HeroPad">
+  <!-- The HeroPad wordmark, as used in the app header: Space Grotesk 700,
+       cyan→white→gold sweep. Text-based on purpose (web use); for print,
+       convert to outlines in Illustrator/Inkscape once the font is installed. -->
+  <defs>
+    <linearGradient id="hp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5DD3FF"/>
+      <stop offset="0.5" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5C842"/>
+    </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&amp;display=swap');
+      text { font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+    </style>
+  </defs>
+  <text x="8" y="92" font-size="96" fill="url(#hp)">HeroPad</text>
+</svg>

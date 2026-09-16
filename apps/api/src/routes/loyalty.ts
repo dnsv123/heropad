@@ -694,6 +694,7 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
       // stale — otherwise editing it looks like it was silently deleted.
       'announcement',
       'announcementAt',
+      'orderUrl',
     ] as const) {
       if (b[key] !== undefined) publicBranding[key] = b[key];
     }
@@ -1295,6 +1296,20 @@ const SettingsBody = z.object({
   // One short line, not a newsfeed: the cap keeps it readable on a phone and
   // keeps the venue writing "Live music Thursday 20:00" instead of an essay.
   announcement: z.union([z.string().trim().max(160), z.literal('')]).optional(),
+  // "Order ahead" — a link to whatever ordering system the venue already
+  // uses (their site, Glovo, a form). We open a door; we do not build the
+  // kitchen. https only: it is rendered as a button on the customer's card.
+  orderUrl: z
+    .union([
+      z
+        .string()
+        .trim()
+        .url()
+        .max(300)
+        .refine((u) => u.startsWith('https://'), 'Must be an https:// link'),
+      z.literal(''),
+    ])
+    .optional(),
   happyHour: z
     .object({
       days: z.array(z.number().int().min(0).max(6)).min(1).max(7),

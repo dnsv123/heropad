@@ -516,6 +516,10 @@ const en = {
   'loy.call': '📞 Call',
   'b.set.review': 'Google review link (shown to customers at reward)',
   'b.set.phone': 'Venue phone (the customer “Call” button)',
+  'b.set.order': '🛒 Order-ahead link (optional)',
+  'b.set.order.hint':
+    'Where your customers already order — your site, Glovo, a form. Shows as an “Order” button on their card. Leave empty to hide it.',
+  'vc.order': 'Order ahead',
   'b.set.announce': '📣 What’s on this week (optional)',
   'b.set.announce.ph': 'e.g. Live music Thursday, 20:00',
   'b.set.announce.hint':
@@ -1033,6 +1037,10 @@ const ro: Record<TranslationKey, string> = {
   'loy.call': '📞 Sună',
   'b.set.review': 'Link recenzie Google (arătat clienților la recompensă)',
   'b.set.phone': 'Telefonul localului (butonul „Sună" la clienți)',
+  'b.set.order': '🛒 Link de precomandă (opțional)',
+  'b.set.order.hint':
+    'Unde comandă deja clienții tăi — site-ul vostru, Glovo, un formular. Apare ca buton „Comandă” pe cardul lor. Gol = nu apare.',
+  'vc.order': 'Comandă',
   'b.set.announce': '📣 Ce se întâmplă săptămâna asta (opțional)',
   'b.set.announce.ph': 'ex. Joi seara concert live, ora 20:00',
   'b.set.announce.hint':

@@ -128,6 +128,9 @@ export default function Business() {
    */
   const [setAnnounce, setSetAnnounce] = useState('');
   const [announceTouched, setAnnounceTouched] = useState(false);
+  /** "Order ahead" link — touched flag so an emptied field clears it. */
+  const [setOrder, setSetOrder] = useState('');
+  const [orderTouched, setOrderTouched] = useState(false);
   /** BITS reward hand-over: the 6-character code the customer reads out. */
   const [rewardCode, setRewardCode] = useState('');
   const [rewardBusy, setRewardBusy] = useState(false);
@@ -221,6 +224,7 @@ export default function Business() {
         setSetFb(str(b.facebook));
         setSetSite(str(b.website));
         setSetAnnounce(str(b.announcement));
+        setSetOrder(str(b.orderUrl));
         if (typeof r.venue.timezone === 'string') setTz(r.venue.timezone);
         const hh = b.happyHour as
           | { days?: number[]; start?: string; end?: string; mult?: number }
@@ -543,6 +547,7 @@ export default function Business() {
         facebook?: string;
         website?: string;
         announcement?: string;
+        orderUrl?: string;
       } = {};
       const n = parseInt(setRequired, 10);
       if (!Number.isNaN(n)) body.stampsRequired = n;
@@ -557,6 +562,7 @@ export default function Business() {
       // Sent even when empty — that is how the venue takes a finished notice
       // down. The other text fields deliberately skip empties instead.
       if (announceTouched) body.announcement = setAnnounce.trim();
+      if (orderTouched) body.orderUrl = setOrder.trim();
       if (hhTouched) {
         body.happyHour =
           hhDays.length > 0 && hhStart && hhEnd
@@ -1268,6 +1274,26 @@ export default function Business() {
                           />
                         </label>
                       </div>
+
+                      {/* "Order ahead": a link to whatever they already use.
+                          Renders as a button on the customer's card. */}
+                      <label className="mt-3 block text-xs text-slate-500">
+                        {t('b.set.order')}
+                        <input
+                          type="url"
+                          maxLength={300}
+                          value={setOrder}
+                          onChange={(e) => {
+                            setSetOrder(e.target.value);
+                            setOrderTouched(true);
+                          }}
+                          placeholder="https://…"
+                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        />
+                        <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
+                          {t('b.set.order.hint')}
+                        </span>
+                      </label>
 
                       {/* "What's on this week" — the one thing here that
                           changes weekly rather than once at setup, so it gets

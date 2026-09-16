@@ -99,7 +99,8 @@ export default function VenueContact({
       ? `https://www.google.com/maps/search/?api=1&query=${gpsLat},${gpsLng}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
 
-  const hasContact = Boolean(b.phone || b.email || b.instagram || b.facebook || b.website);
+  const orderUrl = safeWebUrl(b.orderUrl);
+  const hasContact = Boolean(b.phone || b.email || b.instagram || b.facebook || b.website || orderUrl);
   if (!hasContact && !happyHourNext && !(gpsLat && gpsLng)) return null;
 
   const chip =
@@ -143,6 +144,18 @@ export default function VenueContact({
 
       <p className="text-xs uppercase tracking-wider text-slate-500">{t('vc.title')}</p>
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* Order-ahead first and gold: it is the one chip that makes money
+            for the venue right now, not a way to reach them later. */}
+        {orderUrl && (
+          <a
+            href={orderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-full bg-hero-gold px-3.5 py-1.5 text-xs font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
+          >
+            🛒 {t('vc.order')}
+          </a>
+        )}
         <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={chip}>
           📍 {t('vc.map')}
         </a>
