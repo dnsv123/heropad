@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://heropad.supervictoruniverse.com/</loc><priority>1.0</priority></url>
-  <url><loc>https://heropad.supervictoruniverse.com/privacy</loc><priority>0.3</priority></url>
-  <url><loc>https://heropad.supervictoruniverse.com/terms</loc><priority>0.3</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/rewards</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/passport</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/loyalty/cafe-victor</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://heropad.supervictoruniverse.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
