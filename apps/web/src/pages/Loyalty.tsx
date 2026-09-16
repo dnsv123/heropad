@@ -461,16 +461,29 @@ export default function Loyalty() {
         {/* "What's on this week" — the venue's own line to its regulars.
             Hidden once it goes stale so a card can never advertise last
             month's concert; the venue clears it early by emptying the field. */}
-        {freshAnnouncement && (
-          <div className="mt-4 rounded-xl border border-hero-cyan/30 bg-hero-cyan/5 p-3">
-            <p className="text-[11px] uppercase tracking-wider text-hero-cyan">
-              {t('loy.announce.title', { name: venue?.name ?? '' })}
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-slate-200">
-              {freshAnnouncement}
-            </p>
-          </div>
-        )}
+        {freshAnnouncement && (() => {
+          // The chip says what kind of line it is before the customer reads
+          // it: gold = there is something to gain today, cyan = something
+          // is happening, plain = the venue is just talking to its regulars.
+          const kind = venue?.branding?.announcementKind;
+          const tone =
+            kind === 'offer'
+              ? { box: 'border-hero-gold/40 bg-hero-gold/10', chip: 'bg-hero-gold text-hero-deep', key: 'loy.announce.offer' as const }
+              : kind === 'event'
+              ? { box: 'border-hero-cyan/40 bg-hero-cyan/10', chip: 'bg-hero-cyan text-hero-deep', key: 'loy.announce.event' as const }
+              : { box: 'border-hero-blue/30 bg-hero-deep/60', chip: 'bg-slate-200 text-hero-deep', key: 'loy.announce.news' as const };
+          return (
+            <div className={`mt-4 rounded-xl border p-3 ${tone.box}`}>
+              <div className="flex items-center gap-2">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tone.chip}`}>
+                  {t(tone.key)}
+                </span>
+                <span className="text-[11px] text-slate-500">{venue?.name ?? ''}</span>
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-100">{freshAnnouncement}</p>
+            </div>
+          );
+        })()}
 
         {/* Celebration — a CENTRED modal, not a block in the page.
            It used to render inline below the venue card and auto-dismiss after

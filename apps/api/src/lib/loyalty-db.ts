@@ -710,6 +710,7 @@ export async function updateVenueSettings(
      * hide a notice the venue forgot about.
      */
     announcement?: string;
+    announcementKind?: 'news' | 'offer' | 'event';
     /** "Order ahead" link. Empty string clears it. */
     orderUrl?: string;
   }
@@ -736,6 +737,7 @@ export async function updateVenueSettings(
     input.website !== undefined ||
     input.happyHour !== undefined ||
     input.announcement !== undefined ||
+    input.announcementKind !== undefined ||
     input.orderUrl !== undefined;
 
   if (brandingKeysTouched) {
@@ -769,6 +771,7 @@ export async function updateVenueSettings(
       if (input.announcement === '') {
         delete branding.announcement;
         delete branding.announcementAt;
+        delete branding.announcementKind;
       } else {
         branding.announcement = input.announcement;
         // Stamped here, not sent by the client: this timestamp is what makes
@@ -776,6 +779,7 @@ export async function updateVenueSettings(
         branding.announcementAt = new Date().toISOString();
       }
     }
+    if (input.announcementKind !== undefined) branding.announcementKind = input.announcementKind;
     patch.branding = branding;
   }
   if (Object.keys(patch).length === 0) return;

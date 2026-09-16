@@ -128,6 +128,7 @@ export default function Business() {
    */
   const [setAnnounce, setSetAnnounce] = useState('');
   const [announceTouched, setAnnounceTouched] = useState(false);
+  const [annKind, setAnnKind] = useState<'news' | 'offer' | 'event'>('news');
   /** "Order ahead" link — touched flag so an emptied field clears it. */
   const [setOrder, setSetOrder] = useState('');
   const [orderTouched, setOrderTouched] = useState(false);
@@ -224,6 +225,8 @@ export default function Business() {
         setSetFb(str(b.facebook));
         setSetSite(str(b.website));
         setSetAnnounce(str(b.announcement));
+        const k = str(b.announcementKind);
+        if (k === 'offer' || k === 'event' || k === 'news') setAnnKind(k);
         setSetOrder(str(b.orderUrl));
         if (typeof r.venue.timezone === 'string') setTz(r.venue.timezone);
         const hh = b.happyHour as
@@ -547,6 +550,7 @@ export default function Business() {
         facebook?: string;
         website?: string;
         announcement?: string;
+        announcementKind?: 'news' | 'offer' | 'event';
         orderUrl?: string;
       } = {};
       const n = parseInt(setRequired, 10);
@@ -561,7 +565,10 @@ export default function Business() {
       if (tz) body.timezone = tz;
       // Sent even when empty — that is how the venue takes a finished notice
       // down. The other text fields deliberately skip empties instead.
-      if (announceTouched) body.announcement = setAnnounce.trim();
+      if (announceTouched) {
+        body.announcement = setAnnounce.trim();
+        body.announcementKind = annKind;
+      }
       if (orderTouched) body.orderUrl = setOrder.trim();
       if (hhTouched) {
         body.happyHour =
@@ -1312,6 +1319,30 @@ export default function Business() {
                           placeholder={t('b.set.announce.ph')}
                           className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
+                        {/* Kind → the chip's colour on the customer's card. */}
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          {(['news', 'offer', 'event'] as const).map((k) => (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => {
+                                setAnnKind(k);
+                                setAnnounceTouched(true);
+                              }}
+                              className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                                annKind === k
+                                  ? k === 'offer'
+                                    ? 'border-hero-gold bg-hero-gold/15 text-hero-gold'
+                                    : k === 'event'
+                                    ? 'border-hero-cyan bg-hero-cyan/15 text-hero-cyan'
+                                    : 'border-slate-300 bg-slate-300/10 text-slate-200'
+                                  : 'border-hero-blue/30 text-slate-500 hover:text-slate-300'
+                              }`}
+                            >
+                              {t(`b.set.announce.k.${k}` as 'b.set.announce.k.news')}
+                            </button>
+                          ))}
+                        </span>
                         <span className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
                           <span className="text-[11px] leading-relaxed text-slate-600">
                             {t('b.set.announce.hint')}
