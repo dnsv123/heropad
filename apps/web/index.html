@@ -56,7 +56,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- LCP: the hero mascot starts downloading before React even boots. -->
-    <link rel="preload" as="image" href="/super-victor-hero.webp" imagesrcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" imagesizes="(min-width: 768px) 384px, 220px" fetchpriority="high" />
+    <link rel="preload" as="image" href="/super-victor-hero.webp" imagesrcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" imagesizes="(min-width: 768px) 370px, 250px" fetchpriority="high" />
 
     <!-- Fonts — loaded WITHOUT blocking first paint: the stylesheet arrives as
          "print" (non-blocking) and flips to "all" once fetched. Body text uses
@@ -80,29 +80,34 @@
          Copy is Romanian: the audience is Romanian café owners; an EN visitor
          sees RO for the ~1s before React swaps in their language. -->
     <div id="prehero" aria-hidden="true">
-      <div class="border-b border-hero-blue/20 bg-hero-deep/80">
+      <div class="border-b border-white/[0.06] bg-hero-deep/85">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
-          <span class="flex items-center gap-2 font-display text-lg font-bold tracking-tight md:text-xl"><span class="bg-gradient-to-r from-hero-cyan via-white to-hero-gold bg-clip-text text-transparent">HeroPad</span></span>
-          <span class="h-9 w-24 rounded-full bg-hero-blue/20 md:w-40"></span>
+          <span class="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight md:text-xl"><img src="/super-victor-pfp.webp" alt="" width="28" height="28" class="h-7 w-7 rounded-full bg-hero-navy2 object-cover" /><span>Hero<span class="text-hero-gold">Pad</span></span></span>
+          <span class="h-9 w-24 rounded-full bg-hero-navy2 md:w-40"></span>
         </div>
       </div>
       <section class="relative overflow-hidden">
         <div class="pointer-events-none absolute inset-0 -z-10 bg-hero-glow"></div>
-        <div class="mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-12 md:flex-row md:gap-12 md:py-24">
-          <div class="relative order-first w-full max-w-[220px] flex-shrink-0 md:order-last md:max-w-sm md:flex-1">
-            <div class="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-hero-blue/30 bg-gradient-to-br from-hero-deep via-hero-blue/20 to-hero-deep">
-              <img src="/super-victor-hero.webp" srcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" sizes="(min-width: 768px) 384px, 220px" width="480" height="753" alt="" fetchpriority="high" class="absolute inset-0 h-full w-full object-contain p-3 md:p-5" />
+        <div class="mx-auto grid max-w-6xl items-center gap-10 px-6 py-10 md:grid-cols-[1.1fr_0.9fr] md:gap-8 md:py-20">
+          <div class="order-2 text-center md:order-1 md:text-left">
+            <p class="eyebrow">HeroPad Power Pass</p>
+            <h1 class="mt-4 font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">Fidelizare pe care clienții chiar o iubesc</h1>
+            <p class="mx-auto mt-5 max-w-xl text-base text-slate-300 md:mx-0 md:text-lg">Power Pass transformă fiecare vizită la locurile tale preferate — cafeneaua, brutăria, frizeria, sala — într-o încărcare de supererou. Fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.</p>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+              <span class="btn btn-primary">Pentru afaceri</span>
+              <span class="btn btn-ghost">Programează un demo gratuit</span>
             </div>
+            <p class="mt-6 text-xs text-slate-500"><span class="text-slate-400">Un proiect SuperVictor Universe.</span></p>
           </div>
-          <div class="flex-1 text-center md:text-left">
-            <p class="text-xs uppercase tracking-[0.3em] text-hero-cyan">Fidelizare pe care clienții chiar o iubesc</p>
-            <h1 class="mt-3 font-display text-4xl font-bold tracking-tight md:mt-4 md:text-6xl"><span class="bg-gradient-to-r from-hero-gold via-hero-gold-bright to-hero-cyan bg-clip-text text-transparent">HeroPad</span> <span class="text-white">⚡ Power&nbsp;Pass</span></h1>
-            <p class="mx-auto mt-3 max-w-xl text-base text-slate-300 md:mx-0 md:mt-4 md:text-lg">Power Pass transformă fiecare vizită la locurile tale preferate — cafeneaua, brutăria, frizeria, sala — într-o încărcare de supererou. Fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.</p>
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:justify-start">
-              <span class="rounded-full bg-hero-gold px-6 py-3 font-semibold text-hero-deep shadow-hero-gold">Pentru afaceri</span>
-              <span class="rounded-full border border-hero-cyan/40 px-6 py-3 font-medium text-slate-200">Programează un demo gratuit</span>
+          <div class="relative order-1 mx-auto w-full max-w-[250px] md:order-2 md:max-w-[370px]">
+            <div class="absolute left-1/2 top-[44%] aspect-square h-[74%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-hero-navy"></div>
+            <img src="/super-victor-hero.webp" srcset="/super-victor-hero-320.webp 320w, /super-victor-hero.webp 480w" sizes="(min-width: 768px) 370px, 250px" width="480" height="753" alt="" fetchpriority="high" class="relative h-auto w-full animate-float" />
+            <div class="absolute -left-3 bottom-[9%] w-[150px] rounded-2xl border border-white/10 bg-hero-navy/95 p-3 text-left md:-left-8 md:w-[176px] md:p-3.5">
+              <p class="text-[9px] uppercase tracking-[0.18em] text-slate-400">Café Victor</p>
+              <p class="tnum mt-1 font-display text-2xl font-bold leading-none text-white">3<span class="text-base text-slate-500">/5</span></p>
+              <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-hero-navy2"><div class="h-full w-3/5 rounded-full bg-hero-gold"></div></div>
+              <p class="mt-2 text-[10px] font-medium text-hero-gold">🎁 O cafea gratis</p>
             </div>
-            <p class="mt-6 text-xs text-slate-500 md:mt-8"><span class="text-hero-cyan">Un proiect SuperVictor Universe.</span></p>
           </div>
         </div>
       </section>

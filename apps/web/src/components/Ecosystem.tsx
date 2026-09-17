@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 import { useT } from '../i18n';
 
@@ -61,20 +60,14 @@ export default function Ecosystem() {
         {t('eco.sub')}
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {cards.map((c, i) => {
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {cards.map((c) => {
           const inner = (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="h-full rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5 text-center transition hover:border-hero-cyan/50 hover:bg-hero-deep/80"
-            >
-              <span className="text-3xl">{c.icon}</span>
+            <div className="card-sm h-full p-5 text-center transition hover:border-white/20">
+              <span className="text-2xl">{c.icon}</span>
               <p className="mt-2 font-display font-semibold text-white">{c.title}</p>
               <p className="mt-1 text-xs leading-relaxed text-slate-400">{c.text}</p>
-            </motion.div>
+            </div>
           );
           return c.external ? (
             <a key={c.title} href={c.href} target="_blank" rel="noopener noreferrer">

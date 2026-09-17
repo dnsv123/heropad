@@ -29,6 +29,12 @@ const en = {
   'nav.login': 'Login',
   'nav.loading': 'Loading…',
   'nav.logout': 'Logout',
+  'an.card': 'Card',
+  'an.rewards': 'Rewards',
+  'an.passport': 'Passport',
+  'an.profile': 'Profile',
+  'hero.card.reward': 'A free coffee',
+  'lp.hl': 'Most chosen',
   // --- Landing: hero ---
   'hero.eyebrow': 'Loyalty customers actually love',
   'hero.subtitle':
@@ -565,6 +571,12 @@ const ro: Record<TranslationKey, string> = {
   'nav.login': 'Conectare',
   'nav.loading': 'Se încarcă…',
   'nav.logout': 'Ieșire',
+  'an.card': 'Card',
+  'an.rewards': 'Premii',
+  'an.passport': 'Pașaport',
+  'an.profile': 'Profil',
+  'hero.card.reward': 'O cafea gratis',
+  'lp.hl': 'Cel mai ales',
   'hero.eyebrow': 'Fidelizare pe care clienții chiar o iubesc',
   'hero.subtitle':
     'Power Pass transformă fiecare vizită la locurile tale preferate — cafeneaua, brutăria, frizeria, sala — într-o încărcare de supererou. Fără nicio aplicație de instalat. Cardul plin îți aduce recompensa plus un trofeu de colecție care e cu adevărat al tău.',

@@ -149,18 +149,18 @@ export default function Rewards() {
         {/* ---- Balance pill ---- */}
         <div className="mt-6 flex justify-center">
           {ready && authenticated ? (
-            <div className="rounded-full border border-solana-green/40 bg-solana-green/10 px-5 py-2 text-center">
-              <span className="font-display text-2xl font-bold text-solana-green">
-                ⚡ {bits ?? '…'}
-              </span>{' '}
-              <span className="text-sm text-slate-300">BITS</span>
+            <div className="card-sm flex items-baseline gap-2 px-6 py-3 text-center">
+              <span className="tnum font-display text-3xl font-bold text-white">
+                {bits ?? '…'}
+              </span>
+              <span className="text-sm text-slate-400">⚡ BITS</span>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => login()}
               disabled={!ready}
-              className="rounded-full bg-solana-purple px-6 py-2.5 text-sm font-semibold text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
+              className="btn btn-primary"
             >
               {t('rw.login')}
             </button>
@@ -189,7 +189,7 @@ export default function Rewards() {
               {pending.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center gap-4 rounded-2xl border-2 border-hero-gold/60 bg-hero-gold/10 p-4"
+                  className="card-sm card-gold flex items-center gap-4 border-hero-gold/60 p-4"
                 >
                   {c.imageUrl && (
                     <img
@@ -225,12 +225,12 @@ export default function Rewards() {
               {[0, 1].map((i) => (
                 <div
                   key={i}
-                  className="h-64 animate-pulse rounded-2xl border border-hero-blue/15 bg-hero-deep/50"
+                  className="card-sm h-64 animate-pulse"
                 />
               ))}
             </div>
           ) : items.length === 0 ? (
-            <p className="mt-3 rounded-2xl border border-dashed border-hero-blue/30 p-6 text-center text-sm text-slate-400">
+            <p className="mt-3 rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
               {t('rw.shelf.empty')}
             </p>
           ) : (
@@ -241,14 +241,11 @@ export default function Rewards() {
                 const disabled =
                   !authenticated || !item.inStock || hasCode || !canAfford || busy === item.slug;
                 return (
-                  <motion.div
+                  <div
                     key={item.slug}
-                    whileHover={{ y: -3 }}
-                    className={`overflow-hidden rounded-2xl border bg-hero-deep/50 ${
-                      item.inStock ? 'border-hero-blue/20' : 'border-hero-blue/10 opacity-60'
-                    }`}
+                    className={`card-sm overflow-hidden ${item.inStock ? '' : 'opacity-60'}`}
                   >
-                    <div className="relative aspect-square w-full bg-gradient-to-br from-hero-blue/20 via-hero-deep to-hero-deep">
+                    <div className="relative aspect-square w-full bg-hero-navy2">
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -262,7 +259,7 @@ export default function Rewards() {
                       ) : (
                         <div className="flex h-full items-center justify-center text-5xl">🎁</div>
                       )}
-                      <span className="absolute right-3 top-3 rounded-full border border-solana-green/40 bg-hero-deep/90 px-3 py-1 font-display text-sm font-bold text-solana-green">
+                      <span className="tnum absolute right-3 top-3 rounded-full border border-white/15 bg-hero-deep px-3 py-1 font-display text-sm font-bold text-white">
                         ⚡ {item.priceBits}
                       </span>
                       {!item.inStock && (
@@ -290,7 +287,7 @@ export default function Rewards() {
                         type="button"
                         disabled={disabled}
                         onClick={() => (authenticated ? void claim(item) : login())}
-                        className="mt-3 w-full rounded-full bg-hero-gold px-5 py-2.5 text-sm font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:cursor-not-allowed disabled:opacity-40"
+                        className="btn btn-primary btn-sm mt-3 w-full"
                       >
                         {busy === item.slug
                           ? '…'
@@ -305,7 +302,7 @@ export default function Rewards() {
                           : t('rw.btn.short', { n: item.priceBits - (bits ?? 0) })}
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -322,7 +319,7 @@ export default function Rewards() {
               {history.map((c) => (
                 <li
                   key={c.id}
-                  className="flex items-baseline justify-between gap-3 rounded-lg bg-hero-deep/40 px-3 py-2 text-xs"
+                  className="flex items-baseline justify-between gap-3 rounded-lg bg-hero-navy px-3 py-2 text-xs"
                 >
                   <span className="truncate text-slate-300">{c.itemName}</span>
                   <span className="shrink-0 text-slate-500">
@@ -363,7 +360,7 @@ export default function Rewards() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-3xl border-2 border-hero-gold bg-hero-deep p-6 text-center shadow-hero-gold"
+              className="card w-full max-w-sm border-hero-gold/60 p-6 text-center"
             >
               <p className="text-3xl">🎁</p>
               <p className="mt-2 font-display text-xl font-bold text-white">
@@ -377,7 +374,7 @@ export default function Rewards() {
               <button
                 type="button"
                 onClick={() => setJustClaimed(null)}
-                className="mt-5 w-full rounded-full bg-hero-gold px-5 py-3 text-sm font-semibold text-hero-deep"
+                className="btn btn-primary mt-5 w-full"
               >
                 {t('pp.close')}
               </button>

@@ -61,8 +61,8 @@ export default function ProductCarousel() {
                 zIndex: 10 - Math.abs(off),
               }}
               transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="absolute left-1/2 top-0 h-[360px] w-[170px] overflow-hidden rounded-[24px] border-2 bg-hero-deep shadow-2xl md:h-[420px] md:w-[200px]"
-              style={{ borderColor: off === 0 ? 'rgba(93,211,255,.55)' : 'rgba(30,95,186,.35)' }}
+              className="absolute left-1/2 top-0 h-[360px] w-[170px] overflow-hidden rounded-[24px] border-2 bg-hero-deep md:h-[420px] md:w-[200px]"
+              style={{ borderColor: off === 0 ? 'rgba(245,200,66,.7)' : 'rgba(255,255,255,.12)' }}
             >
               <img
                 src={`/landing/${s.file}.webp`}
@@ -72,7 +72,7 @@ export default function ProductCarousel() {
                 className="h-full w-full object-cover object-top"
                 draggable={false}
               />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-hero-deep/95 to-transparent px-2 pb-2 pt-6 text-center text-[11px] font-semibold text-hero-cyan">
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-hero-deep/95 to-transparent px-2 pb-2 pt-6 text-center text-[11px] font-semibold text-white">
                 {t(s.label)}
               </span>
             </motion.button>
@@ -89,7 +89,7 @@ export default function ProductCarousel() {
             aria-label={t(s.label)}
             onClick={() => setActive(i)}
             className={`h-2 w-2 rounded-full transition ${
-              i === active ? 'bg-hero-gold' : 'bg-hero-cyan/25 hover:bg-hero-cyan/50'
+              i === active ? 'bg-hero-gold' : 'bg-white/20 hover:bg-white/40'
             }`}
           />
         ))}

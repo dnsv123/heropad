@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion';
-
 import { useT } from '../i18n';
 import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact';
 
@@ -25,51 +23,49 @@ export default function LandingPricing() {
         {t('lp.sub')}
       </p>
 
-      <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-hero-gold/50 bg-hero-gold/10 px-5 py-3.5 text-center text-sm text-hero-gold">
+      <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-5 py-3.5 text-center text-sm text-hero-gold">
         ⭐ {t('lp.founding')}
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {tiers.map((tier, i) => (
-          <motion.div
+        {tiers.map((tier) => (
+          <div
             key={tier.name}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.4, delay: i * 0.06 }}
-            className={`rounded-2xl border bg-hero-deep/50 p-6 ${
-              tier.hl ? 'border-hero-gold/60' : 'border-hero-blue/20'
-            }`}
+            className={`card relative p-6 ${tier.hl ? 'border-hero-gold/60' : ''}`}
           >
-            <p className={`font-display font-semibold ${tier.hl ? 'text-hero-gold' : 'text-hero-cyan'}`}>
-              {tier.name}
+            {tier.hl && (
+              <span className="chip chip-gold absolute -top-3 left-6 py-1 text-[11px]">
+                {t('lp.hl')}
+              </span>
+            )}
+            <p className="font-display font-semibold text-slate-300">{tier.name}</p>
+            <p className="tnum mt-2 font-display text-4xl font-bold leading-none text-white">
+              {tier.price}
+              <span className="ml-1.5 text-base font-normal text-slate-500">{t('lp.mo')}</span>
             </p>
-            <p className="mt-1 font-display text-3xl font-bold text-white">
-              {tier.price} <span className="text-base font-normal text-slate-400">{t('lp.mo')}</span>
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{tier.feats}</p>
-          </motion.div>
+            <p className="mt-4 text-sm leading-relaxed text-slate-400">{tier.feats}</p>
+          </div>
         ))}
       </div>
 
-      <p className="mt-4 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm text-slate-400">
         {t('lp.chain')}{' '}
         <a
           href={chainContactHref()}
           target={contactIsWhatsApp() ? '_blank' : undefined}
           rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
-          className="text-hero-cyan underline transition hover:text-hero-gold"
+          className="text-white underline decoration-white/30 underline-offset-4 transition hover:decoration-white"
         >
           {t('lp.chain.cta')}
         </a>
       </p>
       <p className="mt-2 text-center text-xs text-slate-500">{t('lp.note')}</p>
-      <div className="mt-5 text-center">
+      <div className="mt-6 text-center">
         <a
           href={contactHref()}
           target={contactIsWhatsApp() ? '_blank' : undefined}
           rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
-          className="rounded-full bg-hero-gold px-8 py-3 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright"
+          className="btn btn-primary"
         >
           {t('biz.cta')}
         </a>

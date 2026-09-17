@@ -1,9 +1,7 @@
-import { motion } from 'framer-motion';
-
 import { useT } from '../i18n';
 
 // Landing → who it fits. The mechanics are identical everywhere; only the
-// emoji, the threshold and the reward change — which is exactly the message.
+// pose, the threshold and the reward change — which is exactly the message.
 export default function ForWho() {
   const { t } = useT();
 
@@ -34,15 +32,8 @@ export default function ForWho() {
         {t('fw.sub')}
       </p>
       <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-        {verticals.map(([img, label], i) => (
-          <motion.div
-            key={img}
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.35, delay: (i % 6) * 0.05 }}
-            className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-3 text-center transition hover:border-hero-cyan/40"
-          >
+        {verticals.map(([img, label]) => (
+          <div key={img} className="card-sm p-3 text-center transition hover:border-white/20">
             <img
               src={`/venues/${img}.webp`}
               alt={label}
@@ -53,7 +44,7 @@ export default function ForWho() {
               className="mx-auto aspect-square w-full max-w-[120px] object-contain"
             />
             <span className="mt-1.5 block text-[13px] text-slate-300">{label}</span>
-          </motion.div>
+          </div>
         ))}
       </div>
       <p className="mt-4 text-center text-xs text-slate-500">{t('fw.more')}</p>

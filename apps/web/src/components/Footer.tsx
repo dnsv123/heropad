@@ -8,7 +8,7 @@ export default function Footer() {
   const { t } = useT();
 
   return (
-    <footer className="mt-24 border-t border-hero-blue/20 bg-hero-deep/60">
+    <footer className="mt-24 border-t border-white/[0.06] bg-hero-deep">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-8 md:flex-row md:justify-between">
         <div className="flex items-center gap-3 text-sm text-slate-400">
           <img

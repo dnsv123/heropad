@@ -31,26 +31,11 @@ html {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(30, 95, 186, 0.4); /* hero-blue/40 */
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(93, 211, 255, 0.5); /* hero-cyan/50 */
-}
-
-/* Subtle gradient drift on big wordmarks. Apply with class `.text-shimmer`. */
-@keyframes shimmer {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.text-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 6s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Slow rotating ring animation reused across the app via Tailwind's animate-* utilities. */
@@ -60,4 +45,71 @@ html {
 
 .animate-slow-spin {
   animation: slow-spin 18s linear infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Design system v2 — the handful of shapes the whole product is built from.
+   Three buttons, one card (two radii), one chip, one eyebrow. If a screen
+   needs a fourth kind of button, the screen is wrong, not the system.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-6 py-3 text-sm font-semibold transition select-none;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn:disabled {
+    @apply pointer-events-none opacity-40;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-[13px];
+  }
+  /* Gold = the one thing to press on this screen. */
+  .btn-primary {
+    @apply bg-hero-gold text-hero-deep hover:bg-hero-gold-bright;
+  }
+  /* A step up from the ground, one line around it. */
+  .btn-secondary {
+    @apply border-white/15 bg-hero-navy2 text-white hover:border-white/30;
+  }
+  /* Just a line. For cancel, back, "not now". */
+  .btn-ghost {
+    @apply border-white/15 text-slate-200 hover:border-white/30 hover:text-white;
+  }
+
+  /* A card is one step up from the page and one hairline. No shadow. */
+  .card {
+    @apply rounded-3xl border border-white/[0.08] bg-hero-navy;
+  }
+  .card-sm {
+    @apply rounded-2xl border border-white/[0.08] bg-hero-navy;
+  }
+  /* The gold card: only for the thing you can win. */
+  .card-gold {
+    @apply border-hero-gold/40 bg-hero-gold/10;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-hero-navy px-3 py-1.5 text-xs font-medium text-slate-200;
+  }
+  .chip-gold {
+    @apply border-transparent bg-hero-gold font-semibold text-hero-deep;
+  }
+
+  .eyebrow {
+    @apply font-display text-[11px] font-medium uppercase tracking-[0.24em] text-hero-cyan;
+  }
+
+  /* Numbers that sit in columns or change live never shift the layout. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-slow-spin {
+    animation: none;
+  }
 }

@@ -16,6 +16,9 @@ import { useT } from '../i18n';
 //   - `authenticated` is true after a successful login (or returning visit).
 //   - `login()` opens the Privy modal; `logout()` clears the session and any
 //     embedded-wallet keys from local storage.
+//
+// The markup of the wordmark row is mirrored as static HTML in index.html
+// (#prehero) so the first paint already shows it. Change one, change both.
 export default function Header() {
   const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useSolanaWallets();
@@ -28,7 +31,7 @@ export default function Header() {
       type="button"
       onClick={() => setLang(lang === 'ro' ? 'en' : 'ro')}
       aria-label={lang === 'ro' ? 'Switch to English' : 'Schimbă în română'}
-      className="rounded-full border border-hero-blue/40 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300 transition hover:border-hero-cyan hover:text-hero-cyan"
+      className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300 transition hover:border-white/30 hover:text-white"
     >
       {lang === 'ro' ? 'EN' : 'RO'}
     </button>
@@ -50,20 +53,28 @@ export default function Header() {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? 'text-hero-cyan'
-      : 'text-slate-300 hover:text-white transition-colors';
+      ? 'text-white'
+      : 'text-slate-400 hover:text-white transition-colors';
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hero-blue/20 bg-hero-deep/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-hero-deep/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
-        {/* Wordmark — links to home. We use Space Grotesk display font for it. */}
+        {/* Wordmark — the mascot's face beside the name. Solid white, gold
+            "Pad": one colour of ink, one of paint, no gradient. */}
         <Link
           to="/"
-          className="flex items-center gap-2 font-display text-lg font-bold tracking-tight md:text-xl"
+          className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight md:text-xl"
           onClick={() => setMobileOpen(false)}
         >
-          <span className="text-shimmer bg-gradient-to-r from-hero-cyan via-white to-hero-gold bg-clip-text text-transparent">
-            HeroPad
+          <img
+            src="/super-victor-pfp.webp"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-full bg-hero-navy2 object-cover"
+          />
+          <span>
+            Hero<span className="text-hero-gold">Pad</span>
           </span>
         </Link>
 
@@ -98,13 +109,13 @@ export default function Header() {
                 type="button"
                 onClick={login}
                 disabled={!ready}
-                className="rounded-full bg-solana-purple px-5 py-2 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
+                className="btn btn-primary btn-sm"
               >
                 {ready ? t('nav.login') : t('nav.loading')}
               </button>
             ) : (
               <>
-                <span className="max-w-[150px] truncate rounded-full border border-hero-cyan/40 px-3 py-1 font-mono text-xs text-hero-cyan">
+                <span className="max-w-[150px] truncate rounded-full border border-white/15 px-3 py-1 font-mono text-xs text-hero-cyan">
                   {userLabel}
                 </span>
                 <button
@@ -127,12 +138,12 @@ export default function Header() {
               type="button"
               onClick={login}
               disabled={!ready}
-              className="rounded-full bg-solana-purple px-4 py-1.5 text-sm font-medium text-white shadow-hero-purple disabled:opacity-50"
+              className="btn btn-primary btn-sm"
             >
               {ready ? t('nav.login') : '…'}
             </button>
           ) : (
-            <span className="rounded-full border border-hero-cyan/40 px-2.5 py-1 font-mono text-[11px] text-hero-cyan">
+            <span className="rounded-full border border-white/15 px-2.5 py-1 font-mono text-[11px] text-hero-cyan">
               {shortAddress ?? '...'}
             </span>
           )}
@@ -140,7 +151,7 @@ export default function Header() {
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-hero-blue/40 text-slate-200 transition hover:border-hero-cyan hover:text-hero-cyan"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-slate-200 transition hover:border-white/30 hover:text-white"
           >
             {/* Tiny inline hamburger / close — no extra icon library needed. */}
             {mobileOpen ? (
@@ -158,7 +169,7 @@ export default function Header() {
 
       {/* Mobile drawer — only mounts when open, and on small screens only. */}
       {mobileOpen && (
-        <nav className="border-t border-hero-blue/20 bg-hero-deep px-4 py-3 md:hidden">
+        <nav className="border-t border-white/[0.06] bg-hero-deep px-4 py-3 md:hidden">
           <div className="flex flex-col gap-3 text-sm">
             <NavLink to="/" end className={navLinkClass} onClick={() => setMobileOpen(false)}>
               {t('nav.home')}

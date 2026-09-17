@@ -227,6 +227,13 @@ export default function Loyalty() {
         if (active) {
           setVenue(r.venue);
           setVenueError(null);
+          // The bottom nav's "Card" brings the customer back HERE, not to a
+          // default café they have never been to.
+          try {
+            localStorage.setItem('hp.lastVenue', r.venue.slug);
+          } catch {
+            /* private mode — the nav falls back to /loyalty */
+          }
         }
       })
       .catch((err: Error) => {
@@ -471,7 +478,7 @@ export default function Loyalty() {
               ? { box: 'border-hero-gold/40 bg-hero-gold/10', chip: 'bg-hero-gold text-hero-deep', key: 'loy.announce.offer' as const }
               : kind === 'event'
               ? { box: 'border-hero-cyan/40 bg-hero-cyan/10', chip: 'bg-hero-cyan text-hero-deep', key: 'loy.announce.event' as const }
-              : { box: 'border-hero-blue/30 bg-hero-deep/60', chip: 'bg-slate-200 text-hero-deep', key: 'loy.announce.news' as const };
+              : { box: 'border-white/10 bg-hero-navy', chip: 'bg-slate-200 text-hero-deep', key: 'loy.announce.news' as const };
           return (
             <div className={`mt-4 rounded-xl border p-3 ${tone.box}`}>
               <div className="flex items-center gap-2">
@@ -511,13 +518,13 @@ export default function Loyalty() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-sm rounded-2xl border border-solana-green/50 bg-hero-deep p-6 text-center shadow-2xl"
+                className="card relative w-full max-w-sm border-hero-gold/60 p-6 text-center"
               >
                 <button
                   type="button"
                   aria-label={t('loy.celebrate.close')}
                   onClick={() => setCelebrating(false)}
-                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-hero-blue/40 text-slate-400 transition hover:border-hero-cyan hover:text-white"
+                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-400 transition hover:border-white/30 hover:text-white"
                 >
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
                     <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -565,18 +572,14 @@ export default function Loyalty() {
         </AnimatePresence>
 
         <div
-          className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8"
-          style={
-            brandAccent
-              ? { borderColor: `${brandAccent}66`, boxShadow: `0 0 48px -14px ${brandAccent}80` }
-              : undefined
-          }
+          className="card mt-8 p-6 md:p-8"
+          style={brandAccent ? { borderColor: `${brandAccent}66` } : undefined}
         >
           {required === null ? (
             // Skeleton, not a guess. Same height as the meter so nothing jumps.
             <div className="flex flex-col items-center gap-4 py-6" aria-busy="true">
-              <div className="h-28 w-28 animate-pulse rounded-full bg-hero-blue/15" />
-              <div className="h-4 w-40 animate-pulse rounded-full bg-hero-blue/15" />
+              <div className="h-28 w-28 animate-pulse rounded-full bg-hero-navy2" />
+              <div className="h-4 w-40 animate-pulse rounded-full bg-hero-navy2" />
             </div>
           ) : (
             <PowerMeter
@@ -633,7 +636,7 @@ export default function Loyalty() {
                 type="button"
                 disabled={redeemBusy}
                 onClick={() => void requestRedeemCode()}
-                className="mt-3 rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-50"
+                className="btn btn-primary mt-3"
               >
                 {redeemBusy ? t('loy.full.generating') : t('loy.full.btn')}
               </button>
@@ -675,14 +678,14 @@ export default function Loyalty() {
             </motion.div>
           )}
 
-          <div className="mt-6 border-t border-hero-blue/15 pt-6">
+          <div className="mt-6 border-t border-white/[0.08] pt-6">
             {!ready ? null : !authenticated ? (
               <div className="text-center">
                 <p className="mb-3 text-xs text-slate-500">{t('loy.login.hint')}</p>
                 <button
                   type="button"
                   onClick={login}
-                  className="rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep"
+                  className="btn btn-primary"
                 >
                   {t('loy.login.btn')}
                 </button>
@@ -733,15 +736,15 @@ export default function Loyalty() {
             bonus lands on the friend's FIRST stamp, so only a real visit,
             confirmed at a counter, ever pays out. */}
         {me && (
-          <div className="mt-6 rounded-2xl border border-solana-green/25 bg-solana-green/5 p-5 text-center">
-            <p className="font-display font-semibold text-solana-green">
+          <div className="card-sm mt-6 p-5 text-center">
+            <p className="font-display font-semibold text-white">
               🤝 {t('ref.title')}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">{t('ref.body')}</p>
             <button
               type="button"
               onClick={() => void shareInvite()}
-              className="mt-3 rounded-full bg-solana-green px-6 py-2.5 text-sm font-semibold text-hero-deep transition hover:brightness-110"
+              className="btn btn-secondary btn-sm mt-3"
             >
               {refShareState === 'copied' ? t('ref.copied') : t('ref.btn')}
             </button>
@@ -767,7 +770,7 @@ export default function Loyalty() {
         {/* BITS need a shop, or they are just a number. One line, one link. */}
         <Link
           to="/rewards"
-          className="mt-4 block rounded-xl border border-solana-green/30 bg-solana-green/5 px-4 py-3 text-center text-sm font-semibold text-solana-green transition hover:bg-solana-green/10"
+          className="btn btn-secondary mt-4 w-full"
         >
           {t('loy.bits.shop')}
         </Link>

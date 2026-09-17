@@ -39,6 +39,7 @@ import { Analytics } from '@vercel/analytics/react';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
+import AppNav from './components/AppNav';
 import Home from './pages/Home';
 // Profile and Loyalty used to be eager "because customers land there". They
 // do — but never from the landing page in the same session, and the landing
@@ -93,6 +94,8 @@ export default function App() {
           <Route path="*" element={<Home />} />
         </Routes>
         </Suspense>
+        {/* Bottom pill on the customer screens, phones only. */}
+        <AppNav />
       </main>
       <Footer />
       <Analytics />
