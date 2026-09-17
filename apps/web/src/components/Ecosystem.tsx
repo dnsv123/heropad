@@ -63,7 +63,19 @@ export default function Ecosystem() {
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-      <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
+      {/* The universe's own mark — the registered SuperVictor logo — sits
+          here, where the universe is the subject. Everywhere else the app
+          wears the mascot's face; the shield belongs to the brand page. */}
+      <img
+        src="/brand/supervictor-logo.webp"
+        alt="SuperVictor"
+        width={512}
+        height={489}
+        loading="lazy"
+        decoding="async"
+        className="mx-auto h-20 w-auto md:h-24"
+      />
+      <h2 className="mt-4 text-center font-display text-2xl font-bold md:text-3xl">
         {t('eco.title')}
       </h2>
       <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-400 md:text-base">

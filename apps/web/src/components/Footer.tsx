@@ -12,9 +12,12 @@ export default function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-8 md:flex-row md:justify-between">
         <div className="flex items-center gap-3 text-sm text-slate-400">
           <img
-            src="/svu-logo.webp"
+            src="/brand/supervictor-logo.webp"
             alt="SuperVictor Universe"
-            className="h-8 w-8 object-contain"
+            width={512}
+            height={489}
+            loading="lazy"
+            className="h-9 w-auto object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
