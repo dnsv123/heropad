@@ -694,7 +694,11 @@ export default function Business() {
           );
         })()}
 
-        <div className="mt-8 rounded-2xl border border-white/[0.08] bg-hero-navy p-6 backdrop-blur md:p-8">
+        {/* The counter is not one big card: it is a short stack of small
+            ones on the page itself — numbers, the customer, the scanner —
+            each a thing you can put a thumb on. Only the sign-in and the
+            setup-code states sit in a single card. */}
+        <div className={role === 'owner' || role === 'staff' ? 'mt-6' : 'card mt-8 p-6 md:p-8'}>
           {!ready ? null : !authenticated ? (
             <div className="text-center">
               <p className="mb-3 text-sm text-slate-400">
@@ -775,102 +779,12 @@ export default function Business() {
             </div>
           ) : (
             <>
-              {/* Figurine check-ins — codes arrive by themselves, nobody types. */}
-              {checkins.length > 0 && (
-                <div className="mb-3 rounded-2xl border border-hero-cyan/40 bg-hero-cyan/10 px-4 py-2.5">
-                  <p className="text-[10px] uppercase tracking-wider text-hero-cyan">
-                    📡 {t('b.checkin.title')}
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-2">
-                    {checkins.map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        disabled={busy}
-                        onClick={() => {
-                          setCodeInput(c.code);
-                          void lookupCustomer(c.code);
-                        }}
-                        className="flex items-center gap-2 rounded-full border border-hero-cyan/50 px-3 py-1.5 font-mono text-sm tracking-[0.15em] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep disabled:opacity-40"
-                      >
-                        {c.code}
-                        <span className="font-sans text-[10px] tracking-normal opacity-70">
-                          {c.secondsAgo < 60 ? t('b.checkin.now') : `${Math.floor(c.secondsAgo / 60)}m`}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* BITS reward hand-over. Its own small card, its own input:
-                  it must never be confused with the customer code or the
-                  free-item redeem code, both also 6 characters. */}
-              <details className="mb-3 rounded-2xl border border-solana-green/30 bg-solana-green/5">
-                <summary className="cursor-pointer px-4 py-2.5 text-xs font-semibold text-solana-green">
-                  {t('b.rw.title')}
-                </summary>
-                <div className="border-t border-solana-green/15 px-4 py-3">
-                  <p className="text-[11px] leading-relaxed text-slate-400">{t('b.rw.hint')}</p>
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      type="text"
-                      inputMode="text"
-                      autoCapitalize="characters"
-                      maxLength={6}
-                      value={rewardCode}
-                      onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && CODE_RE.test(rewardCode)) void fulfilReward();
-                      }}
-                      placeholder={t('b.rw.ph')}
-                      className="w-full rounded-xl border border-solana-green/30 bg-hero-deep px-3 py-2 font-mono text-lg tracking-[0.2em] text-slate-100 focus:border-solana-green focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={rewardBusy || !CODE_RE.test(rewardCode)}
-                      onClick={() => void fulfilReward()}
-                      className="shrink-0 rounded-xl bg-solana-green px-4 py-2 text-sm font-semibold text-hero-deep transition hover:brightness-110 disabled:opacity-40"
-                    >
-                      {rewardBusy ? '…' : t('b.rw.btn')}
-                    </button>
-                  </div>
-                </div>
-              </details>
-
-              {queued.length > 0 && (
-                <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-4 py-2.5">
-                  <p className="text-xs text-hero-gold">
-                    ⏳ {t('b.queued.n', { n: queued.length })}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void drainQueue()}
-                    className="shrink-0 rounded-full border border-hero-gold/40 px-3 py-1 text-[11px] text-hero-gold transition hover:bg-hero-gold hover:text-hero-deep"
-                  >
-                    {t('b.queued.retry')}
-                  </button>
-                </div>
-              )}
-
-              {/* Shift summary — the first thing an owner wants in the morning,
-                  and the running total a barista glances at during service. */}
-              <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-2.5">
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="text-slate-500">{t('b.today')}</span>
-                  <span className="text-hero-cyan">
-                    <b className="font-display text-base">{today?.stamps ?? 0}</b>{' '}
-                    {t('b.today.stamps')}
-                  </span>
-                  <span className="text-hero-gold">
-                    <b className="font-display text-base">{today?.rewards ?? 0}</b>{' '}
-                    {t('b.today.rewards')}
-                  </span>
-                  <span className="hidden text-slate-400 sm:inline">
-                    <b className="font-display text-base">{today?.customers ?? 0}</b>{' '}
-                    {t('b.today.customers')}
-                  </span>
-                </div>
+              {/* Shift summary — three numbers a barista glances at during
+                  service and an owner reads first thing in the morning. */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                  {t('b.today')}
+                </span>
                 {/* A café that finds the tone annoying would otherwise mute the
                     whole phone and lose the haptics with it. */}
                 <button
@@ -885,56 +799,70 @@ export default function Business() {
                     }
                   }}
                   title={muted ? t('b.sound.on') : t('b.sound.off')}
-                  className="shrink-0 rounded-full border border-white/[0.08] px-2.5 py-1 text-sm text-slate-400 transition hover:border-white/30 hover:text-white"
+                  className="rounded-full px-2 py-0.5 text-sm text-slate-500 transition hover:text-white"
                 >
                   {muted ? '🔇' : '🔊'}
                 </button>
               </div>
-
-              {/* Customer code entry */}
-              <label htmlFor="code" className="text-xs uppercase tracking-wider text-slate-500">
-                {t('b.code.label')}
-              </label>
-              <div className="mt-2 flex items-stretch gap-2">
-                <input
-                  id="code"
-                  type="text"
-                  inputMode="text"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  maxLength={6}
-                  value={codeInput}
-                  onChange={(e) => {
-                    setCodeInput(e.target.value.toUpperCase());
-                    setCustomer(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && codeValid) void lookupCustomer(normalizedCode);
-                  }}
-                  placeholder="K7M3PQ"
-                  className="min-w-0 flex-1 rounded-lg border border-white/15 bg-hero-deep px-3 py-3 text-center font-mono text-xl tracking-[0.2em] text-slate-100 placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan sm:px-4 sm:text-2xl sm:tracking-[0.3em]"
-                />
-                <button
-                  type="button"
-                  disabled={!codeValid || busy}
-                  onClick={() => void lookupCustomer(normalizedCode)}
-                  className="shrink-0 rounded-lg bg-hero-blue px-4 font-medium text-white transition hover:bg-hero-blue-bright disabled:opacity-40"
-                >
-                  {t('b.find')}
-                </button>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {[
+                  { v: today?.stamps ?? 0, l: t('b.today.stamps') },
+                  { v: today?.rewards ?? 0, l: t('b.today.rewards') },
+                  { v: today?.customers ?? 0, l: t('b.today.customers') },
+                ].map((x) => (
+                  <div key={x.l} className="card-sm px-2 py-3 text-center">
+                    <p className="tnum font-display text-2xl font-bold leading-none text-white">{x.v}</p>
+                    <p className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500">{x.l}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Reverse scan — the fast path at a busy counter. */}
-              <button
-                type="button"
-                onClick={() => setScanning(true)}
-                className="mt-2 w-full rounded-full border border-hero-cyan/40 py-2.5 text-sm font-semibold text-hero-cyan transition hover:border-white/30 hover:bg-hero-cyan/10"
-              >
-                {t('b.scan.btn')}
-              </button>
+              {/* Figurine check-ins — codes arrive by themselves, nobody types. */}
+              {checkins.length > 0 && (
+                <div className="card-sm mt-3 border-hero-cyan/30 px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-wider text-hero-cyan">
+                    📡 {t('b.checkin.title')}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {checkins.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          setCodeInput(c.code);
+                          void lookupCustomer(c.code);
+                        }}
+                        className="chip font-mono tracking-[0.15em] text-hero-cyan hover:border-white/30 disabled:opacity-40"
+                      >
+                        {c.code}
+                        <span className="font-sans text-[10px] tracking-normal text-slate-400">
+                          {c.secondsAgo < 60 ? t('b.checkin.now') : `${Math.floor(c.secondsAgo / 60)}m`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              {/* Customer card */}
+              {queued.length > 0 && (
+                <div className="card-sm card-gold mt-3 flex items-center justify-between gap-2 px-4 py-2.5">
+                  <p className="text-xs text-hero-gold">
+                    ⏳ {t('b.queued.n', { n: queued.length })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void drainQueue()}
+                    className="btn btn-primary btn-sm"
+                  >
+                    {t('b.queued.retry')}
+                  </button>
+                </div>
+              )}
+
+              {/* Customer card — ABOVE the scanner once someone is found, so
+                  the +1 is under the thumb that just scanned, not below the
+                  fold. */}
               <AnimatePresence mode="wait">
                 {customer && (
                   <motion.div
@@ -942,7 +870,8 @@ export default function Business() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="mt-6 rounded-xl border border-white/[0.08] bg-hero-navy p-5"
+                    transition={{ duration: 0.15 }}
+                    className="card mt-3 p-5"
                   >
                     {customer.birthdayToday && (
                       <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
@@ -958,13 +887,13 @@ export default function Business() {
                         {(customer.rewards ?? []).map((r) => (
                           <div
                             key={r.code}
-                            className="flex items-center gap-3 rounded-xl border border-solana-green/40 bg-solana-green/10 px-3 py-2"
+                            className="card-sm card-gold flex items-center gap-3 px-3 py-2"
                           >
                             {r.imageUrl && (
                               <img src={r.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-contain" />
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="text-[10px] uppercase tracking-wider text-solana-green">
+                              <p className="text-[10px] uppercase tracking-wider text-hero-gold">
                                 {t('b.rw.card')}
                               </p>
                               <p className="truncate text-sm font-semibold text-white">{r.itemName}</p>
@@ -973,7 +902,7 @@ export default function Business() {
                               type="button"
                               disabled={rewardBusy}
                               onClick={() => void fulfilReward(r.code)}
-                              className="shrink-0 rounded-full bg-solana-green px-4 py-2 text-sm font-semibold text-hero-deep transition hover:brightness-110 disabled:opacity-40"
+                              className="btn btn-primary btn-sm shrink-0"
                             >
                               {rewardBusy ? '…' : t('b.rw.btn')}
                             </button>
@@ -981,19 +910,28 @@ export default function Business() {
                         ))}
                       </div>
                     )}
-                    <div className="flex items-baseline justify-between">
-                      <p className="font-mono text-lg tracking-[0.25em] text-hero-cyan">
-                        {customer.code}
-                      </p>
-                      <p className="font-display text-2xl font-bold">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('b.code.label')}</p>
+                        <p className="mt-0.5 font-mono text-lg tracking-[0.25em] text-hero-cyan">
+                          {customer.code}
+                        </p>
+                      </div>
+                      <p className="tnum font-display text-4xl font-bold leading-none">
                         <span className={customer.canRedeem ? 'text-hero-gold' : 'text-white'}>
                           {customer.stamps}
                         </span>
-                        <span className="text-slate-500"> / {customer.required}</span>
+                        <span className="text-xl text-slate-500">/{customer.required}</span>
                       </p>
                     </div>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-hero-navy2">
+                      <div
+                        className="h-full rounded-full bg-hero-gold transition-[width]"
+                        style={{ width: `${Math.min(100, (customer.stamps / Math.max(1, customer.required)) * 100)}%` }}
+                      />
+                    </div>
 
-                    <div className="mt-4">
+                    <div className="mt-5">
                       <p className="mb-2 text-xs text-slate-500">{t('b.coffees')}</p>
                       {/* Symmetric on purpose: -2 -1 +1 +2 reads as one scale
                           the eye can scan, where -1 +1 +2 +3 reads as three
@@ -1015,10 +953,10 @@ export default function Business() {
                                 ? 'Correction: removes the most recent stamps from today'
                                 : undefined
                             }
-                            className={`rounded-full border py-2.5 font-semibold transition disabled:opacity-40 ${
+                            className={`tnum rounded-2xl border py-4 font-display text-xl font-bold transition disabled:opacity-40 ${
                               n < 0
-                                ? 'border-red-400/40 text-red-300 hover:border-red-400 hover:bg-red-400/10'
-                                : 'border-hero-cyan/40 text-hero-cyan hover:border-white/30 hover:bg-hero-cyan/10'
+                                ? 'border-white/10 text-slate-400 hover:border-red-400/60 hover:text-red-300'
+                                : 'border-transparent bg-hero-gold text-hero-deep hover:bg-hero-gold-bright'
                             }`}
                           >
                             {n > 0 ? `+${n}` : `−${-n}`}
@@ -1034,7 +972,7 @@ export default function Business() {
                           primeAudio();
                           void grant(3);
                         }}
-                        className="mt-2 w-full rounded-full border border-hero-cyan/25 py-2 text-xs text-hero-cyan/80 transition hover:border-white/30 hover:bg-hero-cyan/10 disabled:opacity-40"
+                        className="btn btn-ghost btn-sm mt-2 w-full"
                       >
                         +3
                       </button>
@@ -1042,8 +980,8 @@ export default function Business() {
                     </div>
 
                     {customer.canRedeem && (
-                      <div className="mt-4 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-3">
-                        <p className="text-xs text-hero-gold">{t('b.cardfull')}</p>
+                      <div className="card-sm card-gold mt-4 p-3">
+                        <p className="text-xs font-semibold text-hero-gold">{t('b.cardfull')}</p>
                         <div className="mt-2 flex items-stretch gap-2">
                           <input
                             type="text"
@@ -1070,7 +1008,7 @@ export default function Business() {
                             type="button"
                             disabled={busy || !CODE_RE.test(redeemInput)}
                             onClick={() => void redeem()}
-                            className="shrink-0 rounded-full bg-hero-gold px-4 font-semibold text-hero-deep shadow-hero-gold transition hover:bg-hero-gold-bright disabled:opacity-40"
+                            className="btn btn-primary btn-sm shrink-0"
                           >
                             {t('b.redeem')}
                           </button>
@@ -1084,7 +1022,7 @@ export default function Business() {
               {/* Feedback */}
               {notice && (
                 <p
-                  className={`mt-4 rounded-xl border p-3 text-center text-sm ${
+                  className={`mt-3 rounded-2xl border p-3 text-center text-sm ${
                     notice.kind === 'ok'
                       ? 'border-solana-green/30 bg-solana-green/10 text-solana-green'
                       : 'border-red-500/30 bg-red-500/10 text-red-200'
@@ -1094,10 +1032,91 @@ export default function Business() {
                 </p>
               )}
 
+              {/* THE action. One big button: scan the customer's QR. Typing
+                  the code is the fallback underneath, never the headline. */}
+              <div className="card mt-3 p-4">
+                <button
+                  type="button"
+                  onClick={() => setScanning(true)}
+                  className="btn btn-primary w-full py-4 text-base"
+                >
+                  {t('b.scan.btn')}
+                </button>
+                <label htmlFor="code" className="mt-4 block text-center text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                  {t('b.code.or')}
+                </label>
+                <div className="mt-2 flex items-stretch gap-2">
+                  <input
+                    id="code"
+                    type="text"
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    maxLength={6}
+                    value={codeInput}
+                    onChange={(e) => {
+                      setCodeInput(e.target.value.toUpperCase());
+                      setCustomer(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && codeValid) void lookupCustomer(normalizedCode);
+                    }}
+                    placeholder="K7M3PQ"
+                    className="min-w-0 flex-1 rounded-2xl border border-white/15 bg-hero-deep px-3 py-3 text-center font-mono text-xl tracking-[0.25em] text-white placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    disabled={!codeValid || busy}
+                    onClick={() => void lookupCustomer(normalizedCode)}
+                    className="btn btn-secondary shrink-0 rounded-2xl"
+                  >
+                    {t('b.find')}
+                  </button>
+                </div>
+              </div>
+
+              {/* BITS reward hand-over BY CODE — the fallback for a customer
+                  who shows the code without being looked up first. Its own
+                  input, so it is never confused with the two other 6-character
+                  codes on this screen. Folded away: the normal path is the
+                  gold button on the customer card. */}
+              <details className="card-sm mt-3">
+                <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-slate-300">
+                  {t('b.rw.title')}
+                </summary>
+                <div className="border-t border-white/[0.08] px-4 py-3">
+                  <p className="text-[11px] leading-relaxed text-slate-400">{t('b.rw.hint')}</p>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="text"
+                      autoCapitalize="characters"
+                      maxLength={6}
+                      value={rewardCode}
+                      onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && CODE_RE.test(rewardCode)) void fulfilReward();
+                      }}
+                      placeholder={t('b.rw.ph')}
+                      className="w-full rounded-2xl border border-white/15 bg-hero-deep px-3 py-2 text-center font-mono text-lg tracking-[0.2em] text-white focus:border-hero-gold focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      disabled={rewardBusy || !CODE_RE.test(rewardCode)}
+                      onClick={() => void fulfilReward()}
+                      className="btn btn-primary btn-sm shrink-0"
+                    >
+                      {rewardBusy ? '…' : t('b.rw.btn')}
+                    </button>
+                  </div>
+                </div>
+              </details>
+
               {/* Folders are the owner's. Staff get the counter and their
                   shift summary; the history is partly a record OF them. */}
               {role === 'staff' && (
-                <p className="mt-6 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-3 text-center text-xs text-slate-500">
+                <p className="mt-6 px-4 text-center text-xs text-slate-500">
                   {t('b.staffmode', { name: staffName ?? '' })}
                 </p>
               )}
