@@ -126,8 +126,8 @@ export default function StampsCard({
                       : earned
                         ? 'border-hero-gold bg-hero-deep shadow-[0_0_10px_rgba(245,200,66,0.35)]'
                         : isNext
-                          ? 'border-dashed border-hero-gold/60 bg-hero-deep/70'
-                          : 'border-slate-600/40 bg-hero-deep/70'
+                          ? 'border-dashed border-hero-gold/60 bg-hero-navy'
+                          : 'border-slate-600/40 bg-hero-navy'
                   }`}
                 >
                   {isFree ? (

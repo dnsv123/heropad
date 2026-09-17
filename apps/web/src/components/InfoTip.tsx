@@ -19,7 +19,7 @@ export default function InfoTip({ text }: { text: string }) {
         className={`ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[9px] font-semibold leading-none transition ${
           open
             ? 'border-hero-cyan text-hero-cyan'
-            : 'border-slate-500/50 text-slate-500 hover:border-hero-cyan hover:text-hero-cyan'
+            : 'border-slate-500/50 text-slate-500 hover:border-white/30 hover:text-hero-cyan'
         }`}
       >
         i
@@ -30,7 +30,7 @@ export default function InfoTip({ text }: { text: string }) {
             e.stopPropagation();
             setOpen(false);
           }}
-          className="absolute left-1/2 top-full z-40 mt-1.5 block w-60 -translate-x-1/2 rounded-lg border border-hero-blue/40 bg-hero-deep p-2.5 text-left text-[11px] font-normal normal-case leading-relaxed tracking-normal text-slate-300 shadow-2xl"
+          className="absolute left-1/2 top-full z-40 mt-1.5 block w-60 -translate-x-1/2 rounded-lg border border-white/15 bg-hero-deep p-2.5 text-left text-[11px] font-normal normal-case leading-relaxed tracking-normal text-slate-300 shadow-2xl"
         >
           {text}
         </span>

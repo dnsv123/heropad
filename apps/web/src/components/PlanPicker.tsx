@@ -106,7 +106,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
                 ? 'border-hero-gold bg-hero-gold text-hero-deep'
                 : current?.key === p.key
                 ? 'border-solana-green/60 text-solana-green'
-                : 'border-hero-blue/40 text-slate-200 hover:border-hero-gold hover:text-white'
+                : 'border-white/15 text-slate-200 hover:border-hero-gold hover:text-white'
             }`}
           >
             {p.name} · {p.price}
@@ -115,7 +115,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
       </div>
 
       {preview && (
-        <div className="mt-3 space-y-3 rounded-lg border border-hero-blue/20 bg-hero-deep/70 p-3">
+        <div className="mt-3 space-y-3 rounded-lg border border-white/[0.08] bg-hero-navy p-3">
           <div>
             <p className="font-display text-sm font-semibold text-white">
               {preview.name} — {preview.tagline}
@@ -154,7 +154,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
                 return (
                   <div
                     key={a.key}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-hero-blue/15 px-2.5 py-1.5"
+                    className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.08] px-2.5 py-1.5"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-[12px] text-slate-200">{a.label}</p>
@@ -166,7 +166,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
                       <button
                         type="button"
                         onClick={() => setQty(a.key, Math.max(0, qty - 1))}
-                        className="h-6 w-6 rounded-full border border-hero-blue/30 text-slate-300"
+                        className="h-6 w-6 rounded-full border border-white/15 text-slate-300"
                       >
                         −
                       </button>
@@ -174,7 +174,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
                       <button
                         type="button"
                         onClick={() => setQty(a.key, qty + 1)}
-                        className="h-6 w-6 rounded-full border border-hero-blue/30 text-slate-300"
+                        className="h-6 w-6 rounded-full border border-white/15 text-slate-300"
                       >
                         +
                       </button>
@@ -185,7 +185,7 @@ export default function PlanPicker({ currentPlan, currentAddons, currentFee, onA
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hero-blue/15 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-3">
             <p className="text-sm">
               <span className="text-slate-500">Total lunar: </span>
               <b className="font-display text-lg text-hero-gold">

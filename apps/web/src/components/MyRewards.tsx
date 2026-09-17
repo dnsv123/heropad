@@ -58,7 +58,7 @@ export default function MyRewards() {
   const done = claims.filter((c) => c.status === 'fulfilled');
 
   return (
-    <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+    <div className="mt-8 rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg font-semibold text-white">{t('mr.title')}</h2>
         <Link to="/rewards" className="text-xs text-solana-green underline">
@@ -91,7 +91,7 @@ export default function MyRewards() {
           {done.map((c) => (
             <div
               key={c.id}
-              className="overflow-hidden rounded-xl border border-hero-blue/20 bg-hero-deep/60"
+              className="overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy"
             >
               <div className="aspect-square w-full bg-gradient-to-br from-hero-blue/20 via-hero-deep to-hero-deep">
                 {c.imageUrl ? (

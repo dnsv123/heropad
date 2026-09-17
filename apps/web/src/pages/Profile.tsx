@@ -26,12 +26,12 @@ export default function Profile() {
         {!ready ? (
           <p className="text-slate-400">Loading…</p>
         ) : !authenticated ? (
-          <div className="space-y-4 rounded-2xl border border-slate-800 p-8 text-center">
+          <div className="card space-y-4 p-8 text-center">
             <p className="text-slate-300">{t('p.login.hint')}</p>
             <button
               type="button"
               onClick={login}
-              className="rounded-full bg-[#9945FF] px-6 py-2.5 font-medium text-white transition hover:bg-[#7d34d6]"
+              className="btn btn-primary"
             >
               {t('p.login.btn')}
             </button>

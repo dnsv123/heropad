@@ -132,7 +132,7 @@ export default function PowerMeter({
 
       {/* ---- Energy bar ---- */}
       <motion.div
-        className="relative mt-4 h-7 w-full overflow-hidden rounded-full border bg-hero-deep/80"
+        className="relative mt-4 h-7 w-full overflow-hidden rounded-full border bg-hero-deep"
         // One stamp left is the moment that decides whether a second coffee
         // happens today. The meter stops being a progress bar and starts
         // asking for something.

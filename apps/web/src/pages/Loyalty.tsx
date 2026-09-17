@@ -9,6 +9,7 @@ import PowerMeter from '../components/PowerMeter';
 import StampsCard from '../components/StampsCard';
 import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
+import MyCards from '../components/MyCards';
 import { getJson, postJson } from '../services/apiClient';
 import { getItem, setItem, removeItem } from '../services/storageService';
 import { hapticTap } from '../services/platformService';
@@ -448,6 +449,9 @@ export default function Loyalty() {
           )}
 
         </div>
+
+        {/* A regular at several cafés switches here, not through the menu. */}
+        <MyCards currentSlug={slug} />
 
         {/* Figurine tap acknowledged — the customer knows the counter saw them. */}
         {tappedIn && (

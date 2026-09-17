@@ -425,7 +425,7 @@ export default function Admin() {
         <button
           type="button"
           onClick={login}
-          className="mt-5 rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep"
+          className="mt-5 rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep transition hover:bg-hero-gold-bright"
         >
           Login
         </button>
@@ -448,7 +448,7 @@ export default function Admin() {
             <p className="text-xs uppercase tracking-wider text-hero-gold">
               This account&rsquo;s ID
             </p>
-            <code className="mt-2 block break-all rounded-lg bg-hero-deep/80 px-3 py-2 font-mono text-xs text-hero-cyan">
+            <code className="mt-2 block break-all rounded-lg bg-hero-deep px-3 py-2 font-mono text-xs text-hero-cyan">
               {myPrivyId}
             </code>
             <button
@@ -488,7 +488,7 @@ export default function Admin() {
           ].map((t) => (
             <div
               key={t.l}
-              className="rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-3 text-center"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center"
             >
               <p className="font-display text-2xl font-bold text-hero-cyan">{t.v}</p>
               <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">{t.l}</p>
@@ -531,7 +531,7 @@ export default function Admin() {
                           return (
                             <div
                               key={v.slug}
-                              className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-4"
+                              className="rounded-2xl border border-white/[0.08] bg-hero-navy p-4"
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-2">
                                 <div>
@@ -600,7 +600,7 @@ export default function Admin() {
                               {/* Identity details — editable after creation, because cafés
                                   move, rebrand, and pick their album emoji late. Owner-side
                                   settings (reward, threshold, happy hour) stay on /business. */}
-                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
+                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Name
                                   <input
@@ -611,7 +611,7 @@ export default function Admin() {
                                       const val = e.target.value.trim();
                                       if (val.length >= 2 && val !== v.name) void saveBilling(v, { name: val });
                                     }}
-                                    className="mt-1 block w-44 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                    className="mt-1 block w-44 rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                                   />
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -624,7 +624,7 @@ export default function Admin() {
                                       const val = e.target.value.trim();
                                       if (val !== (v.address ?? '')) void saveBilling(v, { address: val });
                                     }}
-                                    className="mt-1 block w-64 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                    className="mt-1 block w-64 rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                                   />
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -661,7 +661,7 @@ export default function Admin() {
                               />
 
                               {/* Billing + who brought this venue — the inputs to commission */}
-                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-hero-blue/15 bg-hero-deep/70 p-3">
+                              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Fee / month
                                   <InfoTip text="What this café pays per month (RON). Feeds the partner commission math and the payout ledger." />
@@ -673,7 +673,7 @@ export default function Admin() {
                                       const n = Number(e.target.value);
                                       if (n !== v.monthlyFee) void saveBilling(v, { monthlyFee: n });
                                     }}
-                                    className="mt-1 block w-24 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                    className="mt-1 block w-24 rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                                   />
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -682,7 +682,7 @@ export default function Admin() {
                                   <select
                                     value={v.billingStatus}
                                     onChange={(e) => void saveBilling(v, { billingStatus: e.target.value })}
-                                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                    className="mt-1 block rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                                   >
                                     <option value="trial">trial (free)</option>
                                     <option value="active">active (paying)</option>
@@ -696,7 +696,7 @@ export default function Admin() {
                                   <select
                                     value={v.partnerCode ?? ''}
                                     onChange={(e) => void saveBilling(v, { partnerCode: e.target.value })}
-                                    className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                                    className="mt-1 block rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                                   >
                                     <option value="">nobody (direct)</option>
                                     {/* Safety net: the saved value always has an option,
@@ -728,7 +728,7 @@ export default function Admin() {
                                 <button
                                   type="button"
                                   onClick={() => void copy(customerUrl, `c-${v.slug}`)}
-                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                                  className="rounded-full border border-white/15 px-3 py-1 text-slate-300 transition hover:border-white/30 hover:text-white"
                                 >
                                   {copied === `c-${v.slug}` ? 'Copied!' : 'Copy customer link (QR)'}
                                 </button>
@@ -736,7 +736,7 @@ export default function Admin() {
                                 <button
                                   type="button"
                                   onClick={() => void copy(businessUrl, `b-${v.slug}`)}
-                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                                  className="rounded-full border border-white/15 px-3 py-1 text-slate-300 transition hover:border-white/30 hover:text-white"
                                 >
                                   {copied === `b-${v.slug}` ? 'Copied!' : 'Copy merchant link'}
                                 </button>
@@ -767,7 +767,7 @@ export default function Admin() {
                                   type="button"
                                   disabled={busy}
                                   onClick={() => void toggleActive(v)}
-                                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-white hover:text-white disabled:opacity-40"
+                                  className="rounded-full border border-white/15 px-3 py-1 text-slate-300 transition hover:border-white hover:text-white disabled:opacity-40"
                                 >
                                   {v.active ? 'Disable' : 'Enable'}
                                 </button>
@@ -785,7 +785,7 @@ export default function Admin() {
 
                               {/* ---- Per-venue deep dive ---- */}
                               {analyticsFor === v.slug && (
-                                <div className="mt-4 border-t border-hero-blue/15 pt-4">
+                                <div className="mt-4 border-t border-white/[0.08] pt-4">
                                   {!analytics ? (
                                     <p className="text-sm text-slate-500">Loading…</p>
                                   ) : (
@@ -809,7 +809,7 @@ export default function Admin() {
                                         ].map((t) => (
                                           <div
                                             key={t.l}
-                                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+                                            className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center"
                                           >
                                             <p className="font-display text-xl font-bold text-hero-cyan">{t.v}</p>
                                             <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
@@ -820,7 +820,7 @@ export default function Admin() {
                                       </div>
 
                                       {analytics.daily.length > 0 && (
-                                        <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
+                                        <div className="mt-3 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                                           <p className="text-[10px] uppercase tracking-wider text-slate-500">
                                             Daily stamps ({analytics.daily.length} active days)
                                           </p>
@@ -843,7 +843,7 @@ export default function Admin() {
                                       <p className="mt-4 text-[10px] uppercase tracking-wider text-slate-500">
                                         Customers ({analytics.customers.length}) — by anonymous code
                                       </p>
-                                      <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-hero-blue/15">
+                                      <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-white/[0.08]">
                                         <table className="w-full text-left text-xs">
                                           <thead className="sticky top-0 bg-hero-deep text-slate-500">
                                             <tr>
@@ -857,7 +857,7 @@ export default function Admin() {
                                           </thead>
                                           <tbody>
                                             {analytics.customers.map((c) => (
-                                              <tr key={c.code} className="border-t border-hero-blue/10">
+                                              <tr key={c.code} className="border-t border-white/[0.08]">
                                                 <td className="px-3 py-1.5 font-mono text-hero-cyan">{c.code}</td>
                                                 <td className="px-2 py-1.5 text-slate-300">{c.stamps}</td>
                                                 <td className="px-2 py-1.5 text-slate-300">{c.visits}</td>
@@ -900,7 +900,7 @@ export default function Admin() {
             render: () => (
               <div>
                 {/* ---- New venue ---- */}
-                      <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">
+                      <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-navy p-5">
                         <h2 className="font-display text-lg font-semibold text-hero-gold">
                           ➕ New venue
                           <InfoTip text="Creates the café and its one-time setup code. Flow: create here → send the setup code + merchant link to the café → they enter it once at /business and become the merchant. GPS is optional and only powers the Map button." />
@@ -912,7 +912,7 @@ export default function Admin() {
                               value={slug}
                               onChange={(e) => setSlug(e.target.value)}
                               placeholder="cafe-146"
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <label className="text-xs text-slate-500">
@@ -921,7 +921,7 @@ export default function Admin() {
                               value={name}
                               onChange={(e) => setName(e.target.value)}
                               placeholder="146 Specialty Coffee"
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <label className="text-xs text-slate-500">
@@ -930,7 +930,7 @@ export default function Admin() {
                               value={address}
                               onChange={(e) => setAddress(e.target.value)}
                               placeholder="Str. Ocnei 18, Sibiu"
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <div className="grid grid-cols-2 gap-2">
@@ -942,7 +942,7 @@ export default function Admin() {
                                 max={30}
                                 value={required}
                                 onChange={(e) => setRequired(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                               />
                             </label>
                             <label className="text-xs text-slate-500">
@@ -950,7 +950,7 @@ export default function Admin() {
                               <input
                                 value={reward}
                                 onChange={(e) => setReward(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                               />
                             </label>
                           </div>
@@ -960,7 +960,7 @@ export default function Admin() {
                               value={lat}
                               onChange={(e) => setLat(e.target.value)}
                               placeholder="45.7983"
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <label className="text-xs text-slate-500">
@@ -969,7 +969,7 @@ export default function Admin() {
                               value={lng}
                               onChange={(e) => setLng(e.target.value)}
                               placeholder="24.1256"
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                         </div>
@@ -1033,7 +1033,7 @@ export default function Admin() {
             render: () => (
               <div>
                 {/* ---- Substack export ---- */}
-                <div className="mt-8 rounded-2xl border border-hero-cyan/30 bg-hero-deep/50 p-5">
+                <div className="mt-8 rounded-2xl border border-hero-cyan/30 bg-hero-navy p-5">
                   <h2 className="font-display text-lg font-semibold text-hero-cyan">
                     📣 Newsletter export (Substack)
                   </h2>
@@ -1048,7 +1048,7 @@ export default function Admin() {
                     <select
                       value={nlSegment}
                       onChange={(e) => setNlSegment(e.target.value)}
-                      className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-cyan focus:outline-none"
+                      className="rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-cyan focus:outline-none"
                     >
                       <option value="all">Everyone with consent</option>
                       <option value="trophies">Trophy holders (card + passport)</option>
@@ -1093,8 +1093,8 @@ export default function Admin() {
             render: () => (
               <div>
                 {/* ---- Support / GDPR desk ---- */}
-                      <div className="mt-8 rounded-2xl border border-solana-purple/30 bg-hero-deep/50 p-5">
-                        <h2 className="font-display text-lg font-semibold text-solana-purple">
+                      <div className="mt-8 rounded-2xl border border-hero-gold/40 bg-hero-navy p-5">
+                        <h2 className="font-display text-lg font-semibold text-hero-gold">
                           🔎 Support &amp; GDPR desk
                         </h2>
                         <p className="mt-1 text-xs leading-relaxed text-slate-500">
@@ -1113,27 +1113,27 @@ export default function Admin() {
                             }}
                             maxLength={6}
                             placeholder="J7JBXR"
-                            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-solana-purple focus:outline-none"
+                            className="rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-center font-mono tracking-[0.2em] text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                           <input
                             value={supportReason}
                             onChange={(e) => setSupportReason(e.target.value)}
                             maxLength={120}
                             placeholder="Reason (e.g. customer asked for their data)"
-                            className="rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-solana-purple focus:outline-none"
+                            className="rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                           <button
                             type="button"
                             disabled={busy || supportCode.trim().length !== 6}
                             onClick={() => void lookupSubject()}
-                            className="rounded-full bg-solana-purple px-5 py-2 text-sm font-semibold text-white transition hover:bg-solana-purple-deep disabled:opacity-40"
+                            className="rounded-full bg-hero-gold px-5 py-2 text-sm font-semibold text-hero-deep transition hover:bg-hero-gold-bright disabled:opacity-40"
                           >
                             Look up
                           </button>
                         </div>
 
                         {subject && (
-                          <div className="mt-4 rounded-xl border border-hero-blue/20 bg-hero-deep/70 p-4">
+                          <div className="mt-4 rounded-xl border border-white/[0.08] bg-hero-navy p-4">
                             <div className="grid gap-2 sm:grid-cols-2">
                               <p className="text-sm">
                                 <span className="text-slate-500">Email:</span>{' '}
@@ -1181,7 +1181,7 @@ export default function Admin() {
                                 onChange={(e) => setEraseConfirm(e.target.value.toUpperCase())}
                                 maxLength={6}
                                 placeholder="type code"
-                                className="w-28 rounded-lg border border-red-400/40 bg-hero-deep/80 px-2 py-1.5 text-center font-mono text-xs text-red-200 focus:border-red-400 focus:outline-none"
+                                className="w-28 rounded-lg border border-red-400/40 bg-hero-deep px-2 py-1.5 text-center font-mono text-xs text-red-200 focus:border-red-400 focus:outline-none"
                               />
                               <button
                                 type="button"

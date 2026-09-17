@@ -6,7 +6,7 @@
 // commit.
 
 const card =
-  'mt-4 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5';
+  'mt-4 rounded-2xl border border-white/[0.08] bg-hero-navy p-5';
 const h = 'font-display text-lg font-semibold text-hero-cyan';
 const p = 'mt-2 text-sm leading-relaxed text-slate-300';
 const li = 'mt-1.5 text-sm leading-relaxed text-slate-300';
@@ -185,19 +185,19 @@ export default function AdminGuide() {
               </tr>
             </thead>
             <tbody className="text-slate-300">
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3">1</td>
                 <td className="py-2 pr-3 text-hero-gold">25% · 49,75 lei</td>
                 <td className="py-2 pr-3">20% · 39,80 lei</td>
                 <td className="py-2">—</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3">5</td>
                 <td className="py-2 pr-3 text-hero-gold">25% · 248,75 lei</td>
                 <td className="py-2 pr-3">20% · 199 lei</td>
                 <td className="py-2">—</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3">
                   <b className="text-white">10</b>
                 </td>
@@ -205,7 +205,7 @@ export default function AdminGuide() {
                 <td className="py-2 pr-3 text-hero-gold">30% · 597 lei</td>
                 <td className="py-2 text-solana-green">597 lei</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3">20</td>
                 <td className="py-2 pr-3 text-hero-gold">30% · 1.194 lei</td>
                 <td className="py-2 pr-3 text-hero-gold">30% · 1.194 lei</td>
@@ -429,27 +429,27 @@ export default function AdminGuide() {
               </tr>
             </thead>
             <tbody className="text-slate-300">
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-1.5 pr-3">Client (QR / NFC)</td>
                 <td className="py-1.5 pr-3">Copy customer link (QR)</td>
                 <td className="py-1.5">Venues → cardul localului</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-1.5 pr-3">Cafenea (owner)</td>
                 <td className="py-1.5 pr-3">Copy merchant link + cod setup 8</td>
                 <td className="py-1.5">Venues → cardul localului</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-1.5 pr-3">Angajat</td>
                 <td className="py-1.5 pr-3">Copy invite (link + cod 6)</td>
                 <td className="py-1.5">/business → Team (ownerul)</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-1.5 pr-3">Partener</td>
                 <td className="py-1.5 pr-3">⧉ Copy invite message</td>
                 <td className="py-1.5">Partners → cardul partenerului</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-1.5 pr-3">Prieten invitat</td>
                 <td className="py-1.5 pr-3">„Trimite invitația" (clientul o face)</td>
                 <td className="py-1.5">Pagina de fidelitate a clientului</td>
@@ -580,7 +580,7 @@ export default function AdminGuide() {
           ['„Arată-mi un local din Sibiu care a făcut bani cu voi."',
             'Încă nu există — sunteți la începutul pieței, și exact asta e oportunitatea: primele 3 iau condiții pe care nimeni nu le va mai primi. Peste 6 luni vă arăt studii de caz — dar atunci oferta asta nu mai există. (Niciodată nu inventa cifre.)'],
         ].map(([q, a]) => (
-          <details key={q} className="mt-2 rounded-xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-2.5">
+          <details key={q} className="mt-2 rounded-xl border border-white/[0.08] bg-hero-navy px-4 py-2.5">
             <summary className="cursor-pointer text-sm font-semibold text-slate-200">{q}</summary>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">{a}</p>
           </details>
@@ -606,22 +606,22 @@ export default function AdminGuide() {
               </tr>
             </thead>
             <tbody className="text-slate-300">
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3 align-top"><b className="text-hero-cyan">Starter 99</b></td>
                 <td className="py-2 pr-3 align-top">Koala 99 + Penguin 50</td>
                 <td className="py-2 align-top">Același preț ca Koala, dar: clienți nelimitați (ei: 500) · sistem de tejghea cu anti-fraudă și conturi de angajat (ei: un card pasiv în Wallet) · animație + trofee pe care clientul le ține minte. Iar Penguin la 50 lei e o capcană: 100 de clienți activi = ~3 pe zi — orice cafenea decentă îl sparge în prima lună.</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3 align-top"><b className="text-hero-gold">Branded 199</b></td>
                 <td className="py-2 pr-3 align-top">— (n-au echivalent)</td>
                 <td className="py-2 align-top">Figurina NFC fizică pe tejghea + co-branding cu logo-ul localului. Cardora nu are niciun obiect fizic și nicio mascotă — aici jucăm singuri.</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3 align-top"><b className="text-hero-cyan">Growth 349</b></td>
                 <td className="py-2 pr-3 align-top">Elephant („custom quote")</td>
                 <td className="py-2 align-top">Ei ascund prețul după „Let's talk"; noi îl publicăm. Happy Hour, recenzii Google la momentul recompensei, zi de naștere, analitice — funcții de CREȘTERE, nu doar raportare lunară.</td>
               </tr>
-              <tr className="border-t border-hero-blue/10">
+              <tr className="border-t border-white/[0.08]">
                 <td className="py-2 pr-3 align-top"><b className="text-slate-200">Chain 699+</b></td>
                 <td className="py-2 pr-3 align-top">Elephant</td>
                 <td className="py-2 align-top">Multi-locație cu raport consolidat + roluri, preț public, plus rețeaua Pașaportului — pe care niciun competitor nu o are deloc.</td>
@@ -642,15 +642,15 @@ export default function AdminGuide() {
               <tr><th className="py-1 pr-3 font-medium">Cheltuială</th><th className="py-1 font-medium">~RON/lună</th></tr>
             </thead>
             <tbody className="text-slate-300">
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Contabilă</td><td className="py-1">500–1.000</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">AI (Claude Code, ~110 €)</td><td className="py-1">~555</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Shopify (320 €/an)</td><td className="py-1">~135</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Supabase Pro (25 $) — la primul client plătitor</td><td className="py-1">~120</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Railway (Hobby + consum)</td><td className="py-1">~25–50</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Gemini / generare imagini (~20 $)</td><td className="py-1">~100</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">X Premium</td><td className="py-1">~50</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Domenii (4, anualizat)</td><td className="py-1">~30</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3">Vercel + Helius + Resend (free tier acum)</td><td className="py-1">0 <span className="text-slate-500">(Pro ~100 la nevoie)</span></td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Contabilă</td><td className="py-1">500–1.000</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">AI (Claude Code, ~110 €)</td><td className="py-1">~555</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Shopify (320 €/an)</td><td className="py-1">~135</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Supabase Pro (25 $) — la primul client plătitor</td><td className="py-1">~120</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Railway (Hobby + consum)</td><td className="py-1">~25–50</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Gemini / generare imagini (~20 $)</td><td className="py-1">~100</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">X Premium</td><td className="py-1">~50</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Domenii (4, anualizat)</td><td className="py-1">~30</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3">Vercel + Helius + Resend (free tier acum)</td><td className="py-1">0 <span className="text-slate-500">(Pro ~100 la nevoie)</span></td></tr>
               <tr className="border-t border-hero-gold/30 font-semibold text-white"><td className="py-1.5 pr-3">TOTAL</td><td className="py-1.5">~1.500 – 2.100 (mediană ~1.800)</td></tr>
             </tbody>
           </table>
@@ -662,10 +662,10 @@ export default function AdminGuide() {
               <tr><th className="py-1 pr-3 font-medium">Localuri</th><th className="py-1 pr-3 font-medium">Venit net de comision (75%)</th><th className="py-1 font-medium">Rezultat (fără salariul tău)</th></tr>
             </thead>
             <tbody className="text-slate-300">
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>~13</b></td><td className="py-1 pr-3">~1.850</td><td className="py-1">break-even — firma se susține</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>20</b></td><td className="py-1 pr-3">~2.850</td><td className="py-1">≈ +880 net/lună (după 16% pe profit) — trăiește modest</td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>30</b></td><td className="py-1 pr-3">~4.275</td><td className="py-1"><b>≈ +2.080 net/lună — DA, trăiește</b></td></tr>
-              <tr className="border-t border-hero-blue/10"><td className="py-1 pr-3"><b>~40-42</b></td><td className="py-1 pr-3">~6.000</td><td className="py-1">acoperă și <b>salariul tău minim</b> (~4.150 cost total angajator) — pragul „mă plătesc și eu”</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3"><b>~13</b></td><td className="py-1 pr-3">~1.850</td><td className="py-1">break-even — firma se susține</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3"><b>20</b></td><td className="py-1 pr-3">~2.850</td><td className="py-1">≈ +880 net/lună (după 16% pe profit) — trăiește modest</td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3"><b>30</b></td><td className="py-1 pr-3">~4.275</td><td className="py-1"><b>≈ +2.080 net/lună — DA, trăiește</b></td></tr>
+              <tr className="border-t border-white/[0.08]"><td className="py-1 pr-3"><b>~40-42</b></td><td className="py-1 pr-3">~6.000</td><td className="py-1">acoperă și <b>salariul tău minim</b> (~4.150 cost total angajator) — pragul „mă plătesc și eu”</td></tr>
             </tbody>
           </table>
         </div>

@@ -91,7 +91,7 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="aspect-square animate-pulse rounded-xl border border-hero-blue/15 bg-hero-deep/60"
+              className="aspect-square animate-pulse rounded-xl border border-white/[0.08] bg-hero-navy"
             />
           ))}
         </div>
@@ -188,7 +188,7 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
             {bitsHistory.map((e, i) => (
               <div
                 key={`${e.createdAt}-${i}`}
-                className="flex items-baseline justify-between gap-3 rounded-lg bg-hero-deep/40 px-3 py-1.5 text-xs"
+                className="flex items-baseline justify-between gap-3 rounded-lg bg-hero-navy px-3 py-1.5 text-xs"
               >
                 <span className="min-w-0 truncate text-slate-300">{reasonLabel(e)}</span>
                 <span className="flex shrink-0 items-baseline gap-2">
@@ -208,7 +208,7 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
 
       {/* ---- The collection, as folders ---- */}
       {collectibles.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-hero-blue/30 p-6 text-center">
+        <div className="rounded-xl border border-dashed border-white/15 p-6 text-center">
           <p className="text-sm text-slate-300">{t('col.empty.t')}</p>
           <p className="mt-1 text-xs text-slate-500">{t('col.empty.d')}</p>
         </div>
@@ -219,13 +219,13 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
             <details
               key={f.key}
               open={idx === 0}
-              className="rounded-xl border border-hero-blue/20 bg-hero-deep/40"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy"
             >
               <summary className="flex cursor-pointer items-center justify-between px-4 py-3">
                 <span className="text-sm font-semibold text-slate-200">
                   {f.icon} {t(f.label)}
                 </span>
-                <span className="rounded-full border border-hero-blue/25 px-2 py-0.5 font-mono text-[11px] text-hero-cyan">
+                <span className="rounded-full border border-white/[0.08] px-2 py-0.5 font-mono text-[11px] text-hero-cyan">
                   {f.items.length}
                 </span>
               </summary>
@@ -277,7 +277,7 @@ function CollectibleCard({
         show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
       }}
       whileHover={{ y: -4 }}
-      className="group relative block w-full overflow-hidden rounded-xl border border-hero-blue/20 bg-hero-deep/60 text-left transition hover:border-hero-cyan"
+      className="group relative block w-full overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy text-left transition hover:border-white/30"
     >
       <div className="aspect-square w-full bg-gradient-to-br from-hero-blue/30 via-hero-deep to-hero-deep">
         {item.imageUrl ? (

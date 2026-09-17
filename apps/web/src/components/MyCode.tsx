@@ -51,7 +51,7 @@ export default function MyCode() {
   if (!ready || !authenticated || !code) return null;
 
   return (
-    <div className="rounded-2xl border border-hero-cyan/25 bg-hero-deep/50 p-6 text-center">
+    <div className="rounded-2xl border border-hero-cyan/25 bg-hero-navy p-6 text-center">
       <p className="text-xs uppercase tracking-wider text-slate-500">{t('mc.title')}</p>
       {qr && (
         <img src={qr} alt="" className="mx-auto mt-3 h-36 w-36 rounded-xl bg-white p-1.5 shadow-lg" />

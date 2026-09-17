@@ -161,13 +161,13 @@ export default function BrandEditor({ venueName, logo, accent, tagline, onSave }
                   type="color"
                   value={draftAccent}
                   onChange={(e) => setDraftAccent(e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded-lg border border-hero-blue/30 bg-hero-deep"
+                  className="h-9 w-12 cursor-pointer rounded-lg border border-white/15 bg-hero-deep"
                 />
                 <input
                   value={draftAccent}
                   onChange={(e) => setDraftAccent(e.target.value)}
                   maxLength={7}
-                  className="w-28 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 font-mono text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                  className="w-28 rounded-lg border border-white/15 bg-hero-deep px-3 py-2 font-mono text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function BrandEditor({ venueName, logo, accent, tagline, onSave }
                 maxLength={60}
                 onChange={(e) => setDraftTagline(e.target.value)}
                 placeholder="Specialty coffee din 2019"
-                className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
               />
             </div>
 
@@ -202,7 +202,7 @@ export default function BrandEditor({ venueName, logo, accent, tagline, onSave }
                   type="button"
                   disabled={busy}
                   onClick={() => void clear()}
-                  className="rounded-full border border-hero-blue/40 px-4 py-1.5 text-xs text-slate-400"
+                  className="rounded-full border border-white/15 px-4 py-1.5 text-xs text-slate-400"
                 >
                   Remove brand
                 </button>

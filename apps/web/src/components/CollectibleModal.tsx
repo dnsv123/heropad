@@ -87,14 +87,14 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-hero-blue/30 bg-hero-deep shadow-2xl"
+          className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/15 bg-hero-deep shadow-2xl"
         >
           {/* Close button */}
           <button
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-hero-blue/40 bg-hero-deep/80 text-slate-300 backdrop-blur transition hover:border-hero-cyan hover:text-white"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-hero-deep text-slate-300 backdrop-blur transition hover:border-white/30 hover:text-white"
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -147,7 +147,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                     {item.attributes.map((a) => (
                       <span
                         key={`${a.trait}-${a.value}`}
-                        className="rounded-md border border-hero-blue/25 bg-hero-blue/10 px-2.5 py-1 text-xs"
+                        className="rounded-md border border-white/[0.08] bg-hero-blue/10 px-2.5 py-1 text-xs"
                       >
                         <span className="text-slate-500">{a.trait}: </span>
                         <span className="text-slate-200">{a.value}</span>
@@ -161,7 +161,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                 <p className="text-xs uppercase tracking-wider text-slate-500">
                   {t('col.certid')}
                 </p>
-                <code className="mt-1 block break-all rounded bg-hero-deep/80 p-2 font-mono text-[11px] text-hero-cyan">
+                <code className="mt-1 block break-all rounded bg-hero-deep p-2 font-mono text-[11px] text-hero-cyan">
                   {item.assetId}
                 </code>
               </div>
@@ -170,7 +170,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="rounded-full border border-hero-blue/40 px-3 py-2 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
+                  className="rounded-full border border-white/15 px-3 py-2 text-xs text-slate-200 transition hover:border-white/30 hover:text-white"
                 >
                   {copied ? t('w.copied') : t('col.copyid')}
                 </button>
@@ -178,7 +178,7 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                   type="button"
                   onClick={handleDownload}
                   disabled={!item.imageUrl || downloading}
-                  className="rounded-full border border-hero-cyan/40 px-3 py-2 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
+                  className="rounded-full border border-hero-cyan/40 px-3 py-2 text-xs text-hero-cyan transition hover:border-white/30 hover:bg-hero-cyan/10 disabled:opacity-40"
                 >
                   {downloading ? t('col.downloading') : t('col.download')}
                 </button>

@@ -150,7 +150,7 @@ export default function VenueStaff({
             className={`rounded-full border px-2.5 py-0.5 text-[11px] ${
               full
                 ? 'border-hero-gold/40 bg-hero-gold/10 text-hero-gold'
-                : 'border-hero-blue/25 text-slate-400'
+                : 'border-white/[0.08] text-slate-400'
             }`}
           >
             {t('b.staff.seats').replace('{u}', String(data.used)).replace('{s}', String(data.seats))}
@@ -219,7 +219,7 @@ export default function VenueStaff({
           disabled={full}
           placeholder={t('b.staff.placeholder')}
           maxLength={40}
-          className="min-w-0 flex-1 rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600 disabled:opacity-40"
+          className="min-w-0 flex-1 rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white placeholder:text-slate-600 disabled:opacity-40"
         />
         <button
           type="button"
@@ -244,7 +244,7 @@ export default function VenueStaff({
           <li
             key={s.id}
             className={`rounded-xl border px-3 py-2.5 ${
-              s.active ? 'border-hero-blue/20 bg-hero-deep/60' : 'border-slate-700/40 bg-hero-deep/30'
+              s.active ? 'border-white/[0.08] bg-hero-navy' : 'border-slate-700/40 bg-hero-navy'
             }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -301,7 +301,7 @@ export default function VenueStaff({
                     type="button"
                     disabled={busy}
                     onClick={() => void act(s.id, 'reset-code')}
-                    className="rounded-full border border-hero-blue/30 px-2.5 py-1 text-slate-400 transition hover:border-hero-cyan hover:text-white disabled:opacity-40"
+                    className="rounded-full border border-white/15 px-2.5 py-1 text-slate-400 transition hover:border-white/30 hover:text-white disabled:opacity-40"
                   >
                     ↻
                   </button>
@@ -310,7 +310,7 @@ export default function VenueStaff({
                   type="button"
                   disabled={busy}
                   onClick={() => void act(s.id, s.active ? 'deactivate' : 'activate')}
-                  className="rounded-full border border-hero-blue/30 px-2.5 py-1 text-slate-400 transition hover:border-hero-cyan hover:text-white disabled:opacity-40"
+                  className="rounded-full border border-white/15 px-2.5 py-1 text-slate-400 transition hover:border-white/30 hover:text-white disabled:opacity-40"
                 >
                   {s.active ? t('b.staff.disable') : t('b.staff.enable')}
                 </button>
@@ -329,7 +329,7 @@ export default function VenueStaff({
       </ul>
 
       {data?.staff.length === 0 && (
-        <p className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/60 px-3 py-6 text-center text-xs text-slate-500">
+        <p className="mt-4 rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-6 text-center text-xs text-slate-500">
           {t('b.staff.empty')}
         </p>
       )}
@@ -345,7 +345,7 @@ export default function VenueStaff({
         const total = active.reduce((n, x) => n + (x.activity?.granted30d ?? 0), 0);
         if (total === 0) return null;
         return (
-          <div className="mt-5 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 p-4">
+          <div className="mt-5 rounded-2xl border border-white/[0.08] bg-hero-navy p-4">
             <div className="flex items-baseline justify-between">
               <p className="text-[10px] uppercase tracking-wider text-slate-500">
                 {t('b.staff.chart')}
@@ -369,7 +369,7 @@ export default function VenueStaff({
                           <span className="ml-1 text-slate-600">{share}%</span>
                         </span>
                       </div>
-                      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-hero-deep/80">
+                      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-hero-deep">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.max(3, pct)}%` }}

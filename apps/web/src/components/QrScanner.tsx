@@ -135,7 +135,7 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-hero-blue/30 bg-hero-deep p-4 shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-hero-deep p-4 shadow-2xl">
         <h3 className="text-center font-display text-base font-semibold text-hero-cyan">{title}</h3>
 
         <div className="relative mt-3 aspect-square w-full overflow-hidden rounded-xl bg-black">
@@ -159,7 +159,7 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 w-full rounded-full border border-hero-blue/40 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
+          className="mt-4 w-full rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-white"
         >
           ✕
         </button>

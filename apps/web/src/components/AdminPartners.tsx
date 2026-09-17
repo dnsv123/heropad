@@ -248,7 +248,7 @@ export default function AdminPartners({
   const payoutTotal = (partners ?? []).reduce((s, p) => s + p.totals.monthlyCommission, 0);
 
   return (
-    <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-deep/50 p-5">
+    <div className="mt-8 rounded-2xl border border-hero-gold/30 bg-hero-navy p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-lg font-semibold text-hero-gold">🤝 Partners</h2>
         <div className="flex items-center gap-2">
@@ -266,24 +266,24 @@ export default function AdminPartners({
       </div>
 
       {creating && (
-        <div className="mt-4 grid gap-2 rounded-xl border border-hero-blue/20 bg-hero-deep/70 p-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-2 rounded-xl border border-white/[0.08] bg-hero-navy p-3 sm:grid-cols-2">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Name (e.g. Andrei Pop)"
-            className="rounded-lg border border-hero-blue/25 bg-hero-deep px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-white/[0.08] bg-hero-deep px-3 py-2 text-sm text-white"
           />
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="City (e.g. Sibiu)"
-            className="rounded-lg border border-hero-blue/25 bg-hero-deep px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-white/[0.08] bg-hero-deep px-3 py-2 text-sm text-white"
           />
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email (contact only)"
-            className="rounded-lg border border-hero-blue/25 bg-hero-deep px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-white/[0.08] bg-hero-deep px-3 py-2 text-sm text-white"
           />
           <div className="flex items-center gap-2">
             <input
@@ -292,7 +292,7 @@ export default function AdminPartners({
               type="number"
               min={0}
               max={100}
-              className="w-20 rounded-lg border border-hero-blue/25 bg-hero-deep px-3 py-2 text-sm text-white"
+              className="w-20 rounded-lg border border-white/[0.08] bg-hero-deep px-3 py-2 text-sm text-white"
             />
             <span className="text-xs text-slate-500">% commission</span>
             <label className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
@@ -328,7 +328,7 @@ export default function AdminPartners({
           return (
             <div
               key={p.id}
-              className="overflow-hidden rounded-xl border border-hero-blue/20 bg-hero-deep/70"
+              className="overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy"
             >
               <button
                 type="button"
@@ -363,7 +363,7 @@ export default function AdminPartners({
               </button>
 
               {isOpen && (
-                <div className="border-t border-hero-blue/15 px-4 py-3">
+                <div className="border-t border-white/[0.08] px-4 py-3">
                   {/* Activation state — the thing that blocks a new partner */}
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     {p.claimed ? (
@@ -396,7 +396,7 @@ export default function AdminPartners({
                     <button
                       type="button"
                       onClick={() => void resetCode(p.partner.code)}
-                      className="rounded-full border border-hero-blue/30 px-2.5 py-0.5 text-slate-400 transition hover:border-hero-cyan hover:text-white"
+                      className="rounded-full border border-white/15 px-2.5 py-0.5 text-slate-400 transition hover:border-white/30 hover:text-white"
                     >
                       ↻ new code
                     </button>
@@ -404,7 +404,7 @@ export default function AdminPartners({
                     <button
                       type="button"
                       onClick={() => void patch(p.partner.code, { active: !p.partner.active })}
-                      className="rounded-full border border-hero-blue/30 px-2.5 py-0.5 text-slate-400 transition hover:border-hero-cyan hover:text-white"
+                      className="rounded-full border border-white/15 px-2.5 py-0.5 text-slate-400 transition hover:border-white/30 hover:text-white"
                     >
                       {p.partner.active ? 'Deactivate' : 'Reactivate'}
                     </button>
@@ -427,7 +427,7 @@ export default function AdminPartners({
                             void patch(p.partner.code, { commissionPct: v });
                           }
                         }}
-                        className="mt-1 block w-24 rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                        className="mt-1 block w-24 rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                       />
                     </label>
                     <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -441,7 +441,7 @@ export default function AdminPartners({
                             exclusiveCity: Boolean(e.target.value),
                           })
                         }
-                        className="mt-1 block rounded-lg border border-hero-blue/25 bg-hero-deep px-2 py-1 text-sm text-white"
+                        className="mt-1 block rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
                       />
                     </label>
                   </div>
@@ -458,7 +458,7 @@ export default function AdminPartners({
                     </thead>
                     <tbody>
                       {p.venues.map((v) => (
-                        <tr key={v.slug} className="border-t border-hero-blue/10">
+                        <tr key={v.slug} className="border-t border-white/[0.08]">
                           <td className="py-1.5 text-slate-300">
                             {v.name}
                             {!v.claimed && (
@@ -485,7 +485,7 @@ export default function AdminPartners({
                   {/* Payout ledger. The live figure above moves with today's
                       billing status; these rows are what was actually earned,
                       and they stop moving once written. */}
-                  <div className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/50 p-3">
+                  <div className="mt-4 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-[11px] uppercase tracking-wider text-slate-500">
                         Payout ledger
@@ -521,7 +521,7 @@ export default function AdminPartners({
                         {p.payouts.map((x) => (
                           <li
                             key={x.id}
-                            className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hero-deep/60 px-3 py-2 text-xs"
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hero-navy px-3 py-2 text-xs"
                           >
                             <span className="text-slate-300">
                               <b className="font-mono">{x.period}</b>

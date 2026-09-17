@@ -192,13 +192,13 @@ export default function AdminRewards({
   };
 
   const input =
-    'mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none';
+    'mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none';
   const pending = claims.filter((c) => c.status === 'pending');
 
   return (
     <div className="mt-8 space-y-6">
       {/* ---- The form ---- */}
-      <div className="rounded-2xl border border-solana-green/30 bg-hero-deep/50 p-5">
+      <div className="rounded-2xl border border-solana-green/30 bg-hero-navy p-5">
         <h2 className="font-display text-lg font-semibold text-solana-green">
           {editingSlug ? `✏️ Edit: ${editingSlug}` : '➕ Add a reward'}
         </h2>
@@ -243,7 +243,7 @@ export default function AdminRewards({
             Photo
             <div className="mt-1 flex items-center gap-3">
               {form.imageUrl && (
-                <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-lg bg-hero-deep/80 object-contain" />
+                <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-lg bg-hero-deep object-contain" />
               )}
               <input
                 type="file"
@@ -318,7 +318,7 @@ export default function AdminRewards({
                     className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
                       on
                         ? 'border-solana-green bg-solana-green/15 text-solana-green'
-                        : 'border-hero-blue/30 text-slate-400 hover:border-slate-300 hover:text-slate-200'
+                        : 'border-white/15 text-slate-400 hover:border-slate-300 hover:text-slate-200'
                     }`}
                   >
                     {on ? '✓ ' : ''}
@@ -369,7 +369,7 @@ export default function AdminRewards({
                 setEditingSlug(null);
                 setForm(EMPTY);
               }}
-              className="rounded-full border border-hero-blue/40 px-5 py-2 text-sm text-slate-300"
+              className="rounded-full border border-white/15 px-5 py-2 text-sm text-slate-300"
             >
               Cancel
             </button>
@@ -389,11 +389,11 @@ export default function AdminRewards({
           {items.map((it) => (
             <div
               key={it.slug}
-              className={`flex gap-3 rounded-2xl border bg-hero-deep/50 p-3 ${
-                it.active ? 'border-hero-blue/20' : 'border-hero-blue/10 opacity-60'
+              className={`flex gap-3 rounded-2xl border bg-hero-navy p-3 ${
+                it.active ? 'border-white/[0.08]' : 'border-white/[0.08] opacity-60'
               }`}
             >
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-hero-deep/80">
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-hero-deep">
                 {it.image_url ? (
                   <img src={it.image_url} alt="" className="h-full w-full object-contain p-1" />
                 ) : (
@@ -411,7 +411,7 @@ export default function AdminRewards({
                   <button
                     type="button"
                     onClick={() => edit(it)}
-                    className="rounded-full border border-hero-blue/40 px-2.5 py-0.5 text-slate-300 hover:border-hero-cyan"
+                    className="rounded-full border border-white/15 px-2.5 py-0.5 text-slate-300 hover:border-white/30"
                   >
                     Edit
                   </button>
@@ -419,7 +419,7 @@ export default function AdminRewards({
                     type="button"
                     disabled={busy}
                     onClick={() => toggleActive(it)}
-                    className="rounded-full border border-hero-blue/40 px-2.5 py-0.5 text-slate-300 hover:border-hero-gold"
+                    className="rounded-full border border-white/15 px-2.5 py-0.5 text-slate-300 hover:border-hero-gold"
                   >
                     {it.active ? 'Hide' : 'Show'}
                   </button>
@@ -453,7 +453,7 @@ export default function AdminRewards({
               </thead>
               <tbody>
                 {claims.slice(0, 100).map((c) => (
-                  <tr key={c.id} className="border-t border-hero-blue/10">
+                  <tr key={c.id} className="border-t border-white/[0.08]">
                     <td className="py-2 pr-3 text-slate-300">{c.item_name}</td>
                     <td className="py-2 pr-3 font-mono text-slate-400">
                       {c.status === 'pending' ? c.code : '••••••'}

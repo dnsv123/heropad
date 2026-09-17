@@ -694,7 +694,7 @@ export default function Business() {
           );
         })()}
 
-        <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8">
+        <div className="mt-8 rounded-2xl border border-white/[0.08] bg-hero-navy p-6 backdrop-blur md:p-8">
           {!ready ? null : !authenticated ? (
             <div className="text-center">
               <p className="mb-3 text-sm text-slate-400">
@@ -703,7 +703,7 @@ export default function Business() {
               <button
                 type="button"
                 onClick={login}
-                className="rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep"
+                className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep transition hover:bg-hero-gold-bright"
               >
                 {t('b.login.btn')}
               </button>
@@ -744,7 +744,7 @@ export default function Business() {
                     e.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
                   }
                   placeholder={t('b.setupcode.ph')}
-                  className="block w-full rounded-xl border-2 border-hero-gold/50 bg-hero-deep/80 px-3 py-3 text-center font-mono text-2xl tracking-[0.3em] text-hero-gold placeholder:text-base placeholder:tracking-normal placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                  className="block w-full rounded-xl border-2 border-hero-gold/50 bg-hero-deep px-3 py-3 text-center font-mono text-2xl tracking-[0.3em] text-hero-gold placeholder:text-base placeholder:tracking-normal placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
                 />
                 <button
                   type="button"
@@ -824,7 +824,7 @@ export default function Business() {
                         if (e.key === 'Enter' && CODE_RE.test(rewardCode)) void fulfilReward();
                       }}
                       placeholder={t('b.rw.ph')}
-                      className="w-full rounded-xl border border-solana-green/30 bg-hero-deep/80 px-3 py-2 font-mono text-lg tracking-[0.2em] text-slate-100 focus:border-solana-green focus:outline-none"
+                      className="w-full rounded-xl border border-solana-green/30 bg-hero-deep px-3 py-2 font-mono text-lg tracking-[0.2em] text-slate-100 focus:border-solana-green focus:outline-none"
                     />
                     <button
                       type="button"
@@ -855,7 +855,7 @@ export default function Business() {
 
               {/* Shift summary — the first thing an owner wants in the morning,
                   and the running total a barista glances at during service. */}
-              <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-hero-blue/20 bg-hero-deep/60 px-4 py-2.5">
+              <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-2.5">
                 <div className="flex items-center gap-4 text-xs">
                   <span className="text-slate-500">{t('b.today')}</span>
                   <span className="text-hero-cyan">
@@ -885,7 +885,7 @@ export default function Business() {
                     }
                   }}
                   title={muted ? t('b.sound.on') : t('b.sound.off')}
-                  className="shrink-0 rounded-full border border-hero-blue/25 px-2.5 py-1 text-sm text-slate-400 transition hover:border-hero-cyan hover:text-white"
+                  className="shrink-0 rounded-full border border-white/[0.08] px-2.5 py-1 text-sm text-slate-400 transition hover:border-white/30 hover:text-white"
                 >
                   {muted ? '🔇' : '🔊'}
                 </button>
@@ -913,7 +913,7 @@ export default function Business() {
                     if (e.key === 'Enter' && codeValid) void lookupCustomer(normalizedCode);
                   }}
                   placeholder="K7M3PQ"
-                  className="min-w-0 flex-1 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-3 text-center font-mono text-xl tracking-[0.2em] text-slate-100 placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan sm:px-4 sm:text-2xl sm:tracking-[0.3em]"
+                  className="min-w-0 flex-1 rounded-lg border border-white/15 bg-hero-deep px-3 py-3 text-center font-mono text-xl tracking-[0.2em] text-slate-100 placeholder:text-slate-700 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan sm:px-4 sm:text-2xl sm:tracking-[0.3em]"
                 />
                 <button
                   type="button"
@@ -929,7 +929,7 @@ export default function Business() {
               <button
                 type="button"
                 onClick={() => setScanning(true)}
-                className="mt-2 w-full rounded-full border border-hero-cyan/40 py-2.5 text-sm font-semibold text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10"
+                className="mt-2 w-full rounded-full border border-hero-cyan/40 py-2.5 text-sm font-semibold text-hero-cyan transition hover:border-white/30 hover:bg-hero-cyan/10"
               >
                 {t('b.scan.btn')}
               </button>
@@ -942,7 +942,7 @@ export default function Business() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="mt-6 rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-5"
+                    className="mt-6 rounded-xl border border-white/[0.08] bg-hero-navy p-5"
                   >
                     {customer.birthdayToday && (
                       <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
@@ -1018,7 +1018,7 @@ export default function Business() {
                             className={`rounded-full border py-2.5 font-semibold transition disabled:opacity-40 ${
                               n < 0
                                 ? 'border-red-400/40 text-red-300 hover:border-red-400 hover:bg-red-400/10'
-                                : 'border-hero-cyan/40 text-hero-cyan hover:border-hero-cyan hover:bg-hero-cyan/10'
+                                : 'border-hero-cyan/40 text-hero-cyan hover:border-white/30 hover:bg-hero-cyan/10'
                             }`}
                           >
                             {n > 0 ? `+${n}` : `−${-n}`}
@@ -1034,7 +1034,7 @@ export default function Business() {
                           primeAudio();
                           void grant(3);
                         }}
-                        className="mt-2 w-full rounded-full border border-hero-cyan/25 py-2 text-xs text-hero-cyan/80 transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-40"
+                        className="mt-2 w-full rounded-full border border-hero-cyan/25 py-2 text-xs text-hero-cyan/80 transition hover:border-white/30 hover:bg-hero-cyan/10 disabled:opacity-40"
                       >
                         +3
                       </button>
@@ -1064,7 +1064,7 @@ export default function Business() {
                               }
                             }}
                             placeholder="REWARD"
-                            className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep/80 px-3 py-2 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none sm:text-xl sm:tracking-[0.25em]"
+                            className="min-w-0 flex-1 rounded-lg border border-hero-gold/40 bg-hero-deep px-3 py-2 text-center font-mono text-lg tracking-[0.2em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none sm:text-xl sm:tracking-[0.25em]"
                           />
                           <button
                             type="button"
@@ -1097,7 +1097,7 @@ export default function Business() {
               {/* Folders are the owner's. Staff get the counter and their
                   shift summary; the history is partly a record OF them. */}
               {role === 'staff' && (
-                <p className="mt-6 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-3 text-center text-xs text-slate-500">
+                <p className="mt-6 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-3 text-center text-xs text-slate-500">
                   {t('b.staffmode', { name: staffName ?? '' })}
                 </p>
               )}
@@ -1151,7 +1151,7 @@ export default function Business() {
                         ].map((t) => (
                           <div
                             key={t.l}
-                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center"
+                            className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center"
                           >
                             <p className="font-display text-xl font-bold text-hero-cyan">
                               {t.v}
@@ -1165,7 +1165,7 @@ export default function Business() {
 
                       {/* Daily activity — CSS bars, most recent 14 active days */}
                       {analytics.daily.length > 0 && (
-                        <div className="mt-4 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3">
+                        <div className="mt-4 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                           <p className="text-[10px] uppercase tracking-wider text-slate-500">
                             {t('b.stats.daily')}
                           </p>
@@ -1199,7 +1199,7 @@ export default function Business() {
                         ].map((b) => (
                           <div
                             key={b.l}
-                            className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-2"
+                            className="rounded-xl border border-white/[0.08] bg-hero-navy p-2"
                           >
                             <p className="font-display text-lg font-bold text-hero-gold">
                               {b.v}
@@ -1242,7 +1242,7 @@ export default function Business() {
                             value={setRequired}
                             onChange={(e) => setSetRequired(e.target.value)}
                             placeholder={String(venue?.stampsRequired ?? 10)}
-                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                         </label>
                         <label className="text-xs text-slate-500">
@@ -1253,7 +1253,7 @@ export default function Business() {
                             value={setReward}
                             onChange={(e) => setSetReward(e.target.value)}
                             placeholder="A free coffee"
-                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                         </label>
                       </div>
@@ -1266,7 +1266,7 @@ export default function Business() {
                             value={setReview}
                             onChange={(e) => setSetReview(e.target.value)}
                             placeholder="https://g.page/r/..."
-                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                         </label>
                         <label className="text-xs text-slate-500">
@@ -1277,7 +1277,7 @@ export default function Business() {
                             value={setPhone}
                             onChange={(e) => setSetPhone(e.target.value)}
                             placeholder="+40 7xx xxx xxx"
-                            className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                           />
                         </label>
                       </div>
@@ -1295,7 +1295,7 @@ export default function Business() {
                             setOrderTouched(true);
                           }}
                           placeholder="https://…"
-                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                         <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
                           {t('b.set.order.hint')}
@@ -1317,7 +1317,7 @@ export default function Business() {
                             setAnnounceTouched(true);
                           }}
                           placeholder={t('b.set.announce.ph')}
-                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                         {/* Kind → the chip's colour on the customer's card. */}
                         <span className="mt-2 flex flex-wrap gap-1.5">
@@ -1336,7 +1336,7 @@ export default function Business() {
                                     : k === 'event'
                                     ? 'border-hero-cyan bg-hero-cyan/15 text-hero-cyan'
                                     : 'border-slate-300 bg-slate-300/10 text-slate-200'
-                                  : 'border-hero-blue/30 text-slate-500 hover:text-slate-300'
+                                  : 'border-white/15 text-slate-500 hover:text-slate-300'
                               }`}
                             >
                               {t(`b.set.announce.k.${k}` as 'b.set.announce.k.news')}
@@ -1378,7 +1378,7 @@ export default function Business() {
                                   className={`rounded-lg border py-1.5 text-[11px] font-semibold transition ${
                                     hhDays.includes(day)
                                       ? 'border-hero-gold bg-hero-gold text-hero-deep'
-                                      : 'border-hero-blue/30 text-slate-400 hover:border-hero-gold/50'
+                                      : 'border-white/15 text-slate-400 hover:border-hero-gold/50'
                                   }`}
                                 >
                                   {label}
@@ -1396,7 +1396,7 @@ export default function Business() {
                                 setHhTouched(true);
                                 setHhStart(e.target.value);
                               }}
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -1408,7 +1408,7 @@ export default function Business() {
                                 setHhTouched(true);
                                 setHhEnd(e.target.value);
                               }}
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             />
                           </label>
                           <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -1419,7 +1419,7 @@ export default function Business() {
                                 setHhTouched(true);
                                 setHhMult(Number(e.target.value));
                               }}
-                              className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                              className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-2 py-1.5 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                             >
                               <option value={2}>x2</option>
                               <option value={3}>x3</option>
@@ -1439,7 +1439,7 @@ export default function Business() {
                             value={setEmail}
                             onChange={(e) => setSetEmail(e.target.value)}
                             placeholder="contact@cafenea.ro"
-                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                            className="mt-1 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white placeholder:text-slate-600"
                           />
                         </label>
                         <label className="text-xs text-slate-500">
@@ -1448,7 +1448,7 @@ export default function Business() {
                             value={setInsta}
                             onChange={(e) => setSetInsta(e.target.value)}
                             placeholder="@cafeneaua_mea"
-                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                            className="mt-1 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white placeholder:text-slate-600"
                           />
                         </label>
                         <label className="text-xs text-slate-500">
@@ -1457,7 +1457,7 @@ export default function Business() {
                             value={setFb}
                             onChange={(e) => setSetFb(e.target.value)}
                             placeholder="cafeneaua.mea"
-                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                            className="mt-1 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white placeholder:text-slate-600"
                           />
                         </label>
                         <label className="text-xs text-slate-500">
@@ -1466,7 +1466,7 @@ export default function Business() {
                             value={setSite}
                             onChange={(e) => setSetSite(e.target.value)}
                             placeholder="https://cafenea.ro"
-                            className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white placeholder:text-slate-600"
+                            className="mt-1 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white placeholder:text-slate-600"
                           />
                         </label>
                       </div>
@@ -1479,7 +1479,7 @@ export default function Business() {
                         <select
                           value={tz || Intl.DateTimeFormat().resolvedOptions().timeZone}
                           onChange={(e) => setTz(e.target.value)}
-                          className="mt-1 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-3 py-2 text-sm text-white"
+                          className="mt-1 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-2 text-sm text-white"
                         >
                           {Array.from(
                             new Set([

@@ -70,7 +70,7 @@ export default function ConsentPrompt({ show }: ConsentPromptProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
-          className="mt-4 rounded-2xl border border-hero-blue/25 bg-hero-deep/70 p-4"
+          className="mt-4 rounded-2xl border border-white/[0.08] bg-hero-navy p-4"
         >
           {done ? (
             <p className="text-center text-sm text-solana-green">{t('consent.saved')}</p>
@@ -91,7 +91,7 @@ export default function ConsentPrompt({ show }: ConsentPromptProps) {
                   type="button"
                   disabled={busy}
                   onClick={() => void answer(false)}
-                  className="rounded-full border border-hero-blue/40 px-4 py-2 text-xs text-slate-300 transition hover:border-white hover:text-white disabled:opacity-50"
+                  className="rounded-full border border-white/15 px-4 py-2 text-xs text-slate-300 transition hover:border-white hover:text-white disabled:opacity-50"
                 >
                   {t('consent.no')}
                 </button>

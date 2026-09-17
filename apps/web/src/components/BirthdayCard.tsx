@@ -82,7 +82,7 @@ export default function BirthdayCard() {
   }
 
   return (
-    <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+    <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
       <h2 className="font-display text-lg font-semibold text-white">🎂 {t('bday.title')}</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('bday.explainer')}</p>
 
@@ -90,7 +90,7 @@ export default function BirthdayCard() {
         <select
           value={day}
           onChange={(e) => setDay(Number(e.target.value))}
-          className="rounded-xl border border-hero-blue/30 bg-hero-deep px-3 py-2 text-sm text-slate-200"
+          className="rounded-xl border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-200"
         >
           <option value={0}>{t('bday.day')}</option>
           {Array.from({ length: maxDay }, (_, i) => (
@@ -107,7 +107,7 @@ export default function BirthdayCard() {
             // Switching to a shorter month must not leave "31 February" armed.
             if (m >= 1 && day > DAYS_IN_MONTH[m - 1]) setDay(0);
           }}
-          className="rounded-xl border border-hero-blue/30 bg-hero-deep px-3 py-2 text-sm text-slate-200"
+          className="rounded-xl border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-200"
         >
           <option value={0}>{t('bday.month')}</option>
           {monthNames.map((name, i) => (

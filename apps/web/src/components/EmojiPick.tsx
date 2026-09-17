@@ -39,13 +39,13 @@ export default function EmojiPick({
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={`mt-1 block h-9 w-14 rounded-lg border bg-hero-deep text-center text-xl leading-9 transition ${
-          open ? 'border-hero-cyan' : 'border-hero-blue/25 hover:border-hero-cyan/60'
+          open ? 'border-hero-cyan' : 'border-white/[0.08] hover:border-white/30'
         }`}
       >
         {value || '☕'}
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-40 mt-1.5 w-72 rounded-xl border border-hero-blue/40 bg-hero-deep p-2.5 shadow-2xl">
+        <div className="absolute left-0 top-full z-40 mt-1.5 w-72 rounded-xl border border-white/15 bg-hero-deep p-2.5 shadow-2xl">
           <div className="grid max-h-52 grid-cols-8 gap-0.5 overflow-y-auto">
             {PALETTE.map((e) => (
               <button

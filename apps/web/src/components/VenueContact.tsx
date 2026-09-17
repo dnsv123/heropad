@@ -104,10 +104,10 @@ export default function VenueContact({
   if (!hasContact && !happyHourNext && !(gpsLat && gpsLng)) return null;
 
   const chip =
-    'flex items-center gap-1.5 rounded-full border border-hero-blue/25 bg-hero-deep/70 px-3 py-1.5 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white';
+    'flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-hero-navy px-3 py-1.5 text-xs text-slate-300 transition hover:border-white/30 hover:text-white';
 
   return (
-    <div className="mt-6 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5">
+    <div className="mt-6 rounded-2xl border border-white/[0.08] bg-hero-navy p-5">
       {/* Countdown first: it is the only part that changes, and the only part
           that can make someone come in today rather than tomorrow. */}
       {happyHourNext && left > 0 && (

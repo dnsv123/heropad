@@ -275,7 +275,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="space-y-5 rounded-2xl border border-solana-green/40 bg-hero-deep/60 p-6 backdrop-blur md:p-8"
+          className="space-y-5 rounded-2xl border border-solana-green/40 bg-hero-navy p-6 backdrop-blur md:p-8"
         >
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-solana-green/20">
@@ -295,7 +295,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-hero-blue/15 bg-hero-deep/40 p-4 text-xs">
+          <div className="space-y-3 rounded-xl border border-white/[0.08] bg-hero-navy p-4 text-xs">
             <div>
               <p className="uppercase tracking-wider text-slate-500">Certificate ID</p>
               <code className="mt-1 block break-all font-mono text-hero-cyan">
@@ -307,13 +307,13 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
                 href={explorerLink(status.mintAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-hero-cyan/40 px-3 py-1.5 text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10"
+                className="rounded-full border border-hero-cyan/40 px-3 py-1.5 text-hero-cyan transition hover:border-white/30 hover:bg-hero-cyan/10"
               >
                 Verify this hero ↗
               </a>
               <a
                 href="/profile"
-                className="rounded-full border border-hero-blue/40 px-3 py-1.5 text-slate-300 transition hover:border-white hover:text-white"
+                className="rounded-full border border-white/15 px-3 py-1.5 text-slate-300 transition hover:border-white hover:text-white"
               >
                 Go to my profile →
               </a>
@@ -339,7 +339,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
     <>
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6 backdrop-blur md:p-8"
+      className="space-y-5 rounded-2xl border border-white/[0.08] bg-hero-navy p-6 backdrop-blur md:p-8"
     >
       {restoredFromStorage && (
         <div className="rounded-xl border border-hero-cyan/30 bg-hero-cyan/5 p-3 text-xs text-hero-cyan">
@@ -363,12 +363,12 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Paste your scanned URL or HVPD-XXXX-XXXX:signature"
-            className="flex-1 rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-4 py-3 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan"
+            className="flex-1 rounded-lg border border-white/15 bg-hero-deep px-4 py-3 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-hero-cyan focus:outline-none focus:ring-1 focus:ring-hero-cyan"
           />
           <button
             type="button"
             onClick={() => setScanHelpOpen(true)}
-            className="shrink-0 rounded-lg border border-hero-cyan/30 px-3 py-2 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+            className="shrink-0 rounded-lg border border-hero-cyan/30 px-3 py-2 text-xs text-slate-300 transition hover:border-white/30 hover:text-white"
             aria-label="How to scan a HeroPad QR or NFC"
           >
             Scan
@@ -389,7 +389,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
         </div>
       )}
 
-      <div className="flex flex-col gap-3 border-t border-hero-blue/15 pt-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-white/[0.08] pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-500">
           {!authenticated
             ? 'Log in to add this hero to your collection.'
@@ -403,7 +403,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
             type="button"
             onClick={login}
             disabled={!ready}
-            className="rounded-full bg-solana-purple px-6 py-2.5 font-medium text-white shadow-hero-purple transition hover:bg-solana-purple-deep disabled:opacity-50"
+            className="rounded-full bg-hero-gold px-6 py-2.5 font-semibold text-hero-deep transition hover:bg-hero-gold-bright disabled:opacity-50"
           >
             Login to claim
           </button>
@@ -437,7 +437,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.25 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-hero-blue/30 bg-hero-deep p-6 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-white/15 bg-hero-deep p-6 shadow-2xl"
           >
             <h3 className="font-display text-lg font-semibold text-hero-cyan">
               How to scan your HeroPad item
@@ -448,7 +448,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
             </p>
 
             <div className="mt-4 space-y-3 text-sm">
-              <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-3">
+              <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                 <p className="text-hero-gold">QR card / pack sticker</p>
                 <p className="mt-1 text-xs text-slate-300">
                   Open your phone's <strong>Camera</strong> app, point at the QR.
@@ -456,7 +456,7 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
                   claim ready.
                 </p>
               </div>
-              <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/60 p-3">
+              <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-3">
                 <p className="text-hero-cyan">NFC figurine</p>
                 <p className="mt-1 text-xs text-slate-300">
                   Unlock your phone, then tap it to the figurine's base. Most

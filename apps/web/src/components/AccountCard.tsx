@@ -11,7 +11,7 @@ export default function AccountCard() {
   const { t } = useT();
 
   return (
-    <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+    <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
       <div className="flex items-center gap-4">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-hero-cyan/30 bg-gradient-to-br from-hero-blue/40 to-hero-deep md:h-20 md:w-20">
           <img
@@ -44,12 +44,12 @@ export default function AccountCard() {
           external wallet moved to Profile → vault → Technical details:
           it is an expert action, and offering it here made the account card
           read like a crypto app. */}
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-hero-blue/15 pt-4">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.08] pt-4">
         {!user?.email && (
           <button
             type="button"
             onClick={linkEmail}
-            className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
+            className="rounded-full border border-white/15 bg-hero-navy px-4 py-1.5 text-xs text-slate-200 transition hover:border-white/30 hover:text-white"
           >
             {t('acct.link.email')}
           </button>
@@ -58,7 +58,7 @@ export default function AccountCard() {
           <button
             type="button"
             onClick={linkGoogle}
-            className="rounded-full border border-hero-blue/40 bg-hero-deep/50 px-4 py-1.5 text-xs text-slate-200 transition hover:border-hero-cyan hover:text-white"
+            className="rounded-full border border-white/15 bg-hero-navy px-4 py-1.5 text-xs text-slate-200 transition hover:border-white/30 hover:text-white"
           >
             {t('acct.link.google')}
           </button>

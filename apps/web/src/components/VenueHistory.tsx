@@ -251,7 +251,7 @@ export default function VenueHistory({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="w-full rounded-full border border-hero-blue/30 px-4 py-2 text-sm text-slate-300 transition hover:border-hero-cyan hover:text-white"
+          className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-white"
         >
           {open ? t('b.hist.hide') : t('b.hist')}
         </button>
@@ -276,7 +276,7 @@ export default function VenueHistory({
                     className={`rounded-full px-3 py-1 text-xs transition ${
                       preset === p.k
                         ? 'bg-hero-cyan font-semibold text-hero-deep'
-                        : 'border border-hero-blue/25 text-slate-400 hover:border-hero-cyan hover:text-white'
+                        : 'border border-white/[0.08] text-slate-400 hover:border-white/30 hover:text-white'
                     }`}
                   >
                     {p.l}
@@ -295,7 +295,7 @@ export default function VenueHistory({
                       setFrom(e.target.value);
                       setPreset('all');
                     }}
-                    className="mt-1 w-full rounded-lg border border-hero-blue/25 bg-hero-deep/70 px-2 py-1.5 text-xs text-white"
+                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 text-xs text-white"
                   />
                 </label>
                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
@@ -307,7 +307,7 @@ export default function VenueHistory({
                       setTo(e.target.value);
                       setPreset('all');
                     }}
-                    className="mt-1 w-full rounded-lg border border-hero-blue/25 bg-hero-deep/70 px-2 py-1.5 text-xs text-white"
+                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 text-xs text-white"
                   />
                 </label>
                 <label className="col-span-2 text-[10px] uppercase tracking-wider text-slate-500 sm:col-span-1">
@@ -320,7 +320,7 @@ export default function VenueHistory({
                     }}
                     placeholder="K7M3PQ"
                     maxLength={6}
-                    className="mt-1 w-full rounded-lg border border-hero-blue/25 bg-hero-deep/70 px-2 py-1.5 font-mono text-xs uppercase tracking-widest text-white"
+                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 font-mono text-xs uppercase tracking-widest text-white"
                   />
                 </label>
                 <button
@@ -398,7 +398,7 @@ export default function VenueHistory({
                   type="button"
                   onClick={exportCsv}
                   disabled={!events || events.length === 0}
-                  className="rounded-full border border-hero-blue/30 px-3 py-1 text-[11px] text-slate-300 transition hover:border-hero-cyan hover:text-white disabled:opacity-40"
+                  className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-slate-300 transition hover:border-white/30 hover:text-white disabled:opacity-40"
                 >
                   {t('b.hist.csv')}
                 </button>
@@ -415,14 +415,14 @@ export default function VenueHistory({
                   {[0, 1, 2].map((i) => (
                     <div
                       key={i}
-                      className="h-11 animate-pulse rounded-xl border border-hero-blue/10 bg-hero-deep/60"
+                      className="h-11 animate-pulse rounded-xl border border-white/[0.08] bg-hero-navy"
                     />
                   ))}
                 </div>
               )}
 
               {!loading && events && events.length === 0 && (
-                <p className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 px-3 py-6 text-center text-xs text-slate-500">
+                <p className="rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-6 text-center text-xs text-slate-500">
                   {t('b.hist.empty')}
                 </p>
               )}
@@ -442,7 +442,7 @@ export default function VenueHistory({
                         <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-hero-gold/70">
                           {g.label}
                         </p>
-                        <ul className="divide-y divide-hero-blue/10 overflow-hidden rounded-xl border border-hero-blue/15 bg-hero-deep/60">
+                        <ul className="divide-y divide-hero-blue/10 overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy">
                           {g.items.map(({ e, id }) => {
                             const isOpen = expanded === id;
                             return (
@@ -520,7 +520,7 @@ export default function VenueHistory({
                                       initial={{ opacity: 0, height: 0 }}
                                       animate={{ opacity: 1, height: 'auto' }}
                                       exit={{ opacity: 0, height: 0 }}
-                                      className="overflow-hidden bg-hero-deep/80"
+                                      className="overflow-hidden bg-hero-deep"
                                     >
                                       <dl className="space-y-1.5 px-3 pb-3 pt-1 text-[11px]">
                                         <Row label={t('b.hist.d.when')}>

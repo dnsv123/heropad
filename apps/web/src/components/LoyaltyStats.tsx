@@ -94,7 +94,7 @@ export default function LoyaltyStats() {
   if (!ready || !authenticated) return null;
 
   return (
-    <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+    <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
       <h2 className="font-display text-lg font-semibold text-white">⚡ Power Pass</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('pp.explainer')}</p>
 
@@ -116,7 +116,7 @@ export default function LoyaltyStats() {
             <button
               type="button"
               onClick={() => setDetail('stamps')}
-              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-hero-cyan/50 hover:bg-hero-deep"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-white/30 hover:bg-hero-deep"
             >
               <p className="font-display text-2xl font-bold text-hero-cyan">
                 {stats.totalStamps}
@@ -128,7 +128,7 @@ export default function LoyaltyStats() {
             <button
               type="button"
               onClick={() => setDetail('rewards')}
-              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-solana-green/50 hover:bg-hero-deep"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-solana-green/50 hover:bg-hero-deep"
             >
               <p className="font-display text-2xl font-bold text-solana-green">
                 {stats.cardsCompleted}
@@ -140,7 +140,7 @@ export default function LoyaltyStats() {
             <button
               type="button"
               onClick={() => setDetail('trophies')}
-              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-3 text-center transition hover:border-hero-gold/50 hover:bg-hero-deep"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-hero-gold/50 hover:bg-hero-deep"
             >
               <p className="font-display text-2xl font-bold text-hero-gold">
                 {stats.trophiesMinted}
@@ -173,7 +173,7 @@ export default function LoyaltyStats() {
                 <Link
                   key={v.slug}
                   to={`/loyalty/${v.slug}`}
-                  className="flex items-center justify-between rounded-xl border border-hero-blue/10 bg-hero-deep/40 px-4 py-2.5 text-sm transition hover:border-hero-cyan/50 hover:bg-hero-deep/70"
+                  className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-hero-navy px-4 py-2.5 text-sm transition hover:border-white/30 hover:bg-hero-navy"
                 >
                   <span className="text-slate-200">☕ {v.name}</span>
                   <span className="font-mono text-xs text-slate-400">
@@ -202,7 +202,7 @@ export default function LoyaltyStats() {
                   exit={{ opacity: 0, scale: 0.95, y: 12 }}
                   transition={{ duration: 0.25 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl border border-hero-blue/30 bg-hero-deep p-5 shadow-2xl"
+                  className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-hero-deep p-5 shadow-2xl"
                 >
                   {/* ---------- ☕ STAMPS ---------- */}
                   {detail === 'stamps' && (
@@ -216,7 +216,7 @@ export default function LoyaltyStats() {
                           .map((v) => (
                             <div
                               key={v.slug}
-                              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4"
+                              className="rounded-xl border border-white/[0.08] bg-hero-navy p-4"
                             >
                               <div className="flex items-baseline justify-between">
                                 <Link

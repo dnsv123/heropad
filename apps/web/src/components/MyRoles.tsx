@@ -77,7 +77,7 @@ export default function MyRoles() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5"
+      className="rounded-2xl border border-white/[0.08] bg-hero-navy p-5"
     >
       <h2 className="font-display text-lg font-semibold text-white">{t('roles.title')}</h2>
       <p className="mt-1 text-xs text-slate-500">{t('roles.sub')}</p>
@@ -110,7 +110,7 @@ export default function MyRoles() {
             t('roles.partner.title'),
             t('roles.partner.sub').replace('{code}', roles.partner.code),
             '/partner',
-            'border-solana-purple/30 bg-solana-purple/5'
+            'border-hero-gold/30 bg-hero-gold/5'
           )}
       </div>
     </motion.div>

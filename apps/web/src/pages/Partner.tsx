@@ -155,7 +155,7 @@ export default function Partner() {
         <h1 className="font-display text-3xl font-bold">{t('pt.title')}</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">{t('pt.claim.hint')}</p>
 
-        <div className="mt-6 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-5">
+        <div className="mt-6 rounded-2xl border border-white/[0.08] bg-hero-navy p-5">
           <label className="text-[10px] uppercase tracking-wider text-slate-500">
             {t('pt.claim.label')}
           </label>
@@ -167,7 +167,7 @@ export default function Partner() {
             }}
             placeholder="XXXXXXXX"
             maxLength={12}
-            className="mt-2 w-full rounded-xl border border-hero-blue/25 bg-hero-deep/70 px-4 py-3 text-center font-mono text-lg uppercase tracking-[0.3em] text-white"
+            className="mt-2 w-full rounded-xl border border-white/[0.08] bg-hero-navy px-4 py-3 text-center font-mono text-lg uppercase tracking-[0.3em] text-white"
           />
           <button
             type="button"
@@ -217,7 +217,7 @@ export default function Partner() {
         <button
           type="button"
           onClick={() => void loadMe()}
-          className="rounded-full border border-hero-blue/30 px-4 py-1.5 text-xs text-slate-400 transition hover:border-hero-cyan hover:text-white"
+          className="rounded-full border border-white/15 px-4 py-1.5 text-xs text-slate-400 transition hover:border-white/30 hover:text-white"
         >
           ↻ {t('pt.refresh')}
         </button>
@@ -243,7 +243,7 @@ export default function Partner() {
             className={`rounded-2xl border p-4 text-center ${
               k.gold
                 ? 'border-hero-gold/40 bg-hero-gold/10'
-                : 'border-hero-blue/15 bg-hero-deep/60'
+                : 'border-white/[0.08] bg-hero-navy'
             }`}
           >
             <p
@@ -267,7 +267,7 @@ export default function Partner() {
       {loading && <p className="mt-3 text-sm text-slate-500">{t('pt.loading')}</p>}
 
       {!loading && venues.length === 0 && (
-        <div className="mt-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-10 text-center">
+        <div className="mt-3 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-10 text-center">
           <p className="text-sm text-slate-400">{t('pt.empty')}</p>
           <p className="mt-2 text-xs text-slate-600">{t('pt.empty.hint')}</p>
         </div>
@@ -282,7 +282,7 @@ export default function Partner() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-3"
             >
               <div className="min-w-0">
                 <p className="truncate font-semibold text-white">{v.name}</p>
@@ -317,7 +317,7 @@ export default function Partner() {
       <p className="mt-1 text-xs text-slate-500">{t('pt.payouts.rule')}</p>
 
       {(data?.payouts ?? []).length === 0 ? (
-        <p className="mt-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-6 text-center text-xs text-slate-500">
+        <p className="mt-3 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-6 text-center text-xs text-slate-500">
           {t('pt.payouts.empty')}
         </p>
       ) : (
@@ -325,7 +325,7 @@ export default function Partner() {
           {(data?.payouts ?? []).map((x) => (
             <li
               key={x.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-hero-blue/15 bg-hero-deep/60 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-3"
             >
               <div>
                 <p className="font-mono text-sm text-white">{x.period}</p>

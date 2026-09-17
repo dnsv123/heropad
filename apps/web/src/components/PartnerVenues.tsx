@@ -35,7 +35,7 @@ export default function PartnerVenues() {
     /* Dashed border on purpose — the visual language of "not collected yet"
        the passport album already speaks. This card is the map of what exists;
        the Power Pass above is the diary of where you already collect. */
-    <div className="rounded-2xl border border-dashed border-hero-cyan/35 bg-hero-deep/30 p-6">
+    <div className="rounded-2xl border border-dashed border-hero-cyan/35 bg-hero-navy p-6">
       <h2 className="font-display text-lg font-semibold text-hero-cyan">🧭 {t('pv.title')}</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('pv.hint')}</p>
       <div className="mt-4 space-y-2">
@@ -43,7 +43,7 @@ export default function PartnerVenues() {
           <Link
             key={v.slug}
             to={`/loyalty/${v.slug}`}
-            className="flex items-center gap-3 rounded-xl border border-hero-blue/10 bg-hero-deep/40 px-4 py-2.5 transition hover:border-hero-cyan/50 hover:bg-hero-deep/70"
+            className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-hero-navy px-4 py-2.5 transition hover:border-white/30 hover:bg-hero-navy"
           >
             <span className="text-2xl leading-none">{v.icon ?? '☕'}</span>
             <span className="min-w-0 flex-1">

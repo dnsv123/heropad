@@ -26,7 +26,7 @@ export default function CollectionCard() {
   if (!walletAddress) return null;
 
   return (
-    <div className="mt-8 rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-6">
+    <div className="mt-8 rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
       <h2 className="font-display text-lg font-semibold text-white">{t('col.title')}</h2>
       <p className="mt-1 text-xs text-slate-500">{t('col.sub')}</p>
       <div className="mt-4">

@@ -112,25 +112,25 @@ export default function AdminOrders({
     .reduce((s, o) => s + o.qty * o.unit_price, 0);
 
   const input =
-    'mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none';
+    'mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none';
 
   return (
     <div className="mt-8 space-y-6">
       {/* ---- 1. What do I have to do ---- */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">To ship</p>
           <p className="mt-1 font-display text-2xl font-bold text-hero-gold">
             {data.orders.filter((o) => o.status === 'planned').length}
           </p>
           <p className="text-[11px] text-slate-500">lots planned, not sent</p>
         </div>
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">To collect</p>
           <p className="mt-1 font-display text-2xl font-bold text-hero-cyan">{money(owed)}</p>
           <p className="text-[11px] text-slate-500">sent, not yet paid</p>
         </div>
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">Starter kits</p>
           <p className="mt-1 font-display text-2xl font-bold text-solana-green">
             {data.venues.filter((v) => v.starterSent).length}/{data.venues.filter((v) => v.active).length}
@@ -172,7 +172,7 @@ export default function AdminOrders({
               {data.venues
                 .filter((v) => v.active)
                 .map((v) => (
-                  <tr key={v.id} className="border-t border-hero-blue/10">
+                  <tr key={v.id} className="border-t border-white/[0.08]">
                     <td className="py-2 pr-3">
                       <span className="font-semibold text-slate-200">{v.name}</span>
                       <span className="ml-2 text-[10px] text-slate-500">{v.billingStatus}</span>
@@ -226,7 +226,7 @@ export default function AdminOrders({
       </div>
 
       {/* ---- New lot ---- */}
-      <div className="rounded-2xl border border-hero-cyan/30 bg-hero-deep/50 p-5">
+      <div className="rounded-2xl border border-hero-cyan/30 bg-hero-navy p-5">
         <h3 className="font-display text-lg font-semibold text-hero-cyan">➕ New pack</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
           <label className="text-xs text-slate-500">
@@ -315,7 +315,7 @@ export default function AdminOrders({
                 {data.orders.map((o) => {
                   const value = o.qty * o.unit_price;
                   return (
-                    <tr key={o.id} className="border-t border-hero-blue/10">
+                    <tr key={o.id} className="border-t border-white/[0.08]">
                       <td className="py-2 pr-3 text-slate-300">{venueById.get(o.venue_id)?.name ?? '—'}</td>
                       <td className="py-2 pr-3 text-slate-300">
                         {itemById.get(o.reward_id)?.name ?? '—'}
@@ -373,7 +373,7 @@ export default function AdminOrders({
                                   status: o.status === 'paid' ? 'sent' : 'planned',
                                 })
                               }
-                              className="rounded-full border border-hero-blue/30 px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-300"
+                              className="rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-300"
                             >
                               Undo
                             </button>

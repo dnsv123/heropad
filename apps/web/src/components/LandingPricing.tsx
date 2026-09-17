@@ -5,13 +5,18 @@ import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact
 // behind Let's-talk; we publish ours" — so the site has to actually publish
 // it. Unlimited customers on every plan is the structural differentiator and
 // it is said here, not implied.
+//
+// Four plans, four columns, features one under the other. The Founding
+// Partner offer is NOT on the public site: it is the pitch for the first ten
+// cafés, made in person, and Admin's plan picker carries it.
 export default function LandingPricing() {
   const { t } = useT();
 
   const tiers = [
-    { name: 'Starter', price: '99', feats: t('lp.s.feats'), hl: false },
-    { name: 'Branded', price: '199', feats: t('lp.b.feats'), hl: true },
-    { name: 'Growth', price: '349', feats: t('lp.g.feats'), hl: false },
+    { name: 'Starter', price: '99', feats: t('lp.s.feats'), hl: false, chain: false },
+    { name: 'Branded', price: '199', feats: t('lp.b.feats'), hl: true, chain: false },
+    { name: 'Growth', price: '349', feats: t('lp.g.feats'), hl: false, chain: false },
+    { name: 'Chain', price: t('lp.c.price'), feats: t('lp.c.feats'), hl: false, chain: true },
   ];
 
   return (
@@ -23,15 +28,11 @@ export default function LandingPricing() {
         {t('lp.sub')}
       </p>
 
-      <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-hero-gold/40 bg-hero-gold/10 px-5 py-3.5 text-center text-sm text-hero-gold">
-        ⭐ {t('lp.founding')}
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiers.map((tier) => (
           <div
             key={tier.name}
-            className={`card relative p-6 ${tier.hl ? 'border-hero-gold/60' : ''}`}
+            className={`card relative flex flex-col p-6 ${tier.hl ? 'border-hero-gold/60' : ''}`}
           >
             {tier.hl && (
               <span className="chip chip-gold absolute -top-3 left-6 py-1 text-[11px]">
@@ -43,23 +44,33 @@ export default function LandingPricing() {
               {tier.price}
               <span className="ml-1.5 text-base font-normal text-slate-500">{t('lp.mo')}</span>
             </p>
-            <p className="mt-4 text-sm leading-relaxed text-slate-400">{tier.feats}</p>
+
+            <ul className="mt-5 flex-1 space-y-2.5">
+              {tier.feats.split(' · ').map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm leading-snug text-slate-300">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0 text-hero-gold" aria-hidden>
+                    <path d="m5 12 5 5L20 7" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            {tier.chain && (
+              <a
+                href={chainContactHref()}
+                target={contactIsWhatsApp() ? '_blank' : undefined}
+                rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
+                className="btn btn-secondary btn-sm mt-6"
+              >
+                {t('lp.c.cta')}
+              </a>
+            )}
           </div>
         ))}
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-400">
-        {t('lp.chain')}{' '}
-        <a
-          href={chainContactHref()}
-          target={contactIsWhatsApp() ? '_blank' : undefined}
-          rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
-          className="text-white underline decoration-white/30 underline-offset-4 transition hover:decoration-white"
-        >
-          {t('lp.chain.cta')}
-        </a>
-      </p>
-      <p className="mt-2 text-center text-xs text-slate-500">{t('lp.note')}</p>
+      <p className="mt-5 text-center text-xs text-slate-500">{t('lp.note')}</p>
       <div className="mt-6 text-center">
         <a
           href={contactHref()}

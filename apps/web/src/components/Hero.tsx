@@ -86,7 +86,8 @@ export default function Hero() {
 
           {/* The product, at a glance: a real card's anatomy in 176px. */}
           <div className="absolute -left-3 bottom-[9%] w-[150px] rounded-2xl border border-white/10 bg-hero-navy/95 p-3 text-left backdrop-blur md:-left-8 md:w-[176px] md:p-3.5">
-            <p className="text-[9px] uppercase tracking-[0.18em] text-slate-400">Café Victor</p>
+            <p className="text-[9px] uppercase tracking-[0.18em] text-hero-cyan">{t('hero.card.label')}</p>
+            <p className="mt-0.5 text-[11px] font-medium text-slate-300">Café Victor</p>
             <p className="tnum mt-1 font-display text-2xl font-bold leading-none text-white">
               3<span className="text-base text-slate-500">/5</span>
             </p>

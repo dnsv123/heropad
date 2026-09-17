@@ -4,57 +4,57 @@ import { contactHref, contactIsWhatsApp } from '../lib/contact';
 // Landing → "#business": the merchant-facing pitch section. This is where the
 // hero's primary CTA lands. Benefits + pilot offer + a contact CTA (WhatsApp
 // when a number is configured, email otherwise).
+
+// Inline 1.5px stroke icons on a quiet tile — the iOS Settings look. Emoji
+// render differently on every OS and read as filler; a thin white stroke on
+// a hairline tile reads as a system icon.
+const ICONS: Record<string, string[]> = {
+  repeat: ['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3'],
+  chart: ['M3 3v18h18', 'M18 17V9', 'M13 17V5', 'M8 17v-3'],
+  shield: [
+    'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z',
+    'm9 12 2 2 4-4',
+  ],
+  lock: ['M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z', 'M7 11V7a5 5 0 0 1 10 0v4'],
+};
+
+function Icon({ name }: { name: keyof typeof ICONS }) {
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.07] text-white">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-[22px] w-[22px]"
+        aria-hidden
+      >
+        {ICONS[name].map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </svg>
+    </span>
+  );
+}
+
 export default function ForBusinesses() {
   const { t } = useT();
 
-  // Inline stroke icons instead of emoji: emoji render differently on every
-  // OS and read as filler; a 1.8px stroke set stays crisp, on-palette, and
-  // costs nothing.
-  const svg = (paths: string[]) => (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden
-    >
-      {paths.map((d) => (
-        <path key={d} d={d} />
-      ))}
-    </svg>
-  );
-
-  const benefits = [
-    {
-      icon: svg(['M17 2l4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'M7 22l-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3']),
-      title: t('biz.b1.t'),
-      text: t('biz.b1.d'),
-    },
-    {
-      icon: svg(['M4 20h16', 'M7 16v-5', 'M12 16V6', 'M17 16v-8']),
-      title: t('biz.b2.t'),
-      text: t('biz.b2.d'),
-    },
-    {
-      icon: svg(['M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z', 'M9 12l2 2 4-4']),
-      title: t('biz.b3.t'),
-      text: t('biz.b3.d'),
-    },
-    {
-      icon: svg(['M5 11h14v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9z', 'M8 11V7a4 4 0 0 1 8 0v4']),
-      title: t('biz.b4.t'),
-      text: t('biz.b4.d'),
-    },
+  const benefits: Array<{ icon: keyof typeof ICONS; title: string; text: string }> = [
+    { icon: 'repeat', title: t('biz.b1.t'), text: t('biz.b1.d') },
+    { icon: 'chart', title: t('biz.b2.t'), text: t('biz.b2.d') },
+    { icon: 'shield', title: t('biz.b3.t'), text: t('biz.b3.d') },
+    { icon: 'lock', title: t('biz.b4.t'), text: t('biz.b4.d') },
   ];
 
   return (
     <section id="business" className="relative scroll-mt-20">
       <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
         {/* One step up from the page: the sales section is its own panel,
-            with the mascot flying in from the corner on wide screens. */}
+            with the mascot flying in the top corner on wide screens — inside
+            the panel, fully, like a sticker on the card. */}
         <div className="card relative overflow-hidden p-6 md:p-10">
           <img
             src="/super-victor-fly-1.webp"
@@ -64,7 +64,7 @@ export default function ForBusinesses() {
             height={620}
             loading="lazy"
             decoding="async"
-            className="pointer-events-none absolute -right-6 -top-4 hidden h-44 w-auto lg:block"
+            className="pointer-events-none absolute right-8 top-6 hidden h-36 w-auto lg:block"
           />
 
           <div className="md:max-w-2xl">
@@ -77,11 +77,9 @@ export default function ForBusinesses() {
             {benefits.map((b) => (
               <div
                 key={b.title}
-                className="flex items-start gap-4 rounded-2xl border border-white/[0.08] bg-hero-navy2/60 p-5"
+                className="flex items-start gap-4 rounded-2xl border border-white/[0.06] bg-hero-navy2/50 p-5"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-hero-deep text-hero-gold">
-                  {b.icon}
-                </span>
+                <Icon name={b.icon} />
                 <span>
                   <p className="font-display font-semibold text-white">{b.title}</p>
                   <p className="mt-1 text-sm leading-relaxed text-slate-400">{b.text}</p>

@@ -346,7 +346,7 @@ export default function AdminBilling({ onNotice }: Props) {
 
       {/* ---- The three numbers ---- */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">
             Monthly recurring
           </p>
@@ -354,14 +354,14 @@ export default function AdminBilling({ onNotice }: Props) {
             {money(monthlyTotal)}
           </p>
         </div>
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">Unpaid</p>
           <p className="mt-1 font-display text-2xl font-bold text-hero-gold">
             {money(owedTotal)}
           </p>
           <p className="text-[11px] text-slate-500">{unpaid.length} invoice(s)</p>
         </div>
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/50 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">This month</p>
           <p className="mt-1 font-display text-2xl font-bold text-hero-cyan">
             {data.venues.filter((v) => v.invoicedThisPeriod).length}/
@@ -384,7 +384,7 @@ export default function AdminBilling({ onNotice }: Props) {
       />
 
       {lastRun && (
-        <div className="rounded-xl border border-hero-blue/20 bg-hero-deep/40 p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-hero-navy p-4">
           <p className="text-xs font-semibold text-slate-300">Last batch</p>
           <ul className="mt-2 space-y-1 text-[11px]">
             {lastRun.map((r) => (
@@ -418,7 +418,7 @@ export default function AdminBilling({ onNotice }: Props) {
           {data.venues.map((v) => (
             <div
               key={v.slug}
-              className="rounded-2xl border border-hero-blue/20 bg-hero-deep/50 p-4"
+              className="rounded-2xl border border-white/[0.08] bg-hero-navy p-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
@@ -446,7 +446,7 @@ export default function AdminBilling({ onNotice }: Props) {
                   <button
                     type="button"
                     onClick={() => (editing === v.slug ? setEditing(null) : openEditor(v))}
-                    className="rounded-full border border-hero-blue/40 px-3 py-1 text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                    className="rounded-full border border-white/15 px-3 py-1 text-slate-300 transition hover:border-white/30 hover:text-white"
                   >
                     {editing === v.slug ? 'Close' : v.billing ? 'Edit details' : 'Add details'}
                   </button>
@@ -473,10 +473,10 @@ export default function AdminBilling({ onNotice }: Props) {
               </div>
 
               {editing === v.slug && (
-                <div className="mt-4 space-y-3 border-t border-hero-blue/15 pt-4">
+                <div className="mt-4 space-y-3 border-t border-white/[0.08] pt-4">
                   {/* What the law actually asks for, said once, at the top —
                       so the asterisks below mean something. */}
-                  <div className="rounded-lg border border-hero-blue/20 bg-hero-deep/60 p-3">
+                  <div className="rounded-lg border border-white/[0.08] bg-hero-navy p-3">
                     <p className="text-[11px] font-semibold text-hero-cyan">
                       Ce cere legea pe o factură (Cod fiscal, art. 319)
                     </p>
@@ -496,7 +496,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         value={fCompany}
                         onChange={(e) => setFCompany(e.target.value)}
                         placeholder="CAFE VICTOR SRL"
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
@@ -506,7 +506,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         value={fCui}
                         onChange={(e) => setFCui(e.target.value)}
                         placeholder="RO12345678"
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                       {fCui.trim().length >= 2 && !cuiLooksValid(fCui) && (
                         <span className="mt-1 block text-[11px] text-hero-gold">
@@ -528,7 +528,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         value={fReg}
                         onChange={(e) => setFReg(e.target.value)}
                         placeholder="J32/123/2020"
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
@@ -538,7 +538,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         value={fEmail}
                         onChange={(e) => setFEmail(e.target.value)}
                         placeholder="contabilitate@cafenea.ro"
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
@@ -548,7 +548,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         value={fAddress}
                         onChange={(e) => setFAddress(e.target.value)}
                         placeholder="Str. Nicolae Bălcescu nr. 12"
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -558,7 +558,7 @@ export default function AdminBilling({ onNotice }: Props) {
                           value={fCity}
                           onChange={(e) => setFCity(e.target.value)}
                           placeholder="Sibiu"
-                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                       </label>
                       <label className="text-xs text-slate-500">
@@ -567,7 +567,7 @@ export default function AdminBilling({ onNotice }: Props) {
                           value={fCounty}
                           onChange={(e) => setFCounty(e.target.value)}
                           placeholder="Sibiu"
-                          className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                         />
                       </label>
                     </div>
@@ -583,7 +583,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         max={28}
                         value={fDay}
                         onChange={(e) => setFDay(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
@@ -595,7 +595,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         max={100}
                         value={fVat}
                         onChange={(e) => setFVat(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                     <label className="text-xs text-slate-500">
@@ -605,7 +605,7 @@ export default function AdminBilling({ onNotice }: Props) {
                         type="date"
                         value={fTrialEnds}
                         onChange={(e) => setFTrialEnds(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-hero-blue/30 bg-hero-deep/80 px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
                       />
                     </label>
                   </div>
@@ -663,7 +663,7 @@ export default function AdminBilling({ onNotice }: Props) {
 
       {/* ---- The payload preview: what a dry run is for ---- */}
       {preview && (
-        <div className="rounded-2xl border border-hero-cyan/30 bg-hero-deep/50 p-4">
+        <div className="rounded-2xl border border-hero-cyan/30 bg-hero-navy p-4">
           <div className="flex items-baseline justify-between gap-2">
             <p className="font-display text-sm font-semibold text-hero-cyan">
               {preview.status === 'dry_run' ? '🧪 Would send to Oblio' : 'Result'} —{' '}
@@ -688,7 +688,7 @@ export default function AdminBilling({ onNotice }: Props) {
             </a>
           )}
           {preview.payload && (
-            <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-hero-deep/80 p-3 font-mono text-[10px] leading-relaxed text-slate-300">
+            <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-hero-deep p-3 font-mono text-[10px] leading-relaxed text-slate-300">
               {JSON.stringify(preview.payload, null, 2)}
             </pre>
           )}
@@ -718,7 +718,7 @@ export default function AdminBilling({ onNotice }: Props) {
               </thead>
               <tbody>
                 {data.invoices.map((i) => (
-                  <tr key={i.id} className="border-t border-hero-blue/10">
+                  <tr key={i.id} className="border-t border-white/[0.08]">
                     <td className="py-2 pr-3 text-slate-300">
                       {venueById.get(i.venue_id)?.name ?? '—'}
                     </td>
@@ -753,7 +753,7 @@ export default function AdminBilling({ onNotice }: Props) {
                           type="button"
                           onClick={() => togglePaid(i)}
                           disabled={busy === `paid:${i.id}`}
-                          className="rounded-full border border-hero-blue/40 px-2 py-0.5 text-slate-300 transition hover:border-solana-green hover:text-solana-green disabled:opacity-40"
+                          className="rounded-full border border-white/15 px-2 py-0.5 text-slate-300 transition hover:border-solana-green hover:text-solana-green disabled:opacity-40"
                         >
                           {i.paid_at ? 'Undo' : 'Mark paid'}
                         </button>

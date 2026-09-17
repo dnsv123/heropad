@@ -62,8 +62,8 @@ export default function FolderTabs({
               aria-current={on ? 'page' : undefined}
               className={`relative shrink-0 rounded-t-xl border border-b-0 px-3 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm ${
                 on
-                  ? 'z-10 border-hero-blue/30 bg-hero-deep/80 text-white'
-                  : 'border-transparent bg-hero-deep/30 text-slate-500 hover:bg-hero-deep/50 hover:text-slate-300'
+                  ? 'z-10 border-white/15 bg-hero-deep text-white'
+                  : 'border-transparent bg-hero-navy text-slate-500 hover:bg-hero-navy hover:text-slate-300'
               }`}
             >
               <span className="mr-1.5">{tab.icon}</span>
@@ -82,7 +82,7 @@ export default function FolderTabs({
               {on && (
                 <motion.span
                   layoutId="folder-tab-bridge"
-                  className="absolute inset-x-0 -bottom-px h-px bg-hero-deep/80"
+                  className="absolute inset-x-0 -bottom-px h-px bg-hero-deep"
                 />
               )}
             </button>
@@ -90,7 +90,7 @@ export default function FolderTabs({
         })}
       </div>
 
-      <div className="rounded-b-2xl rounded-tr-2xl border border-hero-blue/30 bg-hero-deep/80 p-4 sm:p-5">
+      <div className="rounded-b-2xl rounded-tr-2xl border border-white/15 bg-hero-deep p-4 sm:p-5">
         <AnimatePresence mode="wait">
           <motion.div
             key={current?.key}

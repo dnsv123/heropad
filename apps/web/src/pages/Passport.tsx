@@ -104,7 +104,7 @@ export default function Passport() {
             <button
               type="button"
               onClick={login}
-              className="rounded-full bg-[#9945FF] px-6 py-2.5 font-medium text-white transition hover:bg-[#7d34d6]"
+              className="btn btn-primary"
             >
               {t('p.login.btn')}
             </button>
@@ -229,8 +229,8 @@ export default function Passport() {
                       tier.earned
                         ? 'border-hero-gold/50 bg-hero-gold/10 text-hero-gold'
                         : isNext
-                          ? 'border-hero-cyan/40 bg-hero-deep/60 text-hero-cyan'
-                          : 'border-hero-blue/15 bg-hero-deep/60 text-slate-500'
+                          ? 'border-hero-cyan/40 bg-hero-navy text-hero-cyan'
+                          : 'border-white/[0.08] bg-hero-navy text-slate-500'
                     }`}
                   >
                     <img
@@ -313,7 +313,7 @@ export default function Passport() {
                   className={`relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border p-2 text-center transition ${
                     v.visited
                       ? 'border-hero-gold/50 bg-hero-gold/5 hover:bg-hero-gold/10'
-                      : 'border-dashed border-slate-600/40 bg-hero-deep/60 hover:border-hero-cyan/40'
+                      : 'border-dashed border-slate-600/40 bg-hero-navy hover:border-white/30'
                   }`}
                 >
                   {v.visited && (
@@ -391,7 +391,7 @@ export default function Passport() {
                with. Pure flavour, pure CSS. */}
             <div
               aria-hidden
-              className="select-none border-t border-hero-gold/20 bg-hero-deep/80 px-6 py-2.5 font-mono text-[10px] leading-relaxed tracking-[0.18em] text-slate-600"
+              className="select-none border-t border-hero-gold/20 bg-hero-deep px-6 py-2.5 font-mono text-[10px] leading-relaxed tracking-[0.18em] text-slate-600"
             >
               <p className="truncate">P&lt;SVUHEROPAD&lt;&lt;SUPERVICTOR&lt;PASSPORT&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
               <p className="truncate">

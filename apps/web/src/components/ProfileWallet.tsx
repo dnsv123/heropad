@@ -117,12 +117,12 @@ export default function ProfileWallet() {
 
     if (linkedAddr) {
       return (
-        <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
+        <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-5 md:p-8">
           <p className="text-xs uppercase tracking-wider text-slate-500">{t('w.section')}</p>
           <p className="mt-1 text-xs text-slate-500">{t('w.explain')}</p>
-          <div className="mt-3 rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4">
+          <div className="mt-3 rounded-xl border border-white/[0.08] bg-hero-navy p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <code className="max-w-full break-all rounded bg-hero-deep/80 px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
+              <code className="max-w-full break-all rounded bg-hero-deep px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
                 {linkedAddr}
               </code>
               <span className="rounded-full border border-hero-gold/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-hero-gold">
@@ -133,7 +133,7 @@ export default function ProfileWallet() {
               <button
                 type="button"
                 onClick={() => handleCopy(linkedAddr)}
-                className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-300 transition hover:border-white/30 hover:text-white"
               >
                 {copiedAddr === linkedAddr ? t('w.copied') : t('w.copy')}
               </button>
@@ -145,7 +145,7 @@ export default function ProfileWallet() {
     }
 
     return (
-      <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-8">
+      <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-8">
         <p className="text-slate-400">{t('w.loading')}</p>
       </div>
     );
@@ -154,7 +154,7 @@ export default function ProfileWallet() {
   if (wallets.length === 0) {
     if (hasLinkedSolanaWallet) {
       return (
-        <div className="rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-8 text-center">
+        <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-8 text-center">
           <p className="text-slate-300">{t('w.provisioning')}</p>
           <p className="mt-2 text-xs text-slate-500">{t('w.provisioning.hint')}</p>
         </div>
@@ -162,7 +162,7 @@ export default function ProfileWallet() {
     }
 
     return (
-      <div className="space-y-4 rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-6 text-center md:p-8">
+      <div className="space-y-4 rounded-2xl border border-white/[0.08] bg-hero-navy p-6 text-center md:p-8">
         <p className="text-slate-300">{t('w.create.hint')}</p>
         <button
           type="button"
@@ -182,7 +182,7 @@ export default function ProfileWallet() {
   // ---- Connected state ---------------------------------------------------
 
   return (
-    <div className="space-y-6 rounded-2xl border border-hero-blue/20 bg-hero-deep/40 p-5 md:p-8">
+    <div className="space-y-6 rounded-2xl border border-white/[0.08] bg-hero-navy p-5 md:p-8">
       <div className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-xs uppercase tracking-wider text-slate-500">
@@ -200,17 +200,17 @@ export default function ProfileWallet() {
           return (
             <div
               key={addr}
-              className="rounded-xl border border-hero-blue/15 bg-hero-deep/60 p-4"
+              className="rounded-xl border border-white/[0.08] bg-hero-navy p-4"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <code className="max-w-full break-all rounded bg-hero-deep/80 px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
+                <code className="max-w-full break-all rounded bg-hero-deep px-2.5 py-1.5 font-mono text-[11px] text-hero-cyan md:text-xs">
                   {addr}
                 </code>
                 <span
                   className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
                     isEmbedded
                       ? 'border-hero-gold/40 text-hero-gold'
-                      : 'border-solana-purple/40 text-solana-purple'
+                      : 'border-hero-cyan/40 text-hero-cyan'
                   }`}
                 >
                   {isEmbedded ? t('w.badge.embedded') : t('w.badge.external')}
@@ -221,7 +221,7 @@ export default function ProfileWallet() {
                 <button
                   type="button"
                   onClick={() => handleCopy(addr)}
-                  className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-hero-cyan hover:text-white"
+                  className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-300 transition hover:border-white/30 hover:text-white"
                 >
                   {copiedAddr === addr ? t('w.copied') : t('w.copy')}
                 </button>
@@ -237,11 +237,11 @@ export default function ProfileWallet() {
       {/* The whole technical truth, one click away. Key export lives here
           rather than on the surface: the people who need it go looking for
           it, and the people who don't are never asked to care. */}
-      <details className="rounded-xl border border-hero-blue/15 bg-hero-deep/30">
+      <details className="rounded-xl border border-white/[0.08] bg-hero-navy">
         <summary className="cursor-pointer px-4 py-2.5 text-xs text-slate-400 transition hover:text-slate-200">
           {t('w.adv')}
         </summary>
-        <div className="space-y-3 border-t border-hero-blue/10 px-4 py-3">
+        <div className="space-y-3 border-t border-white/[0.08] px-4 py-3">
           <p className="text-[11px] leading-relaxed text-slate-500">{t('w.adv.body')}</p>
 
           <div className="flex flex-wrap gap-2">
@@ -253,7 +253,7 @@ export default function ProfileWallet() {
                   type="button"
                   onClick={() => handleExportKey(w.address)}
                   disabled={exportingAddr === w.address}
-                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan transition hover:border-hero-cyan hover:bg-hero-cyan/10 disabled:opacity-50"
+                  className="rounded-full border border-hero-cyan/40 px-3 py-1 text-xs text-hero-cyan transition hover:border-white/30 hover:bg-hero-cyan/10 disabled:opacity-50"
                 >
                   {exportingAddr === w.address ? t('w.exporting') : t('w.export')}
                 </button>
@@ -261,7 +261,7 @@ export default function ProfileWallet() {
             <button
               type="button"
               onClick={linkWallet}
-              className="rounded-full border border-hero-blue/40 px-3 py-1 text-xs text-slate-300 transition hover:border-solana-purple hover:text-white"
+              className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-300 transition hover:border-white/30 hover:text-white"
             >
               {t('w.adv.link')}
             </button>
@@ -269,7 +269,7 @@ export default function ProfileWallet() {
 
           {exportError && <p className="text-xs text-red-400">{exportError}</p>}
 
-          <p className="rounded-md border border-hero-blue/15 bg-hero-deep/40 px-2.5 py-2 text-[11px] leading-relaxed text-slate-400">
+          <p className="rounded-md border border-white/[0.08] bg-hero-navy px-2.5 py-2 text-[11px] leading-relaxed text-slate-400">
             {t('w.adv.import')}
           </p>
         </div>
