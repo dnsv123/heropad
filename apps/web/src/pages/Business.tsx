@@ -94,7 +94,12 @@ export default function Business() {
   const [staffName, setStaffName] = useState<string | null>(null);
   /** Owner or staff: this account may work the counter here. */
   const canServe = role === 'owner' || role === 'staff';
-  const [setupCode, setSetupCode] = useState('');
+  // An invite link carries the code (?code=ABC123): the field starts filled
+  // and the new barista only has to press the button.
+  const [setupCode, setSetupCode] = useState(() => {
+    const c = (params.get('code') ?? '').toUpperCase();
+    return /^[A-Z0-9]{6,8}$/.test(c) ? c : '';
+  });
   const [scanning, setScanning] = useState(false);
 
   const [codeInput, setCodeInput] = useState('');

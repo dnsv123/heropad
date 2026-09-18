@@ -127,14 +127,24 @@ export default function VenueStaff({
    * The whole message, not just the code. An owner should not have to know the
    * link, and a barista handed a bare code has nowhere to type it.
    */
+  /** The link carries the code: the barista opens it and the field is already
+   *  filled — one tap, nothing to type on a phone behind a counter. */
+  const inviteLink = (code: string) => `${PUBLIC_BASE}/business?venue=${slug}&code=${code}`;
+
   function copyInvite(who: string, code: string) {
     void navigator.clipboard?.writeText(
       t('b.staff.invite')
         .replace('{name}', who)
-        .replace('{link}', `${PUBLIC_BASE}/business?venue=${slug}`)
+        .replace('{link}', inviteLink(code))
         .replace('{code}', code)
     );
     setCopied(`invite:${code}`);
+    window.setTimeout(() => setCopied(null), 1800);
+  }
+
+  function copyLink(code: string) {
+    void navigator.clipboard?.writeText(inviteLink(code));
+    setCopied(`link:${code}`);
     window.setTimeout(() => setCopied(null), 1800);
   }
 
@@ -179,11 +189,21 @@ export default function VenueStaff({
               {justAdded.code}
             </button>
             <p className="mt-2 text-[11px] text-slate-400">{t('b.staff.codehint')}</p>
+            {/* The link itself, visible — an owner should never have to know
+                it or ask for it. Tapping it copies it. */}
+            <button
+              type="button"
+              onClick={() => copyLink(justAdded.code)}
+              className="mt-3 block w-full truncate rounded-xl border border-white/10 bg-hero-deep px-3 py-2 text-left font-mono text-[11px] text-hero-cyan"
+              title={inviteLink(justAdded.code)}
+            >
+              {copied === `link:${justAdded.code}` ? t('b.staff.copied') : inviteLink(justAdded.code)}
+            </button>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <button
                 type="button"
                 onClick={() => copyInvite(justAdded.name, justAdded.code)}
-                className="rounded-full bg-hero-gold px-3 py-1 text-xs font-semibold text-hero-deep"
+                className="btn btn-primary btn-sm"
               >
                 {copied === `invite:${justAdded.code}`
                   ? t('b.staff.copied')
@@ -191,8 +211,15 @@ export default function VenueStaff({
               </button>
               <button
                 type="button"
+                onClick={() => copyLink(justAdded.code)}
+                className="btn btn-ghost btn-sm"
+              >
+                {copied === `link:${justAdded.code}` ? t('b.staff.copied') : t('b.staff.copylink')}
+              </button>
+              <button
+                type="button"
                 onClick={() => copy(justAdded.code)}
-                className="rounded-full border border-hero-gold/40 px-3 py-1 text-xs text-hero-gold"
+                className="btn btn-ghost btn-sm"
               >
                 {copied === justAdded.code ? t('b.staff.copied') : t('b.staff.copy')}
               </button>
