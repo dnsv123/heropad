@@ -153,7 +153,8 @@ const en = {
   'b.stats.almost': 'Almost! 🔥',
   'b.stats.full': 'Card full',
   'b.stats.pii': 'Counts only — no personal data is ever shown or stored here.',
-  'b.anycode.hint': 'Have a code? Enter it — 8 characters makes you the owner, 6 puts you on the team.',
+  'b.anycode.hint': 'Have a code from the owner or from HeroPad? Enter it here — it knows what it is for.',
+  'b.code.invalid': 'This code is not valid, or it has already been used. Ask for a new one.',
   'b.staffmode': 'You are serving as {name}. Every stamp you grant is recorded under your name.',
   'b.queued': '✓ Saved — no connection right now, it will be sent automatically.',
   'b.queued.n': '{n} waiting to be sent',
@@ -569,7 +570,7 @@ const en = {
   'consent.privacy': 'Privacy policy',
   'b.setupcode.ph': 'SETUP CODE',
   'b.setupcode.hint':
-    'Enter the 8-character setup code you received from HeroPad to link this venue to your account.',
+    'The code works once and expires. A team code was sent by the owner; an owner code came from HeroPad.',
 } as const;
 
 const ro: Record<TranslationKey, string> = {
@@ -698,7 +699,8 @@ const ro: Record<TranslationKey, string> = {
   'b.stats.almost': 'Aproape! 🔥',
   'b.stats.full': 'Card plin',
   'b.stats.pii': 'Doar cifre — nicio dată personală nu apare sau se stochează aici.',
-  'b.anycode.hint': 'Ai un cod? Introdu-l aici — 8 caractere te fac patron, 6 te adaugă în echipă.',
+  'b.anycode.hint': 'Ai un cod de la patron sau de la HeroPad? Introdu-l aici — el știe pentru ce e.',
+  'b.code.invalid': 'Codul nu e valid sau a fost deja folosit. Cere unul nou.',
   'b.staffmode': 'Servești ca {name}. Fiecare bonus pe care îl acorzi e înregistrat pe numele tău.',
   'b.queued': '✓ Salvat — momentan fără conexiune, se trimite automat.',
   'b.queued.n': '{n} în așteptare',
@@ -1112,7 +1114,7 @@ const ro: Record<TranslationKey, string> = {
   'consent.privacy': 'Politica de confidențialitate',
   'b.setupcode.ph': 'COD SETUP',
   'b.setupcode.hint':
-    'Introdu codul de setup de 8 caractere primit de la HeroPad ca să legi localul de contul tău.',
+    'Codul merge o singură dată și expiră. Codul de echipă vine de la patron; codul de patron vine de la HeroPad.',
 };
 
 export type TranslationKey = keyof typeof en;

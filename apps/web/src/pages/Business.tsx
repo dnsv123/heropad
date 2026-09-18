@@ -298,17 +298,39 @@ export default function Business() {
   }, [ready, authenticated, canServe, loadToday]);
 
   /**
-   * One field for both kinds of code. An 8-character code makes you the owner,
-   * a 6-character one puts you on the team — a distinction the person holding
-   * the code should not have to make, since they were simply given a code.
+   * One field for both kinds of code, and the person holding one should not
+   * have to know which it is. Both are now 8 characters from the same alphabet
+   * (the security audit lengthened the team code), so length cannot tell them
+   * apart any more. The seat is tried first — nine codes out of ten are seats
+   * — and only a "no such code" answer falls through to the owner claim. A
+   * rate-limit answer is shown as is, never retried.
    */
   async function handleCode() {
     const code = setupCode.trim().toUpperCase();
     if (code.length === 6) return handleJoinStaff(code);
-    return handleClaimOwnership();
+    try {
+      await handleJoinStaff(code, { quiet: true });
+      return;
+    } catch (err) {
+      const e = err as ApiErr;
+      if (e.code !== 'bad_code') {
+        setNotice({ kind: 'err', text: e.message });
+        return;
+      }
+    }
+    try {
+      await handleClaimOwnership({ quiet: true });
+    } catch (err) {
+      const e = err as ApiErr;
+      setNotice({
+        kind: 'err',
+        text: e.code === 'bad_setup_code' ? t('b.code.invalid') : e.message,
+      });
+    }
   }
 
-  async function handleJoinStaff(code: string) {
+  /** `quiet`: rethrow instead of showing the error — the caller decides. */
+  async function handleJoinStaff(code: string, opts: { quiet?: boolean } = {}) {
     setClaiming(true);
     setNotice(null);
     try {
@@ -328,13 +350,14 @@ export default function Business() {
       setStaffName(r.displayName);
       setNotice({ kind: 'ok', text: t('b.staffclaim.ok', { name: r.venueName ?? '' }) });
     } catch (err) {
+      if (opts.quiet) throw err;
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
       setClaiming(false);
     }
   }
 
-  async function handleClaimOwnership() {
+  async function handleClaimOwnership(opts: { quiet?: boolean } = {}) {
     setClaiming(true);
     setNotice(null);
     try {
@@ -357,6 +380,7 @@ export default function Business() {
       setRole('owner');
       setNotice({ kind: 'ok', text: 'You are now the merchant of this venue. ☕' });
     } catch (err) {
+      if (opts.quiet) throw err;
       setNotice({ kind: 'err', text: (err as ApiErr).message });
     } finally {
       setClaiming(false);
