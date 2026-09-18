@@ -520,10 +520,11 @@ export default function Business() {
     const customerCode = text.startsWith('HPC:') ? text.slice(4) : CODE_RE.test(text) ? text : null;
 
     if (reward && CODE_RE.test(reward)) {
+      // The reward code names its own customer server-side: scanning it IS
+      // the redemption, whether or not someone was looked up first.
       setRedeemInput(reward);
       hapticTap(15);
-      if (customer) void redeemWith(reward);
-      else setNotice({ kind: 'ok', text: t('b.n.scan.reward') });
+      void redeemWith(reward);
       return;
     }
     if (customerCode && CODE_RE.test(customerCode)) {
@@ -647,7 +648,6 @@ export default function Business() {
   }
 
   async function redeemWith(code: string) {
-    if (!customer) return;
     const rc = code.trim().toUpperCase();
     if (!CODE_RE.test(rc)) {
       setNotice({ kind: 'err', text: t('b.n.askcode') });
@@ -669,12 +669,15 @@ export default function Business() {
       >(`/api/loyalty/merchant/${slug}/redeem`, { redeemCode: rc }, token ?? undefined);
       hapticTap(30);
       setRedeemInput('');
-      setCustomer({
-        ...customer,
-        stamps: r.stamps,
-        canRedeem: r.stamps >= customer.required,
-        cardsCompleted: r.cardsCompleted,
-      });
+      if (customer) {
+        setCustomer({
+          ...customer,
+          stamps: r.stamps,
+          canRedeem: r.stamps >= customer.required,
+          cardsCompleted: r.cardsCompleted,
+        });
+      }
+      void loadToday();
       setNotice({
         kind: 'ok',
         text: r.trophy
@@ -862,11 +865,13 @@ export default function Business() {
 
               {/* Figurine check-ins — codes arrive by themselves, nobody types. */}
               {checkins.length > 0 && (
-                <div className="card-sm mt-3 border-hero-cyan/30 px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-wider text-hero-cyan">
+                <div className="card mt-3 border-hero-cyan/40 p-4">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-hero-cyan">
                     📡 {t('b.checkin.title')}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  {/* One tall row per customer at the counter: the code big
+                      enough to read from a step back, one gold button. */}
+                  <div className="mt-2 space-y-2">
                     {checkins.map((c) => (
                       <button
                         key={c.code}
@@ -876,12 +881,17 @@ export default function Business() {
                           setCodeInput(c.code);
                           void lookupCustomer(c.code);
                         }}
-                        className="chip font-mono tracking-[0.15em] text-hero-cyan hover:border-white/30 disabled:opacity-40"
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-hero-deep px-4 py-3 text-left transition hover:border-white/30 disabled:opacity-40"
                       >
-                        {c.code}
-                        <span className="font-sans text-[10px] tracking-normal text-slate-400">
-                          {c.secondsAgo < 60 ? t('b.checkin.now') : `${Math.floor(c.secondsAgo / 60)}m`}
+                        <span>
+                          <span className="block font-mono text-2xl font-bold tracking-[0.25em] text-white">
+                            {c.code}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {c.secondsAgo < 60 ? t('b.checkin.now') : `${Math.floor(c.secondsAgo / 60)} min`}
+                          </span>
                         </span>
+                        <span className="btn btn-primary btn-sm">{t('b.find')} →</span>
                       </button>
                     ))}
                   </div>
@@ -1115,6 +1125,39 @@ export default function Business() {
                     className="btn btn-secondary shrink-0 rounded-2xl"
                   >
                     {t('b.find')}
+                  </button>
+                </div>
+
+                {/* The reward code, always here — a full card is the moment
+                    the barista must not have to hunt for a field. The customer
+                    reads six characters, the barista types them, done. */}
+                <label htmlFor="redeem" className="mt-5 block text-center text-[10px] uppercase tracking-[0.18em] text-hero-gold">
+                  {t('b.reward.field')}
+                </label>
+                <div className="mt-2 flex items-stretch gap-2">
+                  <input
+                    id="redeem"
+                    type="text"
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    maxLength={6}
+                    value={redeemInput}
+                    onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !busy && CODE_RE.test(redeemInput)) void redeemWith(redeemInput);
+                    }}
+                    placeholder="REWARD"
+                    className="min-w-0 flex-1 rounded-2xl border border-hero-gold/40 bg-hero-deep px-3 py-3 text-center font-mono text-xl tracking-[0.25em] text-hero-gold placeholder:text-slate-700 focus:border-hero-gold focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    disabled={busy || !CODE_RE.test(redeemInput)}
+                    onClick={() => void redeemWith(redeemInput)}
+                    className="btn btn-primary shrink-0 rounded-2xl"
+                  >
+                    {t('b.redeem')}
                   </button>
                 </div>
               </div>
