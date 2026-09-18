@@ -798,6 +798,20 @@ export default function Business() {
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-slate-600">{t('b.setupcode.hint')}</p>
+              {/* The answer to the code, right under the button. It used to
+                  render only on the counter, i.e. only after success — a
+                  refused code looked like nothing had happened. */}
+              {notice && (
+                <p
+                  className={`mt-3 rounded-2xl border p-3 text-sm ${
+                    notice.kind === 'ok'
+                      ? 'border-solana-green/30 bg-solana-green/10 text-solana-green'
+                      : 'border-red-500/30 bg-red-500/10 text-red-200'
+                  }`}
+                >
+                  {notice.text}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={logout}
