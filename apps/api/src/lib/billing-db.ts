@@ -200,14 +200,37 @@ export async function listVenueBilling(): Promise<VenueBillingRow[]> {
   return (data ?? []) as VenueBillingRow[];
 }
 
+export type BillingPeriod = 'monthly' | 'annual';
+
+/** Annual = ten months paid, twelve served. Mirrors apps/web/src/lib/plans.ts. */
+export const ANNUAL_MONTHS_PAID = 10;
+
 export interface BillableVenue {
   venueId: string;
   slug: string;
   name: string;
   monthlyFee: number;
   billingStatus: string;
+  billingPeriod: BillingPeriod;
+  /** What the invoice is for: the monthly fee, or ten of them. */
+  amount: number;
+  /** Human line for the invoice: "Perioada oct 2026" or "oct 2026 – sep 2027". */
+  periodLabel: string;
   billing: VenueBillingRow;
 }
+
+/** 'YYYY-MM' in Bucharest time. */
+function yearMonth(d: Date): { y: number; m: number } {
+  const s = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Bucharest',
+    year: 'numeric',
+    month: '2-digit',
+  }).format(d);
+  const [y, m] = s.split('-').map(Number);
+  return { y, m };
+}
+
+const MONTHS_RO = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 /**
  * Who should be invoiced right now.
@@ -216,6 +239,10 @@ export interface BillableVenue {
  * day, the fee is above zero, billing_status is 'active', and any free trial
  * has ended. Deliberately conservative — a café invoiced by mistake during
  * its free pilot is the single worst first impression this product can make.
+ *
+ * Annual venues qualify only in their anniversary month (the month of
+ * `paid_since`; the current month if that is unset), for ten months' worth.
+ * The (venue_id, period) gate then guarantees one such invoice per year.
  */
 export async function venuesDueForInvoice(now: Date = new Date()): Promise<BillableVenue[]> {
   const supa = getSupabaseAdmin();
@@ -230,7 +257,7 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
 
   const { data: venues, error: vErr } = await supa
     .from('venues')
-    .select('id, slug, name, monthly_fee, billing_status')
+    .select('id, slug, name, monthly_fee, billing_status, billing_period, paid_since')
     .in('id', rows.map((r) => r.venue_id));
   if (vErr) throw new Error(`[Supabase] venuesDueForInvoice(venues): ${vErr.message}`);
 
@@ -241,6 +268,8 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
       name: string;
       monthly_fee: number | string | null;
       billing_status: string | null;
+      billing_period: string | null;
+      paid_since: string | null;
     }>).map((v) => [v.id, v])
   );
 
@@ -248,6 +277,7 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
     new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bucharest', day: '2-digit' })
       .format(now)
   );
+  const { y: yNow, m: mNow } = yearMonth(now);
 
   const due: BillableVenue[] = [];
   for (const b of rows) {
@@ -258,12 +288,37 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
     if (!(fee > 0)) continue;
     if (dayNow < b.billing_day) continue;
     if (b.trial_ends_at && new Date(b.trial_ends_at).getTime() > now.getTime()) continue;
+
+    const period: BillingPeriod = v.billing_period === 'annual' ? 'annual' : 'monthly';
+    if (period === 'annual') {
+      // Anniversary month only. paid_since is 'YYYY-MM-DD'; unset = now.
+      const anniv = v.paid_since ? Number(v.paid_since.slice(5, 7)) : mNow;
+      if (anniv !== mNow) continue;
+      const endM = ((mNow + 10) % 12) + 1; // eleven months on, inclusive
+      const endY = mNow + 11 > 12 ? yNow + 1 : yNow;
+      due.push({
+        venueId: b.venue_id,
+        slug: v.slug,
+        name: v.name,
+        monthlyFee: fee,
+        billingStatus: v.billing_status ?? 'trial',
+        billingPeriod: 'annual',
+        amount: fee * ANNUAL_MONTHS_PAID,
+        periodLabel: `Abonament anual ${MONTHS_RO[mNow - 1]} ${yNow} – ${MONTHS_RO[endM - 1]} ${endY} (12 luni, 10 plătite)`,
+        billing: b,
+      });
+      continue;
+    }
+
     due.push({
       venueId: b.venue_id,
       slug: v.slug,
       name: v.name,
       monthlyFee: fee,
       billingStatus: v.billing_status ?? 'trial',
+      billingPeriod: 'monthly',
+      amount: fee,
+      periodLabel: `Perioada ${MONTHS_RO[mNow - 1]} ${yNow}`,
       billing: b,
     });
   }

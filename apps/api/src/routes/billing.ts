@@ -14,6 +14,7 @@ import {
   listVenueBilling,
   markInvoicePaid,
   periodLabel,
+  ANNUAL_MONTHS_PAID,
   releaseInvoice,
   reserveInvoice,
   upsertVenueBilling,
@@ -101,7 +102,7 @@ async function issueForVenue(v: BillableVenue, period: string): Promise<IssueOut
   const reserved = await reserveInvoice(
     v.venueId,
     period,
-    v.monthlyFee,
+    v.amount,
     'RON',
     due.toISOString()
   );
@@ -122,9 +123,11 @@ async function issueForVenue(v: BillableVenue, period: string): Promise<IssueOut
         country: v.billing.country,
         email: v.billing.invoice_email ?? undefined,
       },
-      productName: `Abonament HeroPad — ${PLAN_LABEL[plan] ?? plan} (${v.name})`,
-      periodLabel: `Perioada ${periodLabel(period)}`,
-      price: v.monthlyFee,
+      productName: `Abonament HeroPad — ${PLAN_LABEL[plan] ?? plan}${
+        v.billingPeriod === 'annual' ? ' — anual' : ''
+      } (${v.name})`,
+      periodLabel: v.periodLabel,
+      price: v.amount,
       currency: 'RON',
       vatPercentage: vat,
       issueDate: isoDate(now),
@@ -140,7 +143,7 @@ async function issueForVenue(v: BillableVenue, period: string): Promise<IssueOut
       return {
         ...base,
         status: 'dry_run',
-        amount: v.monthlyFee,
+        amount: v.amount,
         payload: result.payload,
       };
     }
@@ -153,7 +156,7 @@ async function issueForVenue(v: BillableVenue, period: string): Promise<IssueOut
     return {
       ...base,
       status: 'issued',
-      amount: v.monthlyFee,
+      amount: v.amount,
       series: result.seriesName,
       number: result.number,
       link: result.link,
@@ -322,6 +325,14 @@ billingAdminRouter.post('/issue', async (req: Request, res: Response) => {
       });
     }
 
+    // The manual button respects the venue's billing period too: an annual
+    // café pressed by hand gets one annual invoice, never a monthly one.
+    const isAnnual = (venue as { billing_period?: string }).billing_period === 'annual';
+    const period = parsed.data.period ?? billingPeriod();
+    const [py, pm] = period.split('-').map(Number);
+    const endM = ((pm + 10) % 12) + 1;
+    const endY = pm + 11 > 12 ? py + 1 : py;
+    const MONTHS_RO = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     const outcome = await issueForVenue(
       {
         venueId: venue.id,
@@ -329,9 +340,14 @@ billingAdminRouter.post('/issue', async (req: Request, res: Response) => {
         name: venue.name,
         monthlyFee: fee,
         billingStatus: String((venue as { billing_status?: string }).billing_status ?? 'trial'),
+        billingPeriod: isAnnual ? 'annual' : 'monthly',
+        amount: isAnnual ? fee * ANNUAL_MONTHS_PAID : fee,
+        periodLabel: isAnnual
+          ? `Abonament anual ${MONTHS_RO[pm - 1]} ${py} – ${MONTHS_RO[endM - 1]} ${endY} (12 luni, 10 plătite)`
+          : `Perioada ${periodLabel(period)}`,
         billing,
       },
-      parsed.data.period ?? billingPeriod()
+      period
     );
     return res.status(200).json({ ok: true, result: outcome });
   } catch (err) {

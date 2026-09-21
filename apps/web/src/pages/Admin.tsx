@@ -39,6 +39,7 @@ interface VenueRow {
   gpsLng: number | null;
   monthlyFee: number;
   billingStatus: string;
+  billingPeriod: 'monthly' | 'annual';
   paidSince: string | null;
   partnerCode: string | null;
   /** The package, and the addons that explain the fee. null = not set yet. */
@@ -647,6 +648,7 @@ export default function Admin() {
                                 currentPlan={v.plan}
                                 currentAddons={v.addons ?? []}
                                 currentFee={v.monthlyFee}
+                                currentPeriod={v.billingPeriod}
                                 onApply={(patch) => saveBilling(v, patch)}
                               />
 
@@ -710,6 +712,18 @@ export default function Admin() {
                                         {pc.name} ({pc.code})
                                       </option>
                                     ))}
+                                  </select>
+                                </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Invoiced
+                                  <InfoTip text="monthly = 12 invoices a year of the fee · annual = ONE invoice a year of 10 × fee (2 months free), issued in the month of 'paid since'. The fee itself stays monthly — partner commission reads it month by month either way." />
+                                  <select
+                                    value={v.billingPeriod}
+                                    onChange={(e) => void saveBilling(v, { billingPeriod: e.target.value })}
+                                    className="mt-1 block rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
+                                  >
+                                    <option value="monthly">monthly</option>
+                                    <option value="annual">annual (10 × fee)</option>
                                   </select>
                                 </label>
                                 {v.billingStatus === 'active' && v.paidSince && (

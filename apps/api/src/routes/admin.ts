@@ -108,7 +108,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     const { data: venues, error } = await supa
       .from('venues')
       .select(
-        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, paid_since, referred_by, staff_seats, plan, addons, created_at'
+        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, billing_period, paid_since, referred_by, staff_seats, plan, addons, created_at'
       )
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -127,6 +127,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
       gps_lng: number | null;
       monthly_fee: number | string | null;
       billing_status: string | null;
+      billing_period: string | null;
       paid_since: string | null;
       plan: string | null;
       addons: unknown;
@@ -212,6 +213,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         gpsLng: v.gps_lng,
         monthlyFee: Number(v.monthly_fee ?? 0),
         billingStatus: v.billing_status ?? 'trial',
+        billingPeriod: v.billing_period === 'annual' ? 'annual' : 'monthly',
         paidSince: v.paid_since,
         plan: v.plan ?? null,
         addons: Array.isArray(v.addons) ? v.addons : [],
@@ -300,6 +302,8 @@ const UpdateBody = z.object({
   // so they live on the venue rather than being retyped every month.
   monthlyFee: z.number().min(0).max(100000).optional(),
   billingStatus: z.enum(['trial', 'active', 'paused', 'cancelled']).optional(),
+  /** monthly = 12 invoices of the fee; annual = one invoice of 10 × fee per year. */
+  billingPeriod: z.enum(['monthly', 'annual']).optional(),
   paidSince: z.string().trim().max(20).nullable().optional(),
   /** Referral code of the partner who brought this venue; '' clears it. */
   partnerCode: z.string().trim().max(40).nullable().optional(),
@@ -390,6 +394,7 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
       patch.branding = branding;
     }
     if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
+    if (i.billingPeriod !== undefined) patch.billing_period = i.billingPeriod;
     if (i.plan !== undefined) patch.plan = i.plan;
     if (i.addons !== undefined) patch.addons = i.addons;
     if (i.staffSeats !== undefined) patch.staff_seats = i.staffSeats;

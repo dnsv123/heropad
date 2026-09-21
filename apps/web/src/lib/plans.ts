@@ -10,6 +10,19 @@
 
 export type PlanKey = 'starter' | 'branded' | 'growth' | 'chain' | 'founding';
 
+export type BillingPeriod = 'monthly' | 'annual';
+
+/**
+ * Annual = pay for ten months, get twelve. Said as "2 luni gratis", never as
+ * a percentage: two free months are understood at a counter, 16.7% is not.
+ * One invoice a year, in the month the venue went active.
+ */
+export const ANNUAL_MONTHS_PAID = 10;
+
+export function annualPrice(monthly: number): number {
+  return monthly * ANNUAL_MONTHS_PAID;
+}
+
 export interface PlanDef {
   key: PlanKey;
   name: string;
