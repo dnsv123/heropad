@@ -274,7 +274,7 @@ const PASSPORT_LABEL: Record<PassportTierKey, string> = {
 function passportUri(tier: PassportTierKey): string {
   return (
     process.env[`PASSPORT_METADATA_URI_${tier.toUpperCase()}`] ??
-    `https://heropad.vercel.app/cnft/passport-${tier}.json`
+    `https://heropad.supervictoruniverse.com/cnft/passport-${tier}.json`
   );
 }
 
@@ -1995,7 +1995,7 @@ const RedeemBody = z.object({
  */
 function trophyUri(): string {
   return (
-    process.env.TROPHY_METADATA_URI ?? 'https://heropad.vercel.app/cnft/trophy.json'
+    process.env.TROPHY_METADATA_URI ?? 'https://heropad.supervictoruniverse.com/cnft/trophy.json'
   );
 }
 

@@ -117,7 +117,7 @@ claimRouter.post('/', async (req: Request, res: Response) => {
       symbol?: string;
     };
     const name = template.name ?? `${characterName} — ${code.slice(-4)}`;
-    const uri = template.uri ?? 'https://heropad.vercel.app/cnft/placeholder.json';
+    const uri = template.uri ?? 'https://heropad.supervictoruniverse.com/cnft/super-victor.json';
     const symbol = template.symbol ?? 'HEROPAD';
 
     // 5. Mint cNFT.
