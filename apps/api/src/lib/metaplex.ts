@@ -7,8 +7,11 @@ import {
 import { publicKey } from '@metaplex-foundation/umi';
 import bs58 from 'bs58';
 
-import { getAdminUmi } from './solana-admin.js';
-import { getSolanaConfig } from './supabase-admin.js';
+import { createTree } from '@metaplex-foundation/mpl-bubblegum';
+import { generateSigner } from '@metaplex-foundation/umi';
+
+import { getAdminUmi, rpcCluster } from './solana-admin.js';
+import { getSolanaConfig, setSolanaConfig } from './supabase-admin.js';
 
 // Bubblegum cNFT minting.
 // -----------------------
@@ -24,20 +27,59 @@ import { getSolanaConfig } from './supabase-admin.js';
 //   2. Fallback: fetch the tree state, read sequenceNumber, derive the leaf
 //      PDA. Costs one extra RPC call but is bulletproof.
 
-const TREE_CONFIG_KEY = 'bubblegum_tree';
+/**
+ * One tree per cluster. The devnet tree was stored under the bare key before
+ * mainnet existed; mainnet gets its own key so flipping SOLANA_RPC_URL can
+ * never make the API mint into a tree that lives on the other network.
+ */
+export function treeConfigKey(): string {
+  return rpcCluster() === 'mainnet' ? 'bubblegum_tree_mainnet' : 'bubblegum_tree';
+}
 
 /** Reads the configured Bubblegum tree address. Throws if not initialized. */
 export async function getBubblegumTreeAddress(): Promise<string> {
   if (process.env.BUBBLEGUM_TREE_ADDRESS) {
     return process.env.BUBBLEGUM_TREE_ADDRESS;
   }
-  const stored = await getSolanaConfig(TREE_CONFIG_KEY);
+  const stored = await getSolanaConfig(treeConfigKey());
   if (!stored) {
     throw new Error(
-      '[Bubblegum] No tree address configured. Run `tsx apps/api/scripts/create-tree.ts` once to create one.'
+      `[Bubblegum] No tree for ${rpcCluster()}. Create one from Admin → Network (or scripts/create-tree.ts).`
     );
   }
   return stored;
+}
+
+/** The tree for the current cluster, or null when none has been created yet. */
+export async function findBubblegumTreeAddress(): Promise<string | null> {
+  if (process.env.BUBBLEGUM_TREE_ADDRESS) return process.env.BUBBLEGUM_TREE_ADDRESS;
+  return getSolanaConfig(treeConfigKey());
+}
+
+const TREE_MAX_DEPTH = 14; // 2^14 = 16,384 trophies
+const TREE_MAX_BUFFER = 64;
+
+/**
+ * Creates the Bubblegum tree for the current cluster and stores its address.
+ * Refuses when one already exists — a second tree would orphan the first.
+ * Rent for depth 14 / buffer 64 is in the region of 0.06 SOL (verify on
+ * mainnet before pressing the button with a near-empty wallet).
+ */
+export async function createBubblegumTree(): Promise<{ address: string; signature: string }> {
+  const existing = await getSolanaConfig(treeConfigKey());
+  if (existing) throw new Error(`A ${rpcCluster()} tree already exists: ${existing}`);
+  const umi = getAdminUmi();
+  const merkleTree = generateSigner(umi);
+  const builder = await createTree(umi, {
+    merkleTree,
+    maxDepth: TREE_MAX_DEPTH,
+    maxBufferSize: TREE_MAX_BUFFER,
+    public: false,
+  });
+  const { signature } = await builder.sendAndConfirm(umi, { confirm: { commitment: 'confirmed' } });
+  const address = merkleTree.publicKey.toString();
+  await setSolanaConfig(treeConfigKey(), address);
+  return { address, signature: bs58.encode(signature) };
 }
 
 export interface MintCnftInput {

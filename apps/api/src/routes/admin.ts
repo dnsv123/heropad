@@ -23,6 +23,10 @@ import {
   updatePartner,
   upsertPayout,
 } from '../lib/partners-db.js';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+
+import { createBubblegumTree, findBubblegumTreeAddress } from '../lib/metaplex.js';
+import { getAdminConnection, getAdminPublicKey, rpcCluster } from '../lib/solana-admin.js';
 import { billingAdminRouter } from './billing.js';
 import { rewardsAdminRouter } from './rewards.js';
 
@@ -95,6 +99,51 @@ function setupCode(): string {
   for (let i = 0; i < 8; i++) out += TOKEN_ALPHABET[randomInt(TOKEN_ALPHABET.length)];
   return out;
 }
+
+// --- Network: what the API is pointed at, and the one button that needs it ---
+
+// GET /api/admin/solana — cluster, admin wallet, balance, tree. No secrets:
+// the public key and the balance are exactly what an explorer shows.
+adminRouter.get('/solana', async (_req: Request, res: Response) => {
+  try {
+    const cluster = rpcCluster();
+    let adminPubkey: string | null = null;
+    let balanceSol: number | null = null;
+    let keyError: string | null = null;
+    try {
+      adminPubkey = getAdminPublicKey();
+      const lamports = await getAdminConnection().getBalance(new PublicKey(adminPubkey));
+      balanceSol = lamports / LAMPORTS_PER_SOL;
+    } catch (err) {
+      keyError = (err as Error).message;
+    }
+    const tree = adminPubkey ? await findBubblegumTreeAddress() : null;
+    return res.status(200).json({ ok: true, cluster, adminPubkey, balanceSol, tree, keyError });
+  } catch (err) {
+    return serverError(res, 'solana', err);
+  }
+});
+
+// POST /api/admin/solana/tree — create the trophy tree for the current
+// cluster. Idempotent by refusal: a second call is answered with the address
+// that already exists. Costs rent from the admin wallet, hence admin-only and
+// behind the balance shown on the same screen.
+adminRouter.post('/solana/tree', async (_req: Request, res: Response) => {
+  try {
+    const existing = await findBubblegumTreeAddress();
+    if (existing) {
+      return res.status(409).json({
+        ok: false,
+        error: 'tree_exists',
+        message: `A ${rpcCluster()} tree already exists: ${existing}`,
+      });
+    }
+    const created = await createBubblegumTree();
+    return res.status(201).json({ ok: true, cluster: rpcCluster(), ...created });
+  } catch (err) {
+    return serverError(res, 'solana/tree', err);
+  }
+});
 
 // GET /api/admin/me — is the caller an admin? (drives the UI gate)
 adminRouter.get('/me', (req: Request, res: Response) => {

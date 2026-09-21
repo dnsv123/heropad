@@ -30,6 +30,23 @@ function getRpcUrl(): string {
   return url;
 }
 
+/**
+ * Which cluster the RPC URL points at, from its hostname. Helius encodes it
+ * as a subdomain (devnet.helius-rpc.com / mainnet.helius-rpc.com); public
+ * endpoints say it in the host too.
+ */
+export function rpcCluster(): 'devnet' | 'mainnet' | 'unknown' {
+  let host: string;
+  try {
+    host = new URL(getRpcUrl()).hostname.toLowerCase();
+  } catch {
+    return 'unknown';
+  }
+  if (host.includes('devnet')) return 'devnet';
+  if (host.includes('mainnet')) return 'mainnet';
+  return 'unknown';
+}
+
 /** Long-lived RPC Connection (web3.js). Cached across requests. */
 export function getAdminConnection(): Connection {
   if (!cachedConnection) {

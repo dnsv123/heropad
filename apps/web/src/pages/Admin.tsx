@@ -7,6 +7,7 @@ import AdminPartners from '../components/AdminPartners';
 import AdminRewards from '../components/AdminRewards';
 import AdminOrders from '../components/AdminOrders';
 import AdminGuide from '../components/AdminGuide';
+import AdminNetwork from '../components/AdminNetwork';
 import EmojiPick from '../components/EmojiPick';
 import FolderTabs from '../components/FolderTabs';
 import InfoTip from '../components/InfoTip';
@@ -1093,6 +1094,12 @@ export default function Admin() {
                 </div>
               </div>
             ),
+          },
+          {
+            key: 'network',
+            icon: '🛰️',
+            label: 'Network',
+            render: () => <AdminNetwork />,
           },
           {
             key: 'guide',
