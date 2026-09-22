@@ -1842,7 +1842,7 @@ loyaltyRouter.post(
       // with an active multiplier — otherwise a 3× happy hour would reject
       // every 4+ item purchase outright.
       const dailyCap = MAX_STAMPS_PER_DAY * (hhMult ?? 1);
-      const today = await countStampsToday(customer.id, owned.venue.id);
+      const today = await countStampsToday(customer.id, owned.venue.id, owned.venue.timezone ?? undefined);
       if (today + effectiveCount > dailyCap) {
         return res.status(429).json({
           ok: false,
@@ -1940,11 +1940,7 @@ loyaltyRouter.post(
       // never remove the same one twice.
       let removedCount = 0;
       for (let i = 0; i < parsed.data.count; i++) {
-        const ok = await revokeLatestStampToday(
-          customer.id,
-          owned.venue.id,
-          owned.merchantIdentityId
-        );
+        const ok = await revokeLatestStampToday(customer.id, owned.venue.id, owned.merchantIdentityId, owned.venue.timezone ?? undefined);
         if (!ok) break;
         removedCount += 1;
       }

@@ -103,7 +103,7 @@ const en = {
   'biz.b3.d': 'Stamps granted only from your counter; redemptions need one-time codes that expire in 5 minutes.',
   'biz.b4.t': 'Zero GDPR headaches',
   'biz.b4.d': 'You never see customers’ emails or personal data — only anonymous counts.',
-  'biz.pricing': 'Free 2-month pilot · then from $22/month',
+  'biz.pricing': 'Free 2-week pilot · then from $22/month',
   'biz.cta': 'Book a free demo',
   // --- Landing: ecosystem ---
   'eco.title': 'Part of the SuperVictor Universe',
@@ -701,7 +701,7 @@ const ro: Record<TranslationKey, string> = {
   'biz.b3.d': 'Bonusurile se dau doar de la casa ta; răscumpărările cer coduri unice care expiră în 5 minute.',
   'biz.b4.t': 'Zero bătăi de cap cu GDPR',
   'biz.b4.d': 'Nu vezi niciodată emailurile sau datele personale ale clienților — doar cifre anonime.',
-  'biz.pricing': 'Pilot gratuit 2 luni · apoi de la 99 lei/lună',
+  'biz.pricing': 'Pilot gratuit 2 săptămâni · apoi de la 99 lei/lună',
   'biz.cta': 'Programează un demo gratuit',
   'eco.title': 'Parte din SuperVictor Universe',
   'eco.sub': 'HeroPad e una dintre porțile către un univers în creștere de eroi, jocuri și colecții.',

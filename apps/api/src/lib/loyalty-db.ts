@@ -448,18 +448,47 @@ export async function reserveTrophyMint(rewardId: string): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-/** Stamps granted to this user at this venue today (UTC) — soft anti-abuse cap. */
+/**
+ * The venue's own "today": the instant its local midnight passed and the next
+ * one. Everything a barista thinks of as "today" (the daily cap, the window
+ * for a correction) has to use the clock on the café wall, not UTC — a cap
+ * that resets at 03:00 in Sibiu is a cap nobody understands.
+ */
+export function localDayBounds(timeZone = 'Europe/Bucharest'): { start: string; end: string } {
+  let zone = timeZone;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+  } catch {
+    zone = 'Europe/Bucharest';
+  }
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: zone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const num = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const sinceMidnight = (num('hour') * 3600 + num('minute') * 60 + num('second')) * 1000 + now.getMilliseconds();
+  const start = now.getTime() - sinceMidnight;
+  return { start: new Date(start).toISOString(), end: new Date(start + 86_400_000).toISOString() };
+}
+
+/** Stamps granted to this user at this venue today, in the venue's time zone — soft anti-abuse cap. */
 export async function countStampsToday(
   identityId: string,
-  venueId: string
+  venueId: string,
+  timeZone?: string
 ): Promise<number> {
-  const today = new Date().toISOString().slice(0, 10);
+  const day = localDayBounds(timeZone);
   const { count, error } = await getSupabaseAdmin()
     .from('stamps')
     .select('id', { count: 'exact', head: true })
     .eq('user_identity_id', identityId)
     .eq('venue_id', venueId)
-    .eq('stamp_day', today)
+    .gte('created_at', day.start)
+    .lt('created_at', day.end)
     .is('revoked_at', null);
   if (error) throw new Error(`[Supabase] countStampsToday: ${error.message}`);
   return count ?? 0;
@@ -504,16 +533,18 @@ export async function grantStamps(input: {
 export async function revokeLatestStampToday(
   identityId: string,
   venueId: string,
-  revokedBy: string | null
+  revokedBy: string | null,
+  timeZone?: string
 ): Promise<boolean> {
   const supa = getSupabaseAdmin();
-  const today = new Date().toISOString().slice(0, 10);
+  const day = localDayBounds(timeZone);
   const { data, error } = await supa
     .from('stamps')
     .select('id')
     .eq('user_identity_id', identityId)
     .eq('venue_id', venueId)
-    .eq('stamp_day', today)
+    .gte('created_at', day.start)
+    .lt('created_at', day.end)
     .is('revoked_at', null)
     .order('created_at', { ascending: false })
     .limit(1);

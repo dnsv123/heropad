@@ -81,7 +81,7 @@ sequenceDiagram
   API->>API: requireAuth → loadCounterVenue (owner or active staff)
   API->>DB: insert idempotency_keys (grant:venue:requestId) — dup ⇒ no-op
   API->>API: self-grant block; happy-hour multiplier from venue tz
-  API->>DB: countStampsToday (UTC stamp_day) vs cap 15 × multiplier
+  API->>DB: countStampsToday (venue-local day) vs cap 15 × multiplier
   API->>DB: insert count × multiplier rows into stamps (source='merchant')
   API-->>B: {granted, stamps, required, canRedeem}
   API-)DB: off-path: passport check, referral check, +2 BITS/stamp, clear check-in
@@ -97,7 +97,7 @@ grant. Grants are idempotent by `requestId`, so the counter can queue a grant
 in `localStorage` while offline and replay it safely
 (`apps/web/src/services/offlineQueue.ts`, grants only, 12 h max age).
 Revoke (`POST /merchant/:slug/revoke`) marks `revoked_at`/`revoked_by` on the
-newest stamp of the UTC day; nothing is deleted. Balance is arithmetic, not a
+newest stamp of the venue's local day; nothing is deleted. Balance is arithmetic, not a
 card row: `live stamps − Σ rewards_redeemed.stamps_consumed`, clamped at 0
 (`apps/api/src/lib/loyalty-db.ts` `getVenueProgress`).
 
@@ -313,9 +313,9 @@ ownership queries depend on an indexer rather than on-chain accounts.
 3. In-memory state (check-ins, every rate-limit store, the `/api/user/me`
    cache) assumes the single Railway instance that runs today and is lost on
    redeploy.
-4. Daily stamp cap and revoke window use the UTC `stamp_day`; happy hour
-   and birthday use the venue's `timezone`. A venue in Bucharest gets a cap
-   day that ends at 03:00 local.
+4. Daily stamp cap, the correction window, happy hour and birthday all use
+   the venue's `timezone` now; the `stamp_day` column (UTC) remains for
+   reporting only. On a DST switch day the cap window is one hour off.
 5. No staging environment. Development runs against production data behind
    the service-role key.
 6. Privy wallet export exists in the UI but has not been tested end to end.
