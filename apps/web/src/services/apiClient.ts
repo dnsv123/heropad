@@ -83,6 +83,19 @@ export function postJson<TReq, TRes>(path: string, body: TReq, token?: string): 
   );
 }
 
+/** PUT <base>/path with a JSON body, parsed as JSON. Pass a token for authed routes. */
+export function putJson<TReq, TRes>(path: string, body: TReq, token?: string): Promise<TRes> {
+  return request<TRes>(
+    path,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    token
+  );
+}
+
 /** Exposed for display / debugging (e.g. error messages). */
 export function getApiBaseUrl(): string {
   return API_BASE_URL;

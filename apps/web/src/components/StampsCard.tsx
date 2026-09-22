@@ -27,6 +27,8 @@ interface StampsCardProps {
   /** Index (0-based) of a stamp that JUST arrived — triggers the flight. */
   newStamp: number | null;
   onFlightDone: () => void;
+  /** Stamp counts where a milestone reward waits (e.g. [3, 6]); marked on the card. */
+  milestones?: number[];
 }
 
 /** Which of the 10 level artworks stamp #i (0-based) shows, for any threshold. */
@@ -41,6 +43,7 @@ export default function StampsCard({
   canRedeem,
   newStamp,
   onFlightDone,
+  milestones = [],
 }: StampsCardProps) {
   const { t } = useT();
   const [hidden, setHidden] = useState(false);
@@ -112,13 +115,18 @@ export default function StampsCard({
               const earned = i < clamped;
               const isNext = i === clamped && !isFree;
               const inFlight = flight?.index === i;
+              // Stamp #(i+1) completes a milestone: a small gift mark on the
+              // rim says "something is handed over here", before the end.
+              const isMilestone = !isFree && milestones.includes(i + 1);
               return (
                 <div
                   key={i}
                   ref={(el) => {
                     cellRefs.current[i] = el;
                   }}
-                  className={`relative mx-auto flex aspect-square w-full max-w-[56px] items-center justify-center overflow-hidden rounded-full border-2 ${
+                  className={`relative mx-auto flex aspect-square w-full max-w-[56px] items-center justify-center rounded-full border-2 ${
+                    isMilestone ? 'ring-2 ring-hero-gold/70 ring-offset-2 ring-offset-hero-deep' : ''
+                  } ${
                     isFree
                       ? canRedeem
                         ? 'animate-pulse border-solana-green bg-solana-green/15'
@@ -141,7 +149,7 @@ export default function StampsCard({
                       width={56}
                       height={56}
                       draggable={false}
-                      className={`h-full w-full object-cover transition duration-500 ${
+                      className={`h-full w-full rounded-full object-cover transition duration-500 ${
                         earned && !inFlight
                           ? ''
                           : earned && inFlight
@@ -149,6 +157,14 @@ export default function StampsCard({
                             : 'opacity-30 grayscale'
                       }`}
                     />
+                  )}
+                  {isMilestone && (
+                    <span
+                      aria-hidden
+                      className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-hero-gold text-[11px] leading-none shadow"
+                    >
+                      🎁
+                    </span>
                   )}
                 </div>
               );

@@ -23,6 +23,7 @@ import {
   type QueuedGrant,
 } from '../services/offlineQueue';
 import { useT } from '../i18n';
+import MilestoneEditor from '../components/MilestoneEditor';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
 import VenueStaff from '../components/VenueStaff';
@@ -61,6 +62,23 @@ interface CustomerInfo {
   birthdayToday?: boolean;
   /** Rewards claimed with BITS that can be handed over at THIS counter. */
   rewards?: Array<{ code: string; itemName: string; imageUrl: string | null; priceBits: number }>;
+  /** Milestones on the way, with where this customer stands on the current card. */
+  milestones?: MilestoneState[];
+}
+
+interface MilestoneState {
+  at: number;
+  label: string;
+  claimed: boolean;
+  claimable: boolean;
+}
+
+/** What a reward code can be used for right now — the barista picks. */
+interface RedeemChoice {
+  code: string;
+  full: boolean;
+  rewardLabel: string | null;
+  tiers: MilestoneState[];
 }
 
 interface ApiErr {
@@ -104,6 +122,7 @@ export default function Business() {
 
   const [codeInput, setCodeInput] = useState('');
   const [redeemInput, setRedeemInput] = useState('');
+  const [redeemChoice, setRedeemChoice] = useState<RedeemChoice | null>(null);
   const [customer, setCustomer] = useState<CustomerInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -647,7 +666,13 @@ export default function Business() {
     return redeemWith(redeemInput);
   }
 
-  async function redeemWith(code: string) {
+  /**
+   * A reward code can mean the full card OR a milestone on the way. With no
+   * choice given, ask the server what the code is good for: nothing to
+   * choose → redeem the full card straight away; milestones waiting → show
+   * the barista the options and let them pick what they are handing over.
+   */
+  async function redeemWith(code: string, choice?: number | 'full') {
     const rc = code.trim().toUpperCase();
     if (!CODE_RE.test(rc)) {
       setNotice({ kind: 'err', text: t('b.n.askcode') });
@@ -657,16 +682,37 @@ export default function Business() {
     setNotice(null);
     try {
       const token = await getAccessToken();
+      if (choice === undefined) {
+        const opts = await postJson<
+          { redeemCode: string },
+          { ok: true; full: boolean; rewardLabel: string | null; milestones: MilestoneState[]; stamps: number; required: number }
+        >(`/api/loyalty/merchant/${slug}/redeem-options`, { redeemCode: rc }, token ?? undefined);
+        const tiers = opts.milestones.filter((m) => m.claimable);
+        if (tiers.length > 0) {
+          setRedeemChoice({ code: rc, full: opts.full, rewardLabel: opts.rewardLabel, tiers });
+          return;
+        }
+        if (!opts.full) {
+          setNotice({ kind: 'err', text: `${opts.stamps}/${opts.required}` });
+          return;
+        }
+      }
+      setRedeemChoice(null);
       const r = await postJson<
-        { redeemCode: string },
+        { redeemCode: string; milestoneAt?: number },
         {
           ok: true;
           stamps: number;
           cardsCompleted: number;
+          milestone?: { at: number; label: string };
           trophy: { assetId: string } | null;
           trophySkipped: string | null;
         }
-      >(`/api/loyalty/merchant/${slug}/redeem`, { redeemCode: rc }, token ?? undefined);
+      >(
+        `/api/loyalty/merchant/${slug}/redeem`,
+        typeof choice === 'number' ? { redeemCode: rc, milestoneAt: choice } : { redeemCode: rc },
+        token ?? undefined
+      );
       hapticTap(30);
       setRedeemInput('');
       if (customer) {
@@ -675,14 +721,21 @@ export default function Business() {
           stamps: r.stamps,
           canRedeem: r.stamps >= customer.required,
           cardsCompleted: r.cardsCompleted,
+          milestones: r.milestone
+            ? (customer.milestones ?? []).map((m) =>
+                m.at === r.milestone?.at ? { ...m, claimed: true, claimable: false } : m
+              )
+            : (customer.milestones ?? []).map((m) => ({ ...m, claimed: false, claimable: false })),
         });
       }
       void loadToday();
       setNotice({
         kind: 'ok',
-        text: r.trophy
-          ? t('b.n.redeemed.trophy')
-          : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`,
+        text: r.milestone
+          ? t('b.n.tier', { label: r.milestone.label })
+          : r.trophy
+            ? t('b.n.redeemed.trophy')
+            : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`,
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -984,6 +1037,24 @@ export default function Business() {
                       />
                     </div>
 
+                    {/* Where this customer stands on the milestones: a gold
+                        chip means something is waiting to be handed over. */}
+                    {customer.milestones && customer.milestones.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {customer.milestones.map((m) => (
+                          <span
+                            key={m.at}
+                            className={`chip ${
+                              m.claimable ? 'chip-gold' : m.claimed ? 'border-solana-green/40 text-solana-green' : 'opacity-60'
+                            }`}
+                          >
+                            🎁 {m.label} · {t('ms.at', { n: m.at })}
+                            {m.claimed ? ` · ${t('ms.claimed')}` : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="mt-5">
                       <p className="mb-2 text-xs text-slate-500">{t('b.coffees')}</p>
                       {/* Symmetric on purpose: -2 -1 +1 +2 reads as one scale
@@ -1161,6 +1232,47 @@ export default function Business() {
                   </button>
                 </div>
               </div>
+
+              {/* The code is good for more than one thing: the barista says
+                  what is going over the counter. Full card first when it is
+                  there, then the milestones, each a big button. */}
+              {redeemChoice && (
+                <div className="card-sm card-gold mt-3 p-4">
+                  <p className="text-xs font-semibold text-hero-gold">{t('b.choose')}</p>
+                  <div className="mt-2 grid gap-2">
+                    {redeemChoice.full && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void redeemWith(redeemChoice.code, 'full')}
+                        className="btn btn-primary w-full justify-between"
+                      >
+                        <span>🏆 {t('b.choose.full')}</span>
+                        <span className="text-xs opacity-80">{redeemChoice.rewardLabel ?? ''}</span>
+                      </button>
+                    )}
+                    {redeemChoice.tiers.map((m) => (
+                      <button
+                        key={m.at}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void redeemWith(redeemChoice.code, m.at)}
+                        className="btn btn-secondary w-full justify-between"
+                      >
+                        <span>🎁 {m.label}</span>
+                        <span className="text-xs opacity-80">{t('ms.at', { n: m.at })}</span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setRedeemChoice(null)}
+                      className="btn btn-ghost btn-sm"
+                    >
+                      {t('b.choose.cancel')}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* BITS reward hand-over BY CODE — the fallback for a customer
                   who shows the code without being looked up first. Its own
@@ -1362,6 +1474,13 @@ export default function Business() {
                           />
                         </label>
                       </div>
+
+                      <MilestoneEditor
+                        slug={slug}
+                        stampsRequired={venue?.stampsRequired ?? 10}
+                        onNotice={setNotice}
+                      />
+
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <label className="text-xs text-slate-500">
                           {t('b.set.review')}

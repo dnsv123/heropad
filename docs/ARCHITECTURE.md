@@ -146,6 +146,17 @@ creator = admin key (verified, share 100), no collection (`verified: false`,
 system-program key). Asset id comes from the transaction parser; the fallback
 derives it from the tree's `sequenceNumber − 1` (see gap 8.9).
 
+**Milestones on the way** (migration 025, `apps/api/src/lib/milestones-db.ts`):
+a venue may define up to four small rewards below the full card, each with a
+label and a 256 px photo (`venue_milestones`). The customer asks for one
+with the same one-time reward code; the counter calls
+`POST /merchant/:slug/redeem-options` to see what the code is good for, then
+`POST /merchant/:slug/redeem` with `milestoneAt`. A claim is a row in
+`milestone_claims`, unique per (customer, venue, milestone, card cycle); it
+consumes no stamps, never resets the card, mints nothing and credits no
+BITS. `rewards_redeemed` still means "full card", so every count built on
+it is unchanged.
+
 The same pipeline mints **passport** trophies at 3/5/8 distinct venues
 (`runPassportAwards`, `apps/api/src/lib/passport-db.ts`), reserved by a
 unique `(user_identity_id, tier)` row instead of `trophy_attempted_at`.
@@ -401,12 +412,16 @@ the sections above.
   attestation format so third parties can check "earned at venue X").
 - **Daily anchoring** of the off-chain stamp ledger (a periodic hash of the
   day's `stamps` rows written on chain).
-- **Milestone rewards** beyond the completed card and the 3/5/8 passport.
 - **Push notifications** (no service-worker push, no email provider; the
   newsletter is a consented CSV export).
 - **Netopia card payments** for the café's subscription (today: invoice and
   bank transfer, dry-run).
 - **`manager` role** with permissions distinct from `staff`.
+- **Digital twins for physical products** — pins, figurines, the comic and
+  shop items ship with a claim code; claiming mints the object's digital
+  counterpart into the customer's vault, and that counterpart unlocks perks
+  over time (BITS, game items, access). The figurine claim path in section 4
+  is the seed of this.
 - **Staging environment** (separate Supabase project and Railway service).
 - Also referenced in comments or the admin guide, absent from code:
   `POST /api/mint` (501 stub), tag-side NFC cryptography and `ntag_tap`

@@ -29,6 +29,13 @@ import { creditBits, countBitsEventsToday } from '../lib/supabase-admin.js';
 import { claimVenueWithToken, claimVenueByCodeOnly } from './admin.js';
 import { listPendingClaimsForCounter } from '../lib/rewards-db.js';
 import {
+  MAX_MILESTONES,
+  claimMilestone,
+  listVenueMilestones,
+  milestoneStates,
+  replaceVenueMilestones,
+} from '../lib/milestones-db.js';
+import {
   getVenueBySlug,
   getVenueById,
   ensureIdentity,
@@ -699,6 +706,13 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
     ] as const) {
       if (b[key] !== undefined) publicBranding[key] = b[key];
     }
+    // The milestones are the venue's public promise, pictures included; the
+    // customer's own progress against them comes from /me/:slug.
+    const milestones = (await listVenueMilestones(venue.id)).map((m) => ({
+      at: m.at,
+      label: m.label,
+      image: m.image,
+    }));
     return res.status(200).json({
       ok: true,
       venue: {
@@ -706,6 +720,7 @@ loyaltyRouter.get('/venue/:slug', async (req: Request, res: Response) => {
         name: venue.name,
         stampsRequired: venue.stamps_required,
         branding: publicBranding,
+        milestones,
         // `hasOwner` is intentionally NOT exposed publicly — it would tell an
         // attacker exactly which venues are claimable. /business discovers it
         // through the authenticated merchant probe instead.
@@ -993,6 +1008,9 @@ loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) 
       }
     }
     const progress = await getVenueProgress(identity.id, venue.id);
+    const milestones = (
+      await milestoneStates(identity.id, venue.id, progress.current, progress.cardsCompleted)
+    ).map(({ at, label, claimed, claimable }) => ({ at, label, claimed, claimable }));
 
     return res.status(200).json({
       ok: true,
@@ -1003,6 +1021,10 @@ loyaltyRouter.get('/me/:slug', requireAuth, async (req: Request, res: Response) 
       totalStamps: progress.totalStamps,
       cardsCompleted: progress.cardsCompleted,
       canRedeem: progress.current >= venue.stamps_required,
+      milestones,
+      // A milestone is waiting at the counter: the reward-code button shows
+      // for it exactly as it does for a full card.
+      milestoneClaimable: milestones.some((m) => m.claimable),
     });
   } catch (err) {
     return serverError(res, 'me', err);
@@ -1156,11 +1178,20 @@ loyaltyRouter.post(
       const identity = await ensureIdentity(privyId);
       const progress = await getVenueProgress(identity.id, venue.id);
       if (progress.current < venue.stamps_required) {
-        return res.status(409).json({
-          ok: false,
-          error: 'not_enough_stamps',
-          message: `You have ${progress.current}/${venue.stamps_required} stamps.`,
-        });
+        // Not a full card — but a milestone on the way may be waiting.
+        const states = await milestoneStates(
+          identity.id,
+          venue.id,
+          progress.current,
+          progress.cardsCompleted
+        );
+        if (!states.some((m) => m.claimable)) {
+          return res.status(409).json({
+            ok: false,
+            error: 'not_enough_stamps',
+            message: `You have ${progress.current}/${venue.stamps_required} stamps.`,
+          });
+        }
       }
 
       const rc = await createRedeemCode(identity.id, venue.id);
@@ -1743,6 +1774,9 @@ loyaltyRouter.get(
       // Rewards this customer claimed with BITS and can pick up HERE — the
       // barista gets a button per item instead of a code to type.
       const rewards = await listPendingClaimsForCounter(customer.id, owned.venue.id);
+      const milestones = (
+        await milestoneStates(customer.id, owned.venue.id, progress.current, progress.cardsCompleted)
+      ).map(({ at, label, claimed, claimable }) => ({ at, label, claimed, claimable }));
       return res.status(200).json({
         ok: true,
         code: customer.loyalty_code,
@@ -1752,6 +1786,7 @@ loyaltyRouter.get(
         canRedeem: progress.current >= owned.venue.stamps_required,
         birthdayToday,
         rewards,
+        milestones,
       });
     } catch (err) {
       return serverError(res, 'customer', err);
@@ -1982,7 +2017,142 @@ loyaltyRouter.post(
 
 const RedeemBody = z.object({
   redeemCode: z.string().regex(CODE_RE, 'Redeem code must be 6 letters/digits'),
+  /** Set when the barista hands over a milestone instead of the full card. */
+  milestoneAt: z.number().int().min(1).max(29).optional(),
 });
+
+// POST /api/loyalty/merchant/:slug/redeem-options — what a reward code can be
+// used for, WITHOUT consuming it: the full card, one or more milestones, or
+// nothing yet. The counter asks this first when a venue has milestones, so
+// the barista chooses what to hand over instead of the code deciding.
+loyaltyRouter.post(
+  '/merchant/:slug/redeem-options',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadCounterVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const parsed = RedeemBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ ok: false, error: 'invalid_body', message: 'Reward code must be 6 letters/digits' });
+      }
+      const rc = await findValidRedeemCode(parsed.data.redeemCode, owned.venue.id);
+      if (!rc) {
+        return res.status(404).json({
+          ok: false,
+          error: 'invalid_redeem_code',
+          message:
+            'Code not valid (wrong, expired, or already used). Ask the customer to tap "Claim reward" again.',
+        });
+      }
+      const progress = await getVenueProgress(rc.user_identity_id, owned.venue.id);
+      const states = await milestoneStates(
+        rc.user_identity_id,
+        owned.venue.id,
+        progress.current,
+        progress.cardsCompleted
+      );
+      const rewardLabel =
+        typeof owned.venue.branding?.reward === 'string' ? owned.venue.branding.reward : null;
+      return res.status(200).json({
+        ok: true,
+        stamps: progress.current,
+        required: owned.venue.stamps_required,
+        full: progress.current >= owned.venue.stamps_required,
+        rewardLabel,
+        milestones: states.map(({ at, label, claimed, claimable }) => ({ at, label, claimed, claimable })),
+      });
+    } catch (err) {
+      return serverError(res, 'redeem-options', err);
+    }
+  }
+);
+
+const MilestonesBody = z.object({
+  milestones: z
+    .array(
+      z.object({
+        at: z.number().int().min(1).max(29),
+        label: z.string().trim().min(2).max(40),
+        // A small photo the owner picked, resized in the browser to ≤256 px
+        // WebP. ~60 KB of base64 is generous for that; it is also the cap
+        // that keeps the public venue payload light.
+        image: z
+          .string()
+          .regex(/^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/)
+          .max(80_000)
+          .nullable()
+          .optional(),
+      })
+    )
+    .max(MAX_MILESTONES),
+});
+
+// GET /api/loyalty/merchant/:slug/milestones — the owner's current list.
+loyaltyRouter.get(
+  '/merchant/:slug/milestones',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const milestones = (await listVenueMilestones(owned.venue.id)).map((m) => ({
+        at: m.at,
+        label: m.label,
+        image: m.image,
+      }));
+      return res.status(200).json({ ok: true, milestones, stampsRequired: owned.venue.stamps_required });
+    } catch (err) {
+      return serverError(res, 'milestones', err);
+    }
+  }
+);
+
+// PUT /api/loyalty/merchant/:slug/milestones — replace the list. Every
+// threshold must sit strictly below the full card and be distinct.
+loyaltyRouter.put(
+  '/merchant/:slug/milestones',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const privyId = (req as AuthedRequest).privyId as string;
+      const owned = await loadOwnedVenue(req.params.slug, privyId, res);
+      if (!owned) return;
+      const parsed = MilestonesBody.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          ok: false,
+          error: 'invalid_body',
+          message: parsed.error.issues.map((i) => i.message).join('; '),
+        });
+      }
+      const items = parsed.data.milestones;
+      const ats = items.map((m) => m.at);
+      if (new Set(ats).size !== ats.length) {
+        return res.status(400).json({ ok: false, error: 'duplicate_at', message: 'Two milestones at the same number of stamps.' });
+      }
+      if (ats.some((at) => at >= owned.venue.stamps_required)) {
+        return res.status(400).json({
+          ok: false,
+          error: 'at_too_high',
+          message: `A milestone must come before the full card (${owned.venue.stamps_required} stamps).`,
+        });
+      }
+      const saved = await replaceVenueMilestones(
+        owned.venue.id,
+        items.map((m) => ({ at: m.at, label: m.label, image: m.image ?? null }))
+      );
+      return res.status(200).json({
+        ok: true,
+        milestones: saved.map((m) => ({ at: m.at, label: m.label, image: m.image })),
+      });
+    } catch (err) {
+      return serverError(res, 'milestones-save', err);
+    }
+  }
+);
 
 /**
  * Trophy metadata for the collectible cNFT minted at redemption. Off-chain
@@ -2039,6 +2209,53 @@ loyaltyRouter.post(
 
       // 2. Safety re-check of the balance, then consume code + stamps.
       const progress = await getVenueProgress(rc.user_identity_id, owned.venue.id);
+
+      // A milestone hand-over: the code is spent, the milestone is recorded,
+      // the card keeps every stamp. No trophy, no BITS — those belong to the
+      // full card. The claim row is the gate (unique per card), so the code
+      // is consumed only after the claim succeeded.
+      if (parsed.data.milestoneAt !== undefined) {
+        const at = parsed.data.milestoneAt;
+        const def = (await listVenueMilestones(owned.venue.id)).find((m) => m.at === at);
+        if (!def) {
+          return res.status(404).json({ ok: false, error: 'unknown_milestone', message: 'This venue has no such milestone.' });
+        }
+        if (progress.current < at) {
+          return res.status(409).json({
+            ok: false,
+            error: 'not_enough_stamps',
+            message: `Customer has ${progress.current}/${at} stamps for this milestone.`,
+          });
+        }
+        const claimed = await claimMilestone({
+          identityId: rc.user_identity_id,
+          venueId: owned.venue.id,
+          at,
+          label: def.label,
+          cardCycle: progress.cardsCompleted,
+          validatedBy: owned.merchantIdentityId,
+        });
+        if (!claimed) {
+          return res.status(409).json({
+            ok: false,
+            error: 'milestone_already_claimed',
+            message: 'This milestone was already handed over on the current card.',
+          });
+        }
+        await markRedeemCodeUsed(rc.id);
+        return res.status(200).json({
+          ok: true,
+          redeemed: true,
+          milestone: { at, label: def.label },
+          stamps: progress.current,
+          required: owned.venue.stamps_required,
+          cardsCompleted: progress.cardsCompleted,
+          trophy: null,
+          trophySkipped: null,
+          bitsAwarded: 0,
+        });
+      }
+
       if (progress.current < owned.venue.stamps_required) {
         return res.status(409).json({
           ok: false,

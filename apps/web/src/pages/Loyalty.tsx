@@ -36,6 +36,15 @@ interface VenueInfo {
   gpsLng?: number | null;
   happyHour?: { active: boolean; mult: number } | null;
   happyHourNext?: HappyHourNext | null;
+  /** Small rewards before the full card, the venue's own, with a photo each. */
+  milestones?: Array<{ at: number; label: string; image: string | null }>;
+}
+
+interface MilestoneState {
+  at: number;
+  label: string;
+  claimed: boolean;
+  claimable: boolean;
 }
 
 interface MeResponse {
@@ -47,6 +56,8 @@ interface MeResponse {
   totalStamps: number;
   cardsCompleted: number;
   canRedeem: boolean;
+  milestones?: MilestoneState[];
+  milestoneClaimable?: boolean;
 }
 
 interface RedeemCodeState {
@@ -96,6 +107,9 @@ export default function Loyalty() {
   const [celebrating, setCelebrating] = useState(false);
   const [redeemCode, setRedeemCode] = useState<RedeemCodeState | null>(null);
   const [redeemBusy, setRedeemBusy] = useState(false);
+  /** Label of a milestone handed over seconds ago; a short thank-you line. */
+  const [tierDone, setTierDone] = useState<string | null>(null);
+  const prevClaimed = useRef<number[] | null>(null);
   const [redeemSecondsLeft, setRedeemSecondsLeft] = useState(0);
   // QR of the personal code, so the counter can scan instead of typing.
   const [codeQr, setCodeQr] = useState<string | null>(null);
@@ -272,6 +286,21 @@ export default function Loyalty() {
         hapticTap(40);
         // No auto-dismiss: the customer closes it when they are done reading.
       }
+      // A milestone was just handed over: the code is spent, the card stays.
+      // A short line, not the full-card celebration — that one is earned.
+      const nowClaimed = (r.milestones ?? []).filter((m) => m.claimed).map((m) => m.at);
+      const before = prevClaimed.current;
+      if (before !== null) {
+        const fresh = nowClaimed.find((at) => !before.includes(at));
+        if (fresh !== undefined) {
+          const label = (r.milestones ?? []).find((m) => m.at === fresh)?.label ?? '';
+          setTierDone(label);
+          setRedeemCode(null);
+          hapticTap(30);
+          window.setTimeout(() => setTierDone(null), 8000);
+        }
+      }
+      prevClaimed.current = nowClaimed;
       prevStamps.current = r.stamps;
       prevCards.current = r.cardsCompleted;
       setMe(r);
@@ -620,6 +649,62 @@ export default function Loyalty() {
             </div>
           )}
 
+          {/* Milestones on the way: the venue's small promises before the
+              end, each with its photo, each with where this customer stands. */}
+          {venue?.milestones && venue.milestones.length > 0 && required !== null && (
+            <div className="mt-4">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">{t('ms.title')}</p>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {venue.milestones.map((m) => {
+                  const st = me?.milestones?.find((x) => x.at === m.at);
+                  const claimed = Boolean(st?.claimed);
+                  const ready = Boolean(st?.claimable);
+                  return (
+                    <div
+                      key={m.at}
+                      className={`flex items-center gap-2 rounded-xl border p-2 ${
+                        ready
+                          ? 'border-hero-gold/60 bg-hero-gold/10'
+                          : claimed
+                            ? 'border-solana-green/40 bg-solana-green/5'
+                            : 'border-white/[0.08] bg-hero-navy'
+                      }`}
+                    >
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-hero-deep">
+                        {m.image ? (
+                          <img
+                            src={m.image}
+                            alt=""
+                            width={44}
+                            height={44}
+                            loading="lazy"
+                            className={`h-full w-full object-cover ${!ready && !claimed ? 'opacity-60 grayscale' : ''}`}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-lg">🎁</div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-slate-100">{m.label}</p>
+                        <p
+                          className={`text-[11px] ${
+                            ready ? 'text-hero-gold' : claimed ? 'text-solana-green' : 'text-slate-500'
+                          }`}
+                        >
+                          {claimed
+                            ? t('ms.claimed')
+                            : ready
+                              ? t('ms.ready')
+                              : `${t('ms.at', { n: m.at })} · ${t('ms.left', { n: Math.max(0, m.at - stamps) })}`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* The cardboard-card feel, with our hero in it. */}
           {me && required !== null && (
             <StampsCard
@@ -628,27 +713,41 @@ export default function Loyalty() {
               canRedeem={Boolean(me.canRedeem)}
               newStamp={newStamp}
               onFlightDone={flightDone}
+              milestones={(venue?.milestones ?? []).map((m) => m.at)}
             />
           )}
 
+          {tierDone && (
+            <p className="mt-4 rounded-xl border border-solana-green/40 bg-solana-green/10 px-4 py-3 text-center text-sm text-solana-green">
+              {t('loy.tier.done', { label: tierDone })}
+            </p>
+          )}
+
           {/* Full card → the customer generates a ONE-TIME redeem code on their
-              own phone (proof of presence); the barista types that to redeem. */}
-          {me?.canRedeem && !redeemCode && (
+              own phone (proof of presence); the barista types that to redeem.
+              A reached milestone uses the same code, with its own words. */}
+          {(me?.canRedeem || me?.milestoneClaimable) && !redeemCode && (
             <div className="mt-5 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4 text-center">
-              <p className="text-sm text-hero-gold">{t('loy.full.title')}</p>
+              <p className="text-sm text-hero-gold">
+                {me.canRedeem
+                  ? t('loy.full.title')
+                  : t('loy.tier.title', {
+                      label: me.milestones?.find((m) => m.claimable)?.label ?? '',
+                    })}
+              </p>
               <button
                 type="button"
                 disabled={redeemBusy}
                 onClick={() => void requestRedeemCode()}
                 className="btn btn-primary mt-3"
               >
-                {redeemBusy ? t('loy.full.generating') : t('loy.full.btn')}
+                {redeemBusy ? t('loy.full.generating') : me.canRedeem ? t('loy.full.btn') : t('loy.tier.btn')}
               </button>
               <p className="mt-3 text-xs leading-relaxed text-slate-400">{t('loy.full.note')}</p>
             </div>
           )}
 
-          {me?.canRedeem && redeemCode && (
+          {(me?.canRedeem || me?.milestoneClaimable) && redeemCode && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
