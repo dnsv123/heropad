@@ -33,8 +33,8 @@ export default function Ecosystem() {
         src="/brand/svu-hand.webp"
         alt=""
         aria-hidden
-        width={793}
-        height={900}
+        width={564}
+        height={640}
         loading="lazy"
         decoding="async"
         className="pointer-events-none absolute -left-6 top-10 hidden w-56 opacity-90 lg:block xl:w-64"
