@@ -38,7 +38,8 @@ const en = {
   'lp.hl': 'Most chosen',
   // --- Landing v3 (paper) ---
   'hero.eyebrow2': 'HeroPad Power Pass · loyalty for cafés',
-  'hero.h1': "The loyalty card you can't lose.",
+  'hero.h1.a': "The loyalty card you can't ",
+  'hero.h1.b': 'lose.',
   'hero.lede':
     "The customer taps the figurine on the counter with their phone. Nothing to install, no paper. A full card brings the free coffee and a trophy they keep.",
   'hero.cta.prices': 'See pricing',
@@ -638,7 +639,8 @@ const ro: Record<TranslationKey, string> = {
   'hero.card.reward': 'O cafea gratis',
   'lp.hl': 'Cel mai ales',
   'hero.eyebrow2': 'HeroPad Power Pass · fidelizare pentru cafenele',
-  'hero.h1': 'Cardul de fidelitate pe care nu-l poți pierde.',
+  'hero.h1.a': 'Cardul de fidelitate pe care nu îl poți ',
+  'hero.h1.b': 'pierde.',
   'hero.lede':
     'Clientul atinge figurina de pe tejghea cu telefonul. Fără aplicație de instalat, fără carton. Cardul plin aduce cafeaua gratis și un trofeu pe care îl păstrează.',
   'hero.cta.prices': 'Vezi prețurile',

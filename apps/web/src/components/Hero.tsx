@@ -19,7 +19,8 @@ export default function Hero() {
         <div className="order-2 min-w-0 text-center md:order-1 md:text-left">
           <p className="eyebrow-brass">{t('hero.eyebrow2')}</p>
           <h1 className="mt-3 text-balance font-display text-[2.1rem] font-bold leading-[1.04] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-6xl">
-            {t('hero.h1')}
+            {t('hero.h1.a')}
+            <span className="text-brass">{t('hero.h1.b')}</span>
           </h1>
           <p className="mx-auto mt-4 max-w-[52ch] text-base text-ink-2 sm:text-lg md:mx-0 md:mt-5">
             {t('hero.lede')}

@@ -18,7 +18,7 @@ export default function Ecosystem() {
   }> = [
     { icon: '🏛️', title: t('eco.hall.t'), text: t('eco.hall.d'), href: 'https://supervictornft.com', external: true },
     { icon: '🛍️', title: t('eco.shop.t'), text: t('eco.shop.d'), href: 'https://supervictor.shop', external: true },
-    { icon: '📖', title: t('eco.comic.t'), text: t('eco.comic.d'), href: 'https://supervictor.shop', external: true },
+    { icon: '📖', title: t('eco.comic.t'), text: t('eco.comic.d'), href: 'https://www.amazon.com/dp/B0CW62SY47', external: true },
     { icon: '🎮', title: t('eco.vdash.t'), text: t('eco.vdash.d'), href: '/v-dash', external: false },
     { icon: '💛', title: t('eco.league.t'), text: t('eco.league.d'), href: 'https://victorleague.com', external: true },
     { icon: '🦸', title: t('eco.claim.t'), text: t('eco.claim.d'), href: '/claim', external: false, soon: true },
