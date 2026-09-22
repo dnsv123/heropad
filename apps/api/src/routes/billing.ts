@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 import { getSupabaseAdmin } from '../lib/supabase-admin.js';
-import { getVenueBySlug } from '../lib/loyalty-db.js';
+import { getVenueBySlug, pruneIdempotencyKeys } from '../lib/loyalty-db.js';
 import {
   billingPeriod,
   completeInvoice,
@@ -436,6 +436,14 @@ billingCronRouter.post('/cron', async (req: Request, res: Response) => {
       failed: results.filter((r) => r.status === 'failed').length,
     };
     console.log(`[billing.cron] ${period}`, JSON.stringify(summary));
+    // Housekeeping that rides on the daily cron: the grant-replay guard only
+    // needs to remember the window in which a retry can still happen.
+    try {
+      const pruned = await pruneIdempotencyKeys(30);
+      if (pruned > 0) console.log(`[billing.cron] pruned ${pruned} idempotency keys`);
+    } catch (err) {
+      console.warn('[billing.cron] prune failed:', (err as Error).message);
+    }
     // A failure has to be visible in the Actions tab, not buried in a 200.
     return res.status(summary.failed > 0 ? 500 : 200).json({
       ok: summary.failed === 0,

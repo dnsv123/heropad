@@ -1,9 +1,8 @@
 # HeroPad — Architecture
 
-Written 2026-09-22 against branch `feature/solana-frontier`. Every statement
-below is checked against the tracked source; file paths are relative to the
-repo root. The code audit this is built on is `docs/ARCHITECTURE_NOTES.md`.
-Anything not yet in the code is confined to section 10.
+Written 2026-09-22 against `main`. Every statement below is checked against
+the tracked source; file paths are relative to the repo root. Anything not yet
+in the code is confined to section 10.
 
 Vocabulary: a **trophy** is a compressed NFT minted as a loyalty memento when
 a customer completes a stamp card. The code never sells, prices, lists or
@@ -152,8 +151,9 @@ The same pipeline mints **passport** trophies at 3/5/8 distinct venues
 unique `(user_identity_id, tier)` row instead of `trophy_attempted_at`.
 
 A separate, older **figurine claim** path exists: `POST /api/claim`
-(`apps/api/src/routes/claim.ts`) verifies an HMAC-signed code
-`HVPD-XXXX-XXXX:<hex>`, checks `claims` unique-on-code, mints via the same
+(`apps/api/src/routes/claim.ts`) requires a Privy token, verifies an
+HMAC-signed code `HVPD-XXXX-XXXX:<hex>`, checks that the destination wallet
+is linked to the caller, checks `claims` unique-on-code, mints via the same
 function and credits 100 BITS. It is a demo path: no real codes are in
 circulation and the landing lists it as "soon" (`Ecosystem.tsx` line 24).
 
@@ -217,7 +217,7 @@ are applied to production, in order.
 | `stamps` | One row per stamp. | `user_identity_id`, `venue_id`, `source` (check constraint), `granted_by`, `created_at`, generated `stamp_day` (UTC date), `revoked_at`/`revoked_by`. Partial index on live rows per venue. |
 | `rewards_redeemed` | One row per consumed card. | `stamps_consumed`, `reward_type` (label snapshot), `trophy_attempted_at` (mint reservation), `trophy_asset_id`, `milestone_mint_tx`. |
 | `redeem_codes` | 5-minute proof-of-presence codes. | Partial uniques: live `code`; live `(user_identity_id, venue_id)`. `used_at` consumed by conditional update. |
-| `idempotency_keys` | Grant replay guard. | `key` PK (`grant:<venue>:<requestId>`), `scope`. No cleanup. |
+| `idempotency_keys` | Grant replay guard. | `key` PK (`grant:<venue>:<requestId>`), `scope`, `created_at`; pruned to 30 days by the daily cron. |
 | `venue_staff` | Counter seats. | `(venue_id, identity_id)` UNIQUE; `claim_token` + expiry; `role` (`staff`/`manager`, no behavioural difference); `active`. |
 | `passport_awards` | Cross-venue tiers. | `(user_identity_id, tier)` UNIQUE = the reservation; `trophy_asset_id`, `mint_tx`. |
 | `bits_transactions` | Append-only points ledger, keyed by wallet. | `wallet_address`, signed `amount`, `reason`, `metadata`; balance = SUM. |
@@ -302,9 +302,9 @@ ownership queries depend on an indexer rather than on-chain accounts.
 
 **Known gaps** (honest list; none is hidden by the UI)
 
-1. `POST /api/claim` is unauthenticated and mints to whatever
-   `walletAddress` the body carries; a leaked code+signature pair is enough
-   to mint. Demo path only, no real codes issued.
+1. `POST /api/claim` (the figurine demo path) requires a signed-in caller
+   and mints only to a wallet linked to that account; a leaked
+   code+signature pair alone is not enough. No real codes are in circulation.
 2. The NFC tag is a plain NDEF URL (`…/loyalty/<slug>?tap=1`) on
    NTAG213/424 stickers with no tag-side security; the URL can be copied.
    The tap only announces presence; stamps are still granted only from the
@@ -340,7 +340,8 @@ ownership queries depend on an indexer rather than on-chain accounts.
 13. Off-chain metadata is mutable JSON on Vercel, not immutable storage.
 14. CSP has no `script-src`; XSS protection relies on React escaping. Venue
     logos are merchant-supplied data URLs.
-15. `idempotency_keys` grows without bound.
+15. `idempotency_keys` is pruned to a 30-day window by the daily cron; a
+    retry older than that is treated as a new request.
 16. `manager` staff role is stored but grants nothing beyond `staff`.
 17. No automated tests and no CI on push; the only CI is the monthly restore
     test.

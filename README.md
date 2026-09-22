@@ -44,9 +44,7 @@ mint is one transaction fee). The customer's wallet is a Privy embedded
 Solana wallet created at first login; HeroPad never holds user keys.
 
 Full detail, diagrams, data model, cost arithmetic and an honest list of
-known gaps: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**. The code audit
-it is based on: [docs/ARCHITECTURE_NOTES.md](docs/ARCHITECTURE_NOTES.md).
-Demo recording script: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+known gaps: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ---
 
@@ -119,7 +117,7 @@ packages/
   shared/                 cross-process types
   db/migrations/          001_initial_schema … 023_billing_period (applied by hand)
   db/seeds/               loyalty_test_venue.sql
-docs/                     ARCHITECTURE.md, ARCHITECTURE_NOTES.md, DEMO_SCRIPT.md, AI_ASSET_REGISTER.md
+docs/                     ARCHITECTURE.md, AI_ASSET_REGISTER.md
 .github/workflows/        db-backup, db-restore-test, billing, keepalive
 ```
 

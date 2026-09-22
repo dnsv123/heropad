@@ -1332,3 +1332,20 @@ export async function claimRequestId(key: string, scope: string): Promise<boolea
   if (error.code === '23505') return false;
   throw new Error(`[Supabase] claimRequestId: ${error.message}`);
 }
+
+/**
+ * Drops idempotency keys older than `days`. A replay of a grant from a month
+ * ago is not a retry, it is a bug somewhere else; the table only needs to
+ * remember the window in which a real retry can happen (the offline queue
+ * keeps a grant for at most 12 hours). Called from the daily billing cron.
+ */
+export async function pruneIdempotencyKeys(days = 30): Promise<number> {
+  const cutoff = new Date(Date.now() - days * 86_400_000).toISOString();
+  const { data, error } = await getSupabaseAdmin()
+    .from('idempotency_keys')
+    .delete()
+    .lt('created_at', cutoff)
+    .select('key');
+  if (error) throw new Error(`[Supabase] pruneIdempotencyKeys: ${error.message}`);
+  return data?.length ?? 0;
+}

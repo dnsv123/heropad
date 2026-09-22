@@ -31,8 +31,9 @@ export type ClaimApiOutput = ClaimResponse & {
   txSignature: string;
 };
 
-export function postClaim(input: ClaimApiInput): Promise<ClaimApiOutput> {
-  return postJson<ClaimApiInput, ClaimApiOutput>('/api/claim', input);
+/** The API requires a signed-in caller and a wallet linked to that account. */
+export function postClaim(input: ClaimApiInput, token: string): Promise<ClaimApiOutput> {
+  return postJson<ClaimApiInput, ClaimApiOutput>('/api/claim', input, token);
 }
 
 export interface CollectibleSummary {

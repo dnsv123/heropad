@@ -144,7 +144,7 @@ function parseClaimInput(raw: string): ParsedClaim {
 }
 
 export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [params] = useSearchParams();
 
@@ -207,12 +207,20 @@ export default function ClaimFlow({ initialCode = null }: ClaimFlowProps) {
 
     setStatus({ phase: 'submitting' });
     try {
-      const res = await postClaim({
-        code: c,
-        signature: s,
-        walletAddress,
-        scanMethod: 'qr_card',
-      });
+      const token = await getAccessToken();
+      if (!token) {
+        setStatus({ phase: 'error', code: 'unauthorized', message: 'Please sign in again.' });
+        return;
+      }
+      const res = await postClaim(
+        {
+          code: c,
+          signature: s,
+          walletAddress,
+          scanMethod: 'qr_card',
+        },
+        token
+      );
       // Successful claim — we no longer need the persisted pending claim.
       clearPendingClaim();
       setStatus({

@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 import { verifyClaimPayload, isWellFormedClaimCode } from '../lib/hmac.js';
+import { requireAuth, getUserSolanaWallets, type AuthedRequest } from '../middleware/auth.js';
 import { mintCnftToWallet } from '../lib/metaplex.js';
 import {
   findCollectible,
@@ -26,14 +27,17 @@ import {
 //
 // Security:
 //   - HMAC verification uses constant-time compare (lib/hmac.ts).
-//   - Wallet address is taken from the request, NOT trusted blindly — we treat
-//     it as the *destination* for the mint. The user authenticated with Privy
-//     client-side; spoofing a wallet here only "donates" a cNFT to someone
-//     else, which is harmless (and traceable).
-//   - Rate limiting: TODO Day 4 (express-rate-limit). For Day 3 we accept the
-//     risk since claim codes are single-use anyway.
+//   - The caller must be signed in (Privy token), and the destination wallet
+//     must be one of THEIR linked Solana wallets. A leaked code+signature is
+//     therefore not enough to mint to a stranger's address, and every claim
+//     is attributable to an account.
+//   - Rate limited per IP below; codes are single-use on top of that.
 
 export const claimRouter = Router();
+
+// Signed in, or nothing. Applied before the rate limiter so an anonymous
+// flood costs a token check, not a database round-trip.
+claimRouter.use(requireAuth);
 
 // Rate limiting — 30 requests / minute / IP. A successful claim makes ~1
 // request, so a real user is far below this. A spammer / brute-force attempt
@@ -86,6 +90,18 @@ claimRouter.post('/', async (req: Request, res: Response) => {
   try {
     // 2. HMAC verify.
     verifyClaimPayload({ code, signature });
+
+    // 2b. The wallet must belong to the signed-in user. Addresses are public;
+    //     a token proving you control the account is the only real proof.
+    const privyId = (req as AuthedRequest).privyId;
+    const owned = privyId ? await getUserSolanaWallets(privyId) : [];
+    if (!owned.includes(walletAddress)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'wallet_not_yours',
+        message: 'That wallet is not linked to your account.',
+      });
+    }
 
     // 3. Look up + check uniqueness.
     const collectible = await findCollectible(code);
