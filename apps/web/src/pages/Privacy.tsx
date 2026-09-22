@@ -31,12 +31,12 @@ const SECTIONS_EN: Section[] = [
     copy only if you opt in to our newsletter. (b) Loyalty activity in our own database:
     which partner venue gave you a stamp and when, rewards you redeemed, your 6-character
     loyalty code, and short-lived reward codes. This includes a record of which venues you
-    visited and on which days. (c) BITS transactions and claim events (timestamp, code,
-    asset id). (d) Optionally, if you choose to provide it in your Profile: your birthday
+    visited and on which days. (c) BITS point transactions and trophy events (timestamp, code,
+    trophy identifier). (d) Optionally, if you choose to provide it in your Profile: your birthday
     as day and month only — never the year. A venue you visit on that day sees only a
     "today is their birthday" indicator, never the date; you can delete it at any time.
-    We never collect or see private keys — those stay in Privy's MPC custody or
-    in your own wallet.`,
+    We never collect or see private keys; those stay with Privy, our authentication
+    provider, or in your own wallet.`,
   },
   {
     title: '3. How we use it, and on what legal basis',
@@ -77,9 +77,9 @@ const SECTIONS_EN: Section[] = [
     body: `You can request access, correction, deletion or export of your data any time at
     privacy@supervictornft.com — tell us your 6-character loyalty code so we can find you.
     We respond within 30 days; export is delivered as a machine-readable file. Note that
-    on-chain items (your cNFTs and their transactions) are immutable by design: we delete
-    the link between your wallet and your account, but records already on the Solana
-    blockchain cannot be removed by anyone. You may also complain to ANSPDCP, the Romanian
+    your trophies are recorded on the public Solana network and cannot be altered: we delete
+    the link between your wallet and your account, but records already on the network
+    cannot be removed by anyone. You may also complain to ANSPDCP, the Romanian
     data protection authority.`,
   },
   {
@@ -90,14 +90,14 @@ const SECTIONS_EN: Section[] = [
   },
   {
     title: '9. Children',
-    body: `HeroPad is family-friendly but the wallet & cNFT functionality requires that
-    the account holder be of legal age in their jurisdiction (typically 18+). Parents/
-    guardians can claim figurines on behalf of minors using their own wallet.`,
+    body: `HeroPad is family-friendly, but the account holder must be of legal age in their
+    jurisdiction (typically 18+). Parents and guardians can hold the card and the trophies
+    on behalf of a child with their own account.`,
   },
   {
     title: '10. Changes',
     body: `If we materially change this policy we will notify users via email (where
-    available) and prominently on the site. Effective date of this version: 4 August 2026.`,
+    available) and prominently on the site. Effective date of this version: 22 September 2026.`,
   },
 ];
 
@@ -117,12 +117,12 @@ const SECTIONS_RO: Section[] = [
     (b) Activitatea de fidelizare, în baza noastră de date: ce local partener ți-a acordat
     o ștampilă și când, recompensele revendicate, codul tău de fidelitate de 6 caractere și
     codurile temporare de recompensă. Aceasta include istoricul localurilor pe care le-ai
-    vizitat și în ce zile. (c) Tranzacțiile BITS și evenimentele de revendicare (moment,
-    cod, identificatorul activului). (d) Opțional, dacă alegi să o introduci în Profil:
+    vizitat și în ce zile. (c) Tranzacțiile cu puncte BITS și evenimentele legate de trofee
+    (moment, cod, identificatorul trofeului). (d) Opțional, dacă alegi să o introduci în Profil:
     ziua ta de naștere, doar ziua și luna — niciodată anul. Localul pe care îl vizitezi în
     acea zi vede doar un indicator „azi e ziua clientului", niciodată data; o poți șterge
-    oricând. Nu colectăm și nu vedem niciodată chei private —
-    acestea rămân în custodia MPC a Privy sau în portofelul tău.`,
+    oricând. Nu colectăm și nu vedem niciodată chei private;
+    acestea rămân la Privy, furnizorul nostru de autentificare, sau în portofelul tău.`,
   },
   {
     title: '3. Cum le folosim și pe ce temei legal',
@@ -167,10 +167,9 @@ const SECTIONS_RO: Section[] = [
     body: `Poți solicita oricând accesul, rectificarea, ștergerea sau portarea datelor tale
     la privacy@supervictornft.com — menționează codul tău de fidelitate de 6 caractere ca
     să te putem identifica. Răspundem în cel mult 30 de zile; exportul este livrat într-un
-    format care poate fi citit automat. Reține că elementele înscrise on-chain (cNFT-urile
-    tale și tranzacțiile lor) sunt imuabile prin natura tehnologiei: ștergem legătura
-    dintre portofelul tău și contul tău, însă înregistrările aflate deja pe blockchain-ul
-    Solana nu pot fi eliminate de nimeni. Ai de asemenea dreptul de a depune o plângere la
+    format care poate fi citit automat. Reține că trofeele tale sunt înregistrate în rețeaua publică
+    Solana și nu pot fi modificate: ștergem legătura dintre portofelul tău și contul tău,
+    însă înregistrările aflate deja în rețea nu pot fi eliminate de nimeni. Ai de asemenea dreptul de a depune o plângere la
     ANSPDCP, autoritatea română de supraveghere a prelucrării datelor cu caracter personal.`,
   },
   {
@@ -181,16 +180,15 @@ const SECTIONS_RO: Section[] = [
   },
   {
     title: '9. Minori',
-    body: `HeroPad este potrivit pentru întreaga familie, însă funcționalitatea de portofel
-    și cNFT necesită ca titularul contului să aibă vârsta legală din jurisdicția sa (de
-    regulă 18 ani). Părinții și tutorii pot revendica figurine în numele minorilor,
-    folosind propriul portofel.`,
+    body: `HeroPad este potrivit pentru întreaga familie, însă titularul contului trebuie să
+    aibă vârsta legală din jurisdicția sa (de regulă 18 ani). Părinții și tutorii pot ține
+    cardul și trofeele în numele unui copil, cu propriul cont.`,
   },
   {
     title: '10. Modificări',
     body: `Dacă modificăm substanțial această politică, vom anunța utilizatorii prin email
     (unde este disponibil) și vizibil pe site. Data intrării în vigoare a acestei versiuni:
-    4 august 2026.`,
+    22 septembrie 2026.`,
   },
 ];
 
@@ -198,13 +196,13 @@ const COPY = {
   en: {
     eyebrow: 'Legal',
     heading: 'Privacy Notice',
-    effective: 'Effective 4 August 2026 · v2.0',
+    effective: 'Effective 22 September 2026 · v2.1',
     footer: 'This notice covers HeroPad specifically. For the broader SuperVictor Universe privacy policy spanning V-DASH and other products, see',
   },
   ro: {
     eyebrow: 'Juridic',
     heading: 'Politica de confidențialitate',
-    effective: 'În vigoare din 4 august 2026 · v2.0',
+    effective: 'În vigoare din 22 septembrie 2026 · v2.1',
     footer: 'Această notă privește HeroPad în mod specific. Pentru politica de confidențialitate a întregului univers SuperVictor, care acoperă V-DASH și celelalte produse, vezi',
   },
 } as const;
@@ -216,7 +214,7 @@ export default function Privacy() {
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-16 md:py-20">
-      <p className="text-xs uppercase tracking-[0.3em] text-hero-cyan">{copy.eyebrow}</p>
+      <p className="eyebrow">{copy.eyebrow}</p>
       <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
         {copy.heading}
       </h1>
@@ -225,7 +223,7 @@ export default function Privacy() {
       <div className="mt-10 space-y-7">
         {sections.map((s) => (
           <div key={s.title}>
-            <h2 className="font-display text-lg font-semibold text-hero-cyan">
+            <h2 className="font-display text-lg font-semibold text-white">
               {s.title}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">{s.body}</p>
