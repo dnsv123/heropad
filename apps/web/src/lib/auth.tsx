@@ -47,6 +47,11 @@ export interface SolanaWallet {
   address: string;
   /** 'privy' for the embedded wallet; the connector name for external ones. */
   walletClientType?: string;
+  /**
+   * Signs a transaction with this wallet (Privy's wallet-adapter shape). The
+   * real SDK object always carries it; the pre-SDK stub has no wallets at all.
+   */
+  signTransaction?: <T>(transaction: T) => Promise<T>;
   [k: string]: unknown;
 }
 

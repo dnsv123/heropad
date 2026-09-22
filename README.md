@@ -130,8 +130,7 @@ Only what is scheduled or planned; nothing below exists in the code yet.
 - **This week (Sept 2026)** — production API moves from Helius devnet to
   mainnet; mainnet tree created from Admin → Network.
 - **Next** — verified collection / credential standard for trophies; daily
-  anchoring of the stamp ledger; trophy portability from the profile;
-  milestone rewards; push notifications; Netopia card payments for the
+  anchoring of the stamp ledger; milestone rewards; push notifications; Netopia card payments for the
   café subscription; `manager` role permissions; a staging environment.
 - **Later** — tag-side NFC cryptography, permanent metadata storage,
   plan-based feature gating, multi-location cards.

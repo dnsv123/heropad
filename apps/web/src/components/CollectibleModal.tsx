@@ -4,10 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { CollectibleSummary } from '../lib/api';
 import { explorerAddress } from '../lib/explorer';
 import { useT } from '../i18n';
+import MoveTrophy from './MoveTrophy';
 
 interface CollectibleModalProps {
   item: CollectibleSummary | null;
   onClose: () => void;
+  /** The vault the item sits in; enables "Move to another vault". */
+  ownerAddress?: string;
+  /** After a confirmed move: the collection should reload. */
+  onMoved?: () => void;
 }
 
 // In-app trophy / collectible detail viewer.
@@ -16,7 +21,7 @@ interface CollectibleModalProps {
 // - Body scroll locked while open so the page underneath doesn't scroll.
 // - Image download uses fetch+blob so it works cross-origin (CDNs that don't
 //   send Content-Disposition still produce a valid file).
-export default function CollectibleModal({ item, onClose }: CollectibleModalProps) {
+export default function CollectibleModal({ item, onClose, ownerAddress, onMoved }: CollectibleModalProps) {
   const { t } = useT();
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -191,6 +196,10 @@ export default function CollectibleModal({ item, onClose }: CollectibleModalProp
                   {t('col.verify')}
                 </a>
               </div>
+
+              {ownerAddress && (
+                <MoveTrophy item={item} ownerAddress={ownerAddress} onMoved={onMoved} />
+              )}
             </div>
           </div>
         </motion.div>

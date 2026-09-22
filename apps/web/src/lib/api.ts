@@ -72,3 +72,25 @@ export function getUserMe(walletAddress: string, token: string): Promise<UserMeR
   const qs = new URLSearchParams({ wallet: walletAddress }).toString();
   return getJson<UserMeResponse>(`/api/user/me?${qs}`, token);
 }
+
+// --- Moving a trophy to another wallet -------------------------------------
+
+export interface PreparedTransfer {
+  ok: true;
+  /** Base64 transaction, already signed by HeroPad as fee payer. */
+  transaction: string;
+  blockhash: string;
+  lastValidBlockHeight: number;
+  owner: string;
+}
+
+export function prepareTransfer(assetId: string, to: string, token: string): Promise<PreparedTransfer> {
+  return postJson<{ assetId: string; to: string }, PreparedTransfer>('/api/user/transfer/prepare', { assetId, to }, token);
+}
+
+export function sendTransfer(
+  input: { transaction: string; lastValidBlockHeight: number; wallet: string },
+  token: string
+): Promise<{ ok: true; signature: string }> {
+  return postJson<typeof input, { ok: true; signature: string }>('/api/user/transfer/send', input, token);
+}

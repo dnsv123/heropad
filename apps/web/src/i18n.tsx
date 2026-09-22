@@ -517,7 +517,7 @@ const en = {
   'col.sub': 'Everything your account owns — claimed heroes and SuperVictor Trophies.',
   'w.section': 'Your digital vault',
   'w.explain':
-    'Your trophies live here. The vault is secured by your login — nothing to install, no password to remember.',
+    'Your trophies live here. The code below is your vault’s public address: anyone can look it up, nobody can take anything out without your login.',
   'w.copy': 'Copy vault ID',
   'w.copied': 'Copied!',
   'w.export': 'Export access key',
@@ -541,6 +541,22 @@ const en = {
   'w.count.many': 'vaults',
   'w.badge.embedded': 'Yours',
   'w.badge.external': 'External',
+  // --- Moving a trophy to another vault ---
+  'col.verify.short': 'Verify ↗',
+  'mv.open': 'Move to another vault',
+  'mv.body':
+    'You can take this trophy to a vault you control in another app, for example Phantom. Paste that vault’s address below. HeroPad pays the small transfer fee.',
+  'mv.addr': 'Destination address',
+  'mv.addr.ph': 'Paste the address (letters and digits, 32–44 characters)',
+  'mv.confirm':
+    'I understand: the trophy leaves this vault, disappears from my HeroPad collection, and HeroPad cannot bring it back.',
+  'mv.btn': 'Move trophy',
+  'mv.busy': 'Moving…',
+  'mv.done': 'Done. The trophy is now in the other vault.',
+  'mv.receipt': 'See the receipt ↗',
+  'mv.err.addr': 'That does not look like a valid address.',
+  'mv.err.same': 'That is this vault’s own address.',
+  'mv.err': 'The move did not go through. Nothing has changed; you can try again.',
   // --- Happy Hour / review / contact ---
   'loy.reward.label': '🎁 Your reward at {n} stamps',
   'loy.bits.shop': '⚡ See what BITS can get you →',
@@ -1110,7 +1126,7 @@ const ro: Record<TranslationKey, string> = {
   'col.sub': 'Tot ce deține contul tău — eroi revendicați și Trofee SuperVictor.',
   'w.section': 'Seiful tău digital',
   'w.explain':
-    'Aici stau trofeele tale. Seiful e securizat de contul tău — nimic de instalat, nicio parolă de ținut minte.',
+    'Aici stau trofeele tale. Codul de mai jos e adresa publică a seifului: oricine o poate căuta, nimeni nu poate scoate ceva fără contul tău.',
   'w.copy': 'Copiază codul seifului',
   'w.copied': 'Copiat!',
   'w.export': 'Exportă cheia de acces',
@@ -1134,6 +1150,22 @@ const ro: Record<TranslationKey, string> = {
   'w.count.many': 'seifuri',
   'w.badge.embedded': 'Al tău',
   'w.badge.external': 'Extern',
+  // --- Mutarea unui trofeu în alt seif ---
+  'col.verify.short': 'Verifică ↗',
+  'mv.open': 'Mută în alt seif',
+  'mv.body':
+    'Poți muta acest trofeu într-un seif pe care îl controlezi în altă aplicație, de exemplu Phantom. Lipește mai jos adresa acelui seif. HeroPad plătește taxa mică de transfer.',
+  'mv.addr': 'Adresa destinației',
+  'mv.addr.ph': 'Lipește adresa (litere și cifre, 32–44 de caractere)',
+  'mv.confirm':
+    'Am înțeles: trofeul pleacă din acest seif, dispare din colecția mea HeroPad și HeroPad nu îl poate aduce înapoi.',
+  'mv.btn': 'Mută trofeul',
+  'mv.busy': 'Se mută…',
+  'mv.done': 'Gata. Trofeul e acum în celălalt seif.',
+  'mv.receipt': 'Vezi chitanța ↗',
+  'mv.err.addr': 'Nu pare o adresă validă.',
+  'mv.err.same': 'Aceasta e chiar adresa seifului tău.',
+  'mv.err': 'Mutarea nu a reușit. Nimic nu s-a schimbat; poți încerca din nou.',
   'loy.reward.label': '🎁 Recompensa ta la {n} bonusuri',
   'loy.bits.shop': '⚡ Vezi ce poți lua cu BITS →',
   // --- Catalogul de premii (/rewards) ---

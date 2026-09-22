@@ -150,6 +150,19 @@ The same pipeline mints **passport** trophies at 3/5/8 distinct venues
 (`runPassportAwards`, `apps/api/src/lib/passport-db.ts`), reserved by a
 unique `(user_identity_id, tier)` row instead of `trophy_attempted_at`.
 
+**Moving a trophy out** (`apps/api/src/lib/transfer.ts`, `MoveTrophy.tsx`):
+the customer can send any trophy to a wallet they control elsewhere. Only
+the leaf owner can authorise a Bubblegum `transfer`, and the embedded wallet
+holds no SOL, so it is a three-step relay: `POST /api/user/transfer/prepare`
+fetches the asset and its Merkle proof (DAS `getAssetWithProof`), checks the
+tree is ours and the owner is one of the caller's linked wallets, builds the
+transfer with the admin as fee payer and returns it half-signed; the browser
+signs with Privy (`wallet.signTransaction`); `POST /api/user/transfer/send`
+verifies the admin's own signature over the message bytes (so the relay
+cannot be used for arbitrary transactions), submits and confirms. The profile
+also shows the vault address with a copy button, a "verify" link per trophy
+to the public explorer, and key export via Privy under "Technical details".
+
 A separate, older **figurine claim** path exists: `POST /api/claim`
 (`apps/api/src/routes/claim.ts`) requires a Privy token, verifies an
 HMAC-signed code `HVPD-XXXX-XXXX:<hex>`, checks that the destination wallet
@@ -187,8 +200,8 @@ one human
 **What HeroPad never holds**
 
 - User private keys or seed phrases. The web app only calls Privy's
-  `createWallet()` and `exportWallet({ address })`; the API never sees key
-  material. (`solana_wallets.encrypted_private_key` from migration 001 has
+  `createWallet()`, `exportWallet({ address })` and `signTransaction` (for
+  moving a trophy out); the API never sees key material. (`solana_wallets.encrypted_private_key` from migration 001 has
   no reader or writer.)
 - Passwords. Login is Privy's.
 - Card or bank details. There is no payment code in the repo; the café is
@@ -388,8 +401,6 @@ the sections above.
   attestation format so third parties can check "earned at venue X").
 - **Daily anchoring** of the off-chain stamp ledger (a periodic hash of the
   day's `stamps` rows written on chain).
-- **Portability in profile** — a self-service way for the customer to move
-  trophies out (today: Privy `exportWallet`, untested end to end).
 - **Milestone rewards** beyond the completed card and the 3/5/8 passport.
 - **Push notifications** (no service-worker push, no email provider; the
   newsletter is a consented CSV export).

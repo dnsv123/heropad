@@ -10,6 +10,7 @@ import {
   type UserMeResponse,
 } from '../lib/api';
 import { useT, type TranslationKey } from '../i18n';
+import { explorerAddress } from '../lib/explorer';
 import CollectibleModal from './CollectibleModal';
 
 /** Ledger reasons → human labels (i18n key per reason; raw reason as fallback). */
@@ -245,6 +246,7 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
                     onOpen={() => setActive(c)}
                     noImageLabel={t('col.noimg')}
                     openLabel={t('col.view')}
+                    verifyLabel={t('col.verify.short')}
                   />
                 ))}
               </motion.div>
@@ -252,65 +254,81 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
           ))
       )}
 
-      <CollectibleModal item={active} onClose={() => setActive(null)} />
+      <CollectibleModal
+        item={active}
+        onClose={() => setActive(null)}
+        ownerAddress={state.data.wallet}
+        onMoved={() => void load()}
+      />
     </div>
   );
 }
 
+// The tile opens the detail view; the "verify" link beside the id goes
+// straight to the public record, one tap, without opening anything first.
+// A link cannot live inside a button, so the tile is a div with both.
 function CollectibleCard({
   item,
   onOpen,
   noImageLabel,
   openLabel,
+  verifyLabel,
 }: {
   item: CollectibleSummary;
   onOpen: () => void;
   noImageLabel: string;
   openLabel: string;
+  verifyLabel: string;
 }) {
   return (
-    <motion.button
-      type="button"
-      onClick={onOpen}
+    <motion.div
       variants={{
         hidden: { opacity: 0, y: 12 },
         show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
       }}
       whileHover={{ y: -4 }}
-      className="group relative block w-full overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy text-left transition hover:border-white/30"
+      className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy transition hover:border-white/30"
     >
-      <div className="aspect-square w-full bg-gradient-to-br from-hero-blue/30 via-hero-deep to-hero-deep">
-        {item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            loading="lazy"
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
-            {noImageLabel}
-          </div>
-        )}
-      </div>
+      <button type="button" onClick={onOpen} className="block w-full text-left">
+        <div className="aspect-square w-full bg-gradient-to-br from-hero-blue/30 via-hero-deep to-hero-deep">
+          {item.imageUrl ? (
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              loading="lazy"
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">
+              {noImageLabel}
+            </div>
+          )}
+        </div>
+        <p className="truncate px-3 pt-3 text-sm font-medium text-slate-100">{item.name}</p>
+      </button>
 
-      <div className="space-y-1 p-3">
-        <p className="truncate text-sm font-medium text-slate-100">
-          {item.name}
-        </p>
+      <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-1">
         <p className="truncate font-mono text-[10px] text-slate-500">
           {item.assetId.slice(0, 8)}…{item.assetId.slice(-4)}
         </p>
+        <a
+          href={explorerAddress(item.assetId)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-[10px] font-semibold text-hero-gold hover:underline"
+        >
+          {verifyLabel}
+        </a>
       </div>
 
-      <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-2 opacity-0 transition group-hover:opacity-100">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex aspect-square items-end justify-end p-2 opacity-0 transition group-hover:opacity-100">
         <span className="rounded-full bg-hero-cyan/90 px-2 py-0.5 text-[10px] font-medium text-hero-deep">
           {openLabel}
         </span>
       </div>
-    </motion.button>
+    </motion.div>
   );
 }
