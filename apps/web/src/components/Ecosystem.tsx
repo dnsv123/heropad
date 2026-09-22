@@ -25,7 +25,20 @@ export default function Ecosystem() {
   ];
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 md:py-20">
+    <section className="relative mx-auto max-w-6xl px-5 py-14 sm:px-6 md:py-20">
+      {/* The universe's own illustration, a gauntlet holding the phone with
+          the SVU mark: the door from the street into the rest. Desktop only,
+          off to the side, so the cards keep their room. */}
+      <img
+        src="/brand/svu-hand.webp"
+        alt=""
+        aria-hidden
+        width={793}
+        height={900}
+        loading="lazy"
+        decoding="async"
+        className="pointer-events-none absolute -left-6 top-10 hidden w-56 opacity-90 lg:block xl:w-64"
+      />
       <div className="text-center">
         {/* The universe's own mark — the registered SuperVictor logo — sits
             here, where the universe is the subject. */}

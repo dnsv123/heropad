@@ -102,7 +102,7 @@ export default function Header() {
           onClick={() => setMobileOpen(false)}
         >
           <img
-            src="/super-victor-pfp.webp"
+            src="/super-victor-face.webp"
             alt=""
             width={28}
             height={28}

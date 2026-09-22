@@ -40,7 +40,7 @@ export default function Hero() {
           </div>
           <p className="mt-6 flex items-center justify-center gap-3 text-sm text-ink-3 md:justify-start">
             <img
-              src="/super-victor-pfp.webp"
+              src="/super-victor-face.webp"
               alt=""
               width={32}
               height={32}
