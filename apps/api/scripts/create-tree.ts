@@ -25,7 +25,8 @@ loadEnv({ path: path.resolve(__dirname, '../../../.env'), override: true });
 import { createTree } from '@metaplex-foundation/mpl-bubblegum';
 import { generateSigner } from '@metaplex-foundation/umi';
 
-import { getAdminUmi, getAdminPublicKey } from '../src/lib/solana-admin.js';
+import { getAdminUmi, getAdminPublicKey, rpcCluster } from '../src/lib/solana-admin.js';
+import { treeConfigKey } from '../src/lib/metaplex.js';
 import { getSolanaConfig, setSolanaConfig } from '../src/lib/supabase-admin.js';
 
 const MAX_DEPTH = 14;
@@ -38,7 +39,11 @@ async function main() {
     MAX_DEPTH, MAX_BUFFER_SIZE, 2 ** MAX_DEPTH);
 
   // Don't silently overwrite an existing tree.
-  const existing = await getSolanaConfig('bubblegum_tree');
+  // One tree per cluster, same key the API reads (bubblegum_tree on devnet,
+  // bubblegum_tree_mainnet on mainnet) — decided by SOLANA_RPC_URL.
+  const key = treeConfigKey();
+  console.log('Cluster      :', rpcCluster(), '→ config key', key);
+  const existing = await getSolanaConfig(key);
   if (existing) {
     console.log('\n⚠️  A tree address is already configured: %s', existing);
     console.log('   To replace it, manually delete the row in solana_config first.');
@@ -68,8 +73,8 @@ async function main() {
   console.log('✓ Tree created. Tx signature (base64):', sigBase64);
 
   // Persist for future claims.
-  await setSolanaConfig('bubblegum_tree', merkleTree.publicKey.toString());
-  console.log('✓ Tree address saved to solana_config.bubblegum_tree');
+  await setSolanaConfig(key, merkleTree.publicKey.toString());
+  console.log(`✓ Tree address saved to solana_config.${key}`);
   console.log('\nDone. You can now POST /api/claim and mints will land in this tree.');
 }
 
