@@ -408,8 +408,12 @@ the sections above.
 
 - **Mainnet cut-over** — scheduled for this week: switch `SOLANA_RPC_URL`,
   create the mainnet tree from Admin → Network, set `VITE_SOLANA_CLUSTER`.
-- **Credential standard** for trophies (a verified collection or an
-  attestation format so third parties can check "earned at venue X").
+- **Conforming trophy metadata.** The credential standard itself exists as
+  a draft in `standard/` (spec, JSON schemas, examples, validator; no SDK
+  yet). HeroPad's on-chain side conforms (verified creator, no personal
+  data); its off-chain JSON does not (one static file per kind, no venue,
+  edition or date). The migration for new mints is written down in
+  `standard/IMPLEMENTATIONS.md` and not started.
 - **Daily anchoring** of the off-chain stamp ledger (a periodic hash of the
   day's `stamps` rows written on chain).
 - **Push notifications** (no service-worker push, no email provider; the

@@ -1,0 +1,20 @@
+{
+  "name": "Bătrânu' Sas — card #12",
+  "symbol": "BSAS",
+  "description": "A full stamp card at Bătrânu' Sas, Sibiu. A memento of twelve cards' worth of visits.",
+  "image": "https://cards.batranu-sas.example/12.webp",
+  "external_url": "https://batranu-sas.example",
+  "attributes": [
+    { "trait_type": "Type", "value": "Stamp card" },
+    { "trait_type": "Venue", "value": "Bătrânu' Sas" },
+    { "trait_type": "Card", "value": 12 }
+  ],
+  "credential": {
+    "standard": "ovc/0.1",
+    "type": "stamp_card",
+    "issuer": { "id": "batranu-sas.example", "name": "Bătrânu' Sas", "location": "Sibiu" },
+    "edition": { "serial": 12 },
+    "issued_at": "2026-09-22",
+    "platform": { "name": "HeroPad", "url": "https://heropad.supervictoruniverse.com" }
+  }
+}

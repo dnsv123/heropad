@@ -1,0 +1,18 @@
+{
+  "name": "Café Victor — Gold regular",
+  "symbol": "CVIC",
+  "description": "Gold tier at Café Victor: the third level a regular can reach.",
+  "image": "https://cafe-victor.example/tiers/gold.webp",
+  "attributes": [
+    { "trait_type": "Type", "value": "Tier" },
+    { "trait_type": "Venue", "value": "Café Victor" },
+    { "trait_type": "Tier", "value": "Gold" }
+  ],
+  "credential": {
+    "standard": "ovc/0.1",
+    "type": "tier",
+    "issuer": { "id": "cafe-victor.example", "name": "Café Victor", "url": "https://cafe-victor.example" },
+    "tier": { "level": 3, "label": "Gold" },
+    "issued_at": "2026-10-04"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://heropad.supervictoruniverse.com/standard/schema/collector-profile.schema.json",
+  "title": "Collector Profile (ovc/0.1)",
+  "description": "A holder's venue credentials, derived by a reader from the wallets' assets. Not stored on chain.",
+  "type": "object",
+  "required": ["standard", "holder", "credentials", "derived_at"],
+  "properties": {
+    "standard": { "type": "string", "pattern": "^ovc/0\\.[0-9]+$" },
+    "holder": {
+      "type": "object",
+      "required": ["wallets"],
+      "properties": {
+        "wallets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "derived_at": { "type": "string", "format": "date-time" },
+    "credentials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "owner", "credential", "authentic"],
+        "properties": {
+          "asset_id": { "type": "string", "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$" },
+          "owner": { "type": "string", "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$" },
+          "name": { "type": "string" },
+          "image": { "type": "string" },
+          "credential": { "$ref": "venue-credential.schema.json#/properties/credential" },
+          "verified_creators": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$" }
+          },
+          "authentic": {
+            "description": "true: a verified creator is authorised by the issuer's well-known document; false: not; null: the document could not be fetched.",
+            "type": ["boolean", "null"]
+          },
+          "authority_checked_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "by_issuer": {
+      "description": "Optional grouping the reader may add: issuer id → asset ids.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}

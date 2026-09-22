@@ -1,0 +1,20 @@
+{
+  "name": "Sibiu Jazz Weekend pin 37/200",
+  "symbol": "SJW",
+  "description": "The enamel pin sold at the 2026 Sibiu Jazz Weekend, and its digital twin. Numbered 37 of 200.",
+  "image": "https://pins.sibiu-jazz.example/2026/37.webp",
+  "attributes": [
+    { "trait_type": "Type", "value": "Limited edition" },
+    { "trait_type": "Venue", "value": "Sibiu Jazz Weekend" },
+    { "trait_type": "Edition", "value": "37 / 200" }
+  ],
+  "credential": {
+    "standard": "ovc/0.1",
+    "type": "limited_edition",
+    "issuer": { "id": "sibiu-jazz.example", "name": "Sibiu Jazz Weekend", "location": "Sibiu" },
+    "edition": { "serial": 37, "of": 200 },
+    "issued_at": "2026-08-30",
+    "physical": { "kind": "pin", "ref": "SJW26-ENAMEL-A" },
+    "note": "Pin batch A, enamel, 32 mm."
+  }
+}

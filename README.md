@@ -118,6 +118,9 @@ packages/
   db/migrations/          001_initial_schema … 023_billing_period (applied by hand)
   db/seeds/               loyalty_test_venue.sql
 docs/                     ARCHITECTURE.md, AI_ASSET_REGISTER.md
+standard/                 Open Venue Credentials (draft 0.1): spec, JSON schemas,
+                          examples, validator — the vendor-neutral format trophies
+                          are moving to; MIT, to become its own repository
 .github/workflows/        db-backup, db-restore-test, billing, keepalive
 ```
 
@@ -129,8 +132,10 @@ Only what is scheduled or planned; nothing below exists in the code yet.
 
 - **This week (Sept 2026)** — production API moves from Helius devnet to
   mainnet; mainnet tree created from Admin → Network.
-- **Next** — verified collection / credential standard for trophies; daily
-  anchoring of the stamp ledger.
+- **Next** — trophies minted with metadata that conforms to the draft
+  standard in `standard/` (per-asset JSON with venue, edition, date; the
+  venue's well-known authority document); daily anchoring of the stamp
+  ledger.
 - **After the hackathon** — activities for BITS: a HeroPad-defined list the
   venue ticks, values set by HeroPad, paid only for server-verifiable
   behaviour or a proof reviewed by HeroPad; `manager` role; push
