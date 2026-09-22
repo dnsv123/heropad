@@ -591,6 +591,10 @@ const en = {
   'b.set.ms.remove': 'Remove',
   'b.set.ms.save': 'Save milestones',
   'b.set.ms.saved': 'Milestones saved — customers see them now.',
+  'b.set.ms.toohigh': 'The milestone at {n} must be below the full card ({r}).',
+  'b.set.ms.dup': 'Two milestones at the same number of stamps.',
+  'b.set.dirty': 'Unsaved changes',
+  'b.set.saveall': 'Save changes',
   'b.set.ms.none': 'No milestones yet. The card has only its final reward.',
   // --- Moving a trophy to another vault ---
   'col.verify.short': 'Verify ↗',
@@ -1251,6 +1255,10 @@ const ro: Record<TranslationKey, string> = {
   'b.set.ms.remove': 'Șterge',
   'b.set.ms.save': 'Salvează treptele',
   'b.set.ms.saved': 'Treptele au fost salvate — clienții le văd acum.',
+  'b.set.ms.toohigh': 'Treapta la {n} trebuie să fie sub cardul plin ({r}).',
+  'b.set.ms.dup': 'Două trepte la același număr de bonusuri.',
+  'b.set.dirty': 'Modificări nesalvate',
+  'b.set.saveall': 'Salvează modificările',
   'b.set.ms.none': 'Nicio treaptă încă. Cardul are doar recompensa finală.',
   // --- Mutarea unui trofeu în alt seif ---
   'col.verify.short': 'Verifică ↗',

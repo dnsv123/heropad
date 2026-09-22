@@ -132,10 +132,15 @@ Only what is scheduled or planned; nothing below exists in the code yet.
 
 - **This week (Sept 2026)** — production API moves from Helius devnet to
   mainnet; mainnet tree created from Admin → Network.
-- **Next** — trophies minted with metadata that conforms to the draft
-  standard in `standard/` (per-asset JSON with venue, edition, date; the
-  venue's well-known authority document); daily anchoring of the stamp
-  ledger.
+- **Next** — daily anchoring of the stamp ledger with a printable sealed
+  report per venue (`docs/ANCHORING.md`, approved); trophies minted with
+  metadata that conforms to the draft standard in `standard/` (per-asset
+  JSON with venue, edition, date; the venue's well-known authority
+  document); pre-orders inside HeroPad: the venue lists what can be ordered
+  ahead, the customer writes the order and a pick-up time from the venue's
+  card, the counter (owner and staff) sees it and marks it ready and handed
+  over — the current "order-ahead link" only points at a system the venue
+  already uses.
 - **After the hackathon** — activities for BITS: a HeroPad-defined list the
   venue ticks, values set by HeroPad, paid only for server-verifiable
   behaviour or a proof reviewed by HeroPad; `manager` role; push

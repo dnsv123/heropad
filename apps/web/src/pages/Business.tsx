@@ -23,7 +23,7 @@ import {
   type QueuedGrant,
 } from '../services/offlineQueue';
 import { useT } from '../i18n';
-import MilestoneEditor from '../components/MilestoneEditor';
+import MilestoneEditor, { type MilestoneEditorHandle } from '../components/MilestoneEditor';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
 import VenueStaff from '../components/VenueStaff';
@@ -123,6 +123,13 @@ export default function Business() {
   const [codeInput, setCodeInput] = useState('');
   const [redeemInput, setRedeemInput] = useState('');
   const [redeemChoice, setRedeemChoice] = useState<RedeemChoice | null>(null);
+  // Settings save as one: any edited field (or milestone row) lights the
+  // sticky "save changes" bar, and one tap saves the form and the milestones
+  // together, threshold first, so the milestones are always checked against
+  // the number the owner sees on screen.
+  const [settingsDirty, setSettingsDirty] = useState(false);
+  const [msDirty, setMsDirty] = useState(false);
+  const msRef = useRef<MilestoneEditorHandle>(null);
   const [customer, setCustomer] = useState<CustomerInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -625,16 +632,30 @@ export default function Business() {
             ? { days: hhDays, start: hhStart, end: hhEnd, mult: hhMult }
             : null;
       }
-      if (Object.keys(body).length === 0) {
+      if (Object.keys(body).length === 0 && !msDirty) {
         setNotice({ kind: 'err', text: t('b.n.nothing') });
         return;
       }
-      const r = await postJson<
-        typeof body,
-        { ok: true; venue: { stampsRequired: number; rewardLabel: string | null } }
-      >(`/api/loyalty/merchant/${slug}/settings`, body, token ?? undefined);
+      // Milestones are checked against the threshold as typed, before
+      // anything is sent: a bad row stops the whole save with one clear line.
+      const requiredNext = Number.isNaN(n) ? (venue?.stampsRequired ?? 10) : n;
+      const msProblems = msRef.current?.problems(requiredNext) ?? [];
+      if (msProblems.length > 0) {
+        setNotice({ kind: 'err', text: msProblems[0] });
+        return;
+      }
+      let requiredSaved = venue?.stampsRequired ?? requiredNext;
+      if (Object.keys(body).length > 0) {
+        const r = await postJson<
+          typeof body,
+          { ok: true; venue: { stampsRequired: number; rewardLabel: string | null } }
+        >(`/api/loyalty/merchant/${slug}/settings`, body, token ?? undefined);
+        requiredSaved = r.venue.stampsRequired;
+        setVenue((v) => (v ? { ...v, stampsRequired: r.venue.stampsRequired } : v));
+      }
+      if (msDirty) await msRef.current?.save(requiredSaved);
       hapticTap(15);
-      setVenue((v) => (v ? { ...v, stampsRequired: r.venue.stampsRequired } : v));
+      setSettingsDirty(false);
       setCustomer(null);
       setNotice({ kind: 'ok', text: t('b.n.saved.gen') });
     } catch (err) {
@@ -1448,7 +1469,7 @@ export default function Business() {
                     icon: '⚙️',
                     label: t('b.tab.set'),
                     render: () => (
-                      <div>
+                      <div onChangeCapture={() => setSettingsDirty(true)}>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <label className="text-xs text-slate-500">
                           {t('b.set.required')}
@@ -1476,8 +1497,13 @@ export default function Business() {
                       </div>
 
                       <MilestoneEditor
+                        ref={msRef}
                         slug={slug}
-                        stampsRequired={venue?.stampsRequired ?? 10}
+                        stampsRequired={(() => {
+                          const typed = parseInt(setRequired, 10);
+                          return Number.isNaN(typed) ? (venue?.stampsRequired ?? 10) : typed;
+                        })()}
+                        onDirty={setMsDirty}
                         onNotice={setNotice}
                       />
 
@@ -1740,6 +1766,25 @@ export default function Business() {
                       <p className="mt-1.5 text-center text-[10px] text-slate-600">
                         {t('b.set.note')}
                       </p>
+
+                      {/* The save bar follows the owner: the form is long, and
+                          a change made at the top must not depend on finding
+                          a button at the bottom. */}
+                      {(settingsDirty || msDirty) && (
+                        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hero-gold/30 bg-hero-deep/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+                          <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+                            <p className="text-xs text-slate-300">{t('b.set.dirty')}</p>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void saveSettings()}
+                              className="btn btn-primary btn-sm"
+                            >
+                              {busy ? '…' : t('b.set.saveall')}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       </div>
                     ),
                   },

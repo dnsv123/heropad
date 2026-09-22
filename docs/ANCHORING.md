@@ -49,6 +49,16 @@ The **day summary** is computed from the same leaves and stored beside the
 root: `stamps`, `revokes`, `net_stamps`, `unique_customers` (distinct
 `customer_slot` among stamps), `rewards`, `milestones`, `event_count`.
 
+**Running totals are sealed too.** The summary also carries `since`
+(the venue's first anchored day) and `totals` — the same counters
+accumulated from the first day to this one, plus `unique_customers_all_time`
+(distinct customers over the whole period, computed from the rows, not
+from the blinded slots). The summary object itself becomes the **last
+leaf** of the day's tree (`kind = summary`), so the day's numbers and the
+all-time numbers are covered by the root: a printed report can show "today"
+and "since the start" and both lines are checkable against the chain, not
+just the individual events.
+
 ## 3. Deterministic ordering and canonical form
 
 - Events are ordered by `(occurred_at, kind, id)` ascending, where
@@ -205,11 +215,17 @@ vocabulary:
 > checked by anyone, any time, without taking our word for it."
 
 And one button, **„Descarcă raportul sigilat”** / "Download the sealed
-report": a PDF (same generator as the offer) with one line per day —
-stamps, unique customers, rewards, the seal (root, shortened) and a link
-labelled "check" that opens `/verify` for that day — plus a CSV of the
-same. Nothing else. The word "seal" is the customer-facing name of the
-anchor.
+report": a printable page (same generator as the offer, opens the print
+dialog) with the venue's name and logo, a "since the start" block (days
+sealed, stamps, unique customers, rewards, milestones), then one line per
+day — stamps, unique customers, rewards, the seal (root, shortened) and a
+link labelled "check" that opens `/verify` for that day — plus a CSV of the
+same. The word "seal" is the customer-facing name of the anchor.
+
+A second, smaller output for HeroPad's own use: `GET /api/anchor/summary`
+(admin) with the platform-wide numbers of the day and all time (venues
+sealed, stamps, customers) for a daily post — the same numbers the venues
+see, aggregated, no venue named without its consent.
 
 ## 9. What an attacker who controls the HeroPad server can still do
 

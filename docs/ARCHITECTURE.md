@@ -424,6 +424,13 @@ the sections above.
 - **Netopia card payments** for the café's subscription (today: invoice and
   bank transfer, dry-run).
 - **`manager` role** with permissions distinct from `staff`.
+- **Pre-orders inside HeroPad** — the venue lists items that can be
+  ordered ahead (name, optional price, on/off); the customer opens the
+  venue from their profile, writes what they want and a pick-up time (free
+  text plus optional picks); the counter shows pending orders to owner and
+  staff with "ready" and "handed over". A new table, a counter poll like
+  check-ins, no payment (paid at pick-up). Today's `branding.orderUrl` only
+  links to an external system the venue already uses.
 - **Activities (missions) for BITS** — a list HeroPad defines, the venue
   only ticks which ones run at its counter; the BITS value of each is set
   by HeroPad, never by the venue, so BITS mean the same everywhere. Paid

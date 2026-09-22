@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 import { usePrivy } from '../lib/auth';
 import { getJson, putJson } from '../services/apiClient';
@@ -9,12 +9,33 @@ import { useT } from '../i18n';
 // A short list: at how many stamps, what the customer gets, an optional
 // photo. The photo is resized in the browser to a 256 px WebP so the public
 // venue payload stays light on every customer's phone; the API refuses
-// anything larger. Saved as a whole list, like the rest of the settings.
+// anything larger.
+//
+// No save button of its own: the settings form saves everything at once
+// (the parent calls `save(stampsRequired)` after the threshold is stored),
+// so a milestone can never be checked against a threshold the owner has
+// typed but not yet saved — which is exactly how the second milestone went
+// missing the first time this was used.
 
 export interface MilestoneDraft {
   at: string;
   label: string;
   image: string | null;
+}
+
+export interface MilestoneEditorHandle {
+  /** Problems with the current rows against this threshold; empty = fine. */
+  problems: (stampsRequired: number) => string[];
+  /** Persists the rows. Resolves when saved; rejects with a readable message. */
+  save: (stampsRequired: number) => Promise<void>;
+}
+
+interface MilestoneEditorProps {
+  slug: string;
+  stampsRequired: number;
+  /** Fires when the rows change (true) and after a save (false). */
+  onDirty: (dirty: boolean) => void;
+  onNotice: (n: { kind: 'ok' | 'err'; text: string }) => void;
 }
 
 const MAX = 4;
@@ -40,17 +61,13 @@ async function fileToThumb(file: File): Promise<string> {
   return url;
 }
 
-interface MilestoneEditorProps {
-  slug: string;
-  stampsRequired: number;
-  onNotice: (n: { kind: 'ok' | 'err'; text: string }) => void;
-}
-
-export default function MilestoneEditor({ slug, stampsRequired, onNotice }: MilestoneEditorProps) {
+const MilestoneEditor = forwardRef<MilestoneEditorHandle, MilestoneEditorProps>(function MilestoneEditor(
+  { slug, stampsRequired, onDirty, onNotice },
+  ref
+) {
   const { t } = useT();
   const { getAccessToken } = usePrivy();
   const [rows, setRows] = useState<MilestoneDraft[] | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -71,8 +88,12 @@ export default function MilestoneEditor({ slug, stampsRequired, onNotice }: Mile
     };
   }, [slug, getAccessToken]);
 
+  const edit = (next: MilestoneDraft[]) => {
+    setRows(next);
+    onDirty(true);
+  };
   const update = (i: number, patch: Partial<MilestoneDraft>) =>
-    setRows((rs) => (rs ? rs.map((r, j) => (j === i ? { ...r, ...patch } : r)) : rs));
+    edit((rows ?? []).map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const pickPhoto = async (i: number, file: File | null) => {
     if (!file) return;
@@ -83,27 +104,40 @@ export default function MilestoneEditor({ slug, stampsRequired, onNotice }: Mile
     }
   };
 
-  const save = async () => {
-    if (!rows) return;
-    setBusy(true);
-    try {
+  /** Rows that count: a number and a label; half-filled rows are ignored. */
+  const cleaned = (list: MilestoneDraft[]) =>
+    list
+      .map((r) => ({ at: parseInt(r.at, 10), label: r.label.trim(), image: r.image }))
+      .filter((r) => Number.isFinite(r.at) && r.label.length >= 2);
+
+  const problemsFor = (required: number): string[] => {
+    const list = cleaned(rows ?? []);
+    const out: string[] = [];
+    for (const m of list) {
+      if (m.at < 1) out.push(t('b.set.ms.toohigh', { n: m.at, r: required }));
+      else if (m.at >= required) out.push(t('b.set.ms.toohigh', { n: m.at, r: required }));
+    }
+    if (new Set(list.map((m) => m.at)).size !== list.length) out.push(t('b.set.ms.dup'));
+    return out;
+  };
+
+  useImperativeHandle(ref, () => ({
+    problems: problemsFor,
+    save: async (required: number) => {
+      const bad = problemsFor(required);
+      if (bad.length > 0) throw new Error(bad[0]);
       const token = await getAccessToken();
-      const milestones = rows
-        .map((r) => ({ at: parseInt(r.at, 10), label: r.label.trim(), image: r.image }))
-        .filter((r) => Number.isFinite(r.at) && r.label.length >= 2);
+      const milestones = cleaned(rows ?? []);
       const r = await putJson<
         { milestones: typeof milestones },
         { ok: true; milestones: Array<{ at: number; label: string; image: string | null }> }
       >(`/api/loyalty/merchant/${slug}/milestones`, { milestones }, token ?? undefined);
       setRows(r.milestones.map((m) => ({ at: String(m.at), label: m.label, image: m.image })));
-      onNotice({ kind: 'ok', text: t('b.set.ms.saved') });
-    } catch (err) {
-      onNotice({ kind: 'err', text: (err as Error).message });
-    } finally {
-      setBusy(false);
-    }
-  };
+      onDirty(false);
+    },
+  }));
 
+  const liveProblems = rows ? problemsFor(stampsRequired) : [];
   const inputCls =
     'mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none';
 
@@ -164,7 +198,7 @@ export default function MilestoneEditor({ slug, stampsRequired, onNotice }: Mile
                 </label>
                 <button
                   type="button"
-                  onClick={() => setRows((rs) => (rs ? rs.filter((_, j) => j !== i) : rs))}
+                  onClick={() => edit((rows ?? []).filter((_, j) => j !== i))}
                   className="btn btn-ghost btn-sm"
                 >
                   {t('b.set.ms.remove')}
@@ -184,22 +218,25 @@ export default function MilestoneEditor({ slug, stampsRequired, onNotice }: Mile
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {rows !== null && rows.length < MAX && (
-          <button
-            type="button"
-            onClick={() => setRows((rs) => [...(rs ?? []), { at: '', label: '', image: null }])}
-            className="btn btn-ghost btn-sm"
-          >
-            {t('b.set.ms.add')}
-          </button>
-        )}
-        {rows !== null && (
-          <button type="button" disabled={busy} onClick={() => void save()} className="btn btn-primary btn-sm">
-            {busy ? '…' : t('b.set.ms.save')}
-          </button>
-        )}
-      </div>
+      {liveProblems.length > 0 && (
+        <ul className="mt-2 space-y-0.5 text-xs text-red-300">
+          {liveProblems.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ul>
+      )}
+
+      {rows !== null && rows.length < MAX && (
+        <button
+          type="button"
+          onClick={() => edit([...(rows ?? []), { at: '', label: '', image: null }])}
+          className="btn btn-ghost btn-sm mt-3"
+        >
+          {t('b.set.ms.add')}
+        </button>
+      )}
     </div>
   );
-}
+});
+
+export default MilestoneEditor;
