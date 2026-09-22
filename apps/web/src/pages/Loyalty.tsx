@@ -14,6 +14,7 @@ import { getJson, postJson } from '../services/apiClient';
 import { getItem, setItem, removeItem } from '../services/storageService';
 import { hapticTap } from '../services/platformService';
 import { useT } from '../i18n';
+import { applyPageMeta } from '../lib/pageMeta';
 
 // Loyalty page — customer view, wired to the REAL backend.
 // ---------------------------------------------------------------------------
@@ -94,7 +95,7 @@ export default function Loyalty() {
   const [searchParams] = useSearchParams();
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const { wallets, ready: walletsReady, createWallet } = useSolanaWallets();
-  const { t } = useT();
+  const { t, lang } = useT();
 
   const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [venueError, setVenueError] = useState<string | null>(null);
@@ -258,6 +259,20 @@ export default function Loyalty() {
       active = false;
     };
   }, [slug]);
+
+  // The tab and the share card carry the venue's own name once it is known;
+  // this runs after the generic route title in App and overrides it.
+  useEffect(() => {
+    if (!venue) return;
+    applyPageMeta(
+      {
+        title: t('pt.loyalty', { venue: venue.name }),
+        description: t('pt.loyalty.d', { venue: venue.name }),
+      },
+      `/loyalty/${venue.slug}`,
+      lang
+    );
+  }, [venue, lang, t]);
 
   // Authenticated progress — polled. The server is the single source of truth.
   // We pass the Solana wallet so the backend links it to the identity — that's

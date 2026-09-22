@@ -417,6 +417,15 @@ the sections above.
 - **Netopia card payments** for the café's subscription (today: invoice and
   bank transfer, dry-run).
 - **`manager` role** with permissions distinct from `staff`.
+- **Activities (missions) for BITS** — a list HeroPad defines, the venue
+  only ticks which ones run at its counter; the BITS value of each is set
+  by HeroPad, never by the venue, so BITS mean the same everywhere. Paid
+  only for what the server can verify from its own data (first visit at a
+  new venue, four weeks in a row at one venue, the passport tiers, the
+  referral that pays when the friend's first stamp lands, Happy Hour) or
+  what a human at HeroPad approves from a submitted proof (a link or a
+  screenshot reviewed in Admin, never the barista). Per-customer and
+  per-venue daily caps, same pattern as trophies.
 - **Digital twins for physical products** — pins, figurines, the comic and
   shop items ship with a claim code; claiming mints the object's digital
   counterpart into the customer's vault, and that counterpart unlocks perks

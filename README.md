@@ -130,8 +130,11 @@ Only what is scheduled or planned; nothing below exists in the code yet.
 - **This week (Sept 2026)** — production API moves from Helius devnet to
   mainnet; mainnet tree created from Admin → Network.
 - **Next** — verified collection / credential standard for trophies; daily
-  anchoring of the stamp ledger; push notifications; Netopia card payments for the
-  café subscription; `manager` role permissions; a staging environment.
+  anchoring of the stamp ledger.
+- **After the hackathon** — activities for BITS: a HeroPad-defined list the
+  venue ticks, values set by HeroPad, paid only for server-verifiable
+  behaviour or a proof reviewed by HeroPad; `manager` role; push
+  notifications; Netopia card payments; a staging environment.
 - **Later** — digital twins for physical products (pins, figurines, the
   comic, shop items): a code with the object claims its digital counterpart,
   which unlocks perks over time; tag-side NFC cryptography, permanent
