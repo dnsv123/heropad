@@ -646,6 +646,7 @@ export default function Admin() {
                                   the counter. The manual fee field below still works —
                                   it is the override, not the default. */}
                               <PlanPicker
+                                venueName={v.name}
                                 currentPlan={v.plan}
                                 currentAddons={v.addons ?? []}
                                 currentFee={v.monthlyFee}

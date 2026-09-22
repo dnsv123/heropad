@@ -10,6 +10,7 @@ import {
   type BillingPeriod,
   type PlanKey,
 } from '../lib/plans';
+import { openOffer } from '../lib/offer';
 
 // Admin → venue card → the plan buttons.
 //
@@ -25,6 +26,7 @@ import {
 // invoiced: one invoice of ten fees a year instead of twelve of one.
 
 interface Props {
+  venueName: string;
   currentPlan: string | null;
   currentAddons: AppliedAddon[];
   currentFee: number;
@@ -40,6 +42,7 @@ interface Props {
 }
 
 export default function PlanPicker({
+  venueName,
   currentPlan,
   currentAddons,
   currentFee,
@@ -259,7 +262,25 @@ export default function PlanPicker({
                 <p className="mt-1 text-[11px] text-slate-500">+ {onceTotal} lei o singură dată</p>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {/* The same numbers, on paper: opens the print dialog, which is
+                  also how it becomes a PDF for WhatsApp. */}
+              <button
+                type="button"
+                onClick={() =>
+                  openOffer({
+                    venueName,
+                    plan: preview,
+                    addons,
+                    period,
+                    monthlyTotal: monthly,
+                    trial: preview.trialDays > 0,
+                  })
+                }
+                className="btn btn-secondary btn-sm"
+              >
+                Ofertă PDF
+              </button>
               <button
                 type="button"
                 disabled={busy}
