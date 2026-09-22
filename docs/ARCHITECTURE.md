@@ -414,8 +414,11 @@ the sections above.
   data); its off-chain JSON does not (one static file per kind, no venue,
   edition or date). The migration for new mints is written down in
   `standard/IMPLEMENTATIONS.md` and not started.
-- **Daily anchoring** of the off-chain stamp ledger (a periodic hash of the
-  day's `stamps` rows written on chain).
+- **Daily anchoring** of the off-chain stamp ledger. Designed, not built:
+  `docs/ANCHORING.md` (per venue-day Merkle root in a Memo instruction from
+  a dedicated key, ≈ 0.002 SOL per venue per year, proofs and a sealed
+  report for the café, and an honest list of what a compromised server
+  can still do).
 - **Push notifications** (no service-worker push, no email provider; the
   newsletter is a consented CSV export).
 - **Netopia card payments** for the café's subscription (today: invoice and
