@@ -42,6 +42,8 @@ interface VenueRow {
   billingStatus: string;
   billingPeriod: 'monthly' | 'annual';
   paidSince: string | null;
+  /** 'YYYY-MM-DD' end of the free pilot, null when none. */
+  trialEndsAt: string | null;
   partnerCode: string | null;
   /** The package, and the addons that explain the fee. null = not set yet. */
   plan: string | null;
@@ -728,6 +730,35 @@ export default function Admin() {
                                     <option value="annual">annual (10 × fee)</option>
                                   </select>
                                 </label>
+                                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                                  Pilot until
+                                  <InfoTip text="Set by the plan button (today + 14 days, Founding + 60). No invoice is issued before this date. Clear it when the café starts paying." />
+                                  <input
+                                    type="date"
+                                    defaultValue={v.trialEndsAt ?? ''}
+                                    onBlur={(e) => {
+                                      if (e.target.value !== (v.trialEndsAt ?? '')) void saveBilling(v, { trialEndsAt: e.target.value });
+                                    }}
+                                    className="mt-1 block rounded-lg border border-white/[0.08] bg-hero-deep px-2 py-1 text-sm text-white"
+                                  />
+                                </label>
+                                {(() => {
+                                  if (!v.trialEndsAt) return null;
+                                  const left = Math.ceil((new Date(`${v.trialEndsAt}T23:59:59`).getTime() - Date.now()) / 86_400_000);
+                                  return (
+                                    <span
+                                      className={`tnum self-end rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                                        left > 3
+                                          ? 'border-hero-gold/40 bg-hero-gold/10 text-hero-gold'
+                                          : left >= 0
+                                          ? 'border-red-400/40 bg-red-500/10 text-red-300'
+                                          : 'border-white/15 text-slate-400'
+                                      }`}
+                                    >
+                                      {left >= 0 ? `Pilot · ${left} ${left === 1 ? 'day' : 'days'} left` : 'Pilot ended'}
+                                    </span>
+                                  );
+                                })()}
                                 {v.billingStatus === 'active' && v.paidSince && (
                                   <span className="pb-1 text-[10px] text-slate-600">since {v.paidSince}</span>
                                 )}

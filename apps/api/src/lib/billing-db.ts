@@ -257,7 +257,7 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
 
   const { data: venues, error: vErr } = await supa
     .from('venues')
-    .select('id, slug, name, monthly_fee, billing_status, billing_period, paid_since')
+    .select('id, slug, name, monthly_fee, billing_status, billing_period, paid_since, trial_ends_at')
     .in('id', rows.map((r) => r.venue_id));
   if (vErr) throw new Error(`[Supabase] venuesDueForInvoice(venues): ${vErr.message}`);
 
@@ -270,6 +270,7 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
       billing_status: string | null;
       billing_period: string | null;
       paid_since: string | null;
+      trial_ends_at: string | null;
     }>).map((v) => [v.id, v])
   );
 
@@ -288,6 +289,8 @@ export async function venuesDueForInvoice(now: Date = new Date()): Promise<Billa
     if (!(fee > 0)) continue;
     if (dayNow < b.billing_day) continue;
     if (b.trial_ends_at && new Date(b.trial_ends_at).getTime() > now.getTime()) continue;
+    // The pilot set from the plan button lives on the venue row.
+    if (v.trial_ends_at && new Date(v.trial_ends_at).getTime() > now.getTime()) continue;
 
     const period: BillingPeriod = v.billing_period === 'annual' ? 'annual' : 'monthly';
     if (period === 'annual') {

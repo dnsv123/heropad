@@ -157,7 +157,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
     const { data: venues, error } = await supa
       .from('venues')
       .select(
-        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, billing_period, paid_since, referred_by, staff_seats, plan, addons, created_at'
+        'id, slug, name, address, stamps_required, branding, active, owner_identity_id, claim_token, gps_lat, gps_lng, monthly_fee, billing_status, billing_period, paid_since, trial_ends_at, referred_by, staff_seats, plan, addons, created_at'
       )
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
@@ -178,6 +178,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
       billing_status: string | null;
       billing_period: string | null;
       paid_since: string | null;
+      trial_ends_at: string | null;
       plan: string | null;
       addons: unknown;
       referred_by: string | null;
@@ -264,6 +265,7 @@ adminRouter.get('/venues', async (_req: Request, res: Response) => {
         billingStatus: v.billing_status ?? 'trial',
         billingPeriod: v.billing_period === 'annual' ? 'annual' : 'monthly',
         paidSince: v.paid_since,
+        trialEndsAt: v.trial_ends_at ? v.trial_ends_at.slice(0, 10) : null,
         plan: v.plan ?? null,
         addons: Array.isArray(v.addons) ? v.addons : [],
         partnerCode: v.referred_by ? (partnerCodeById.get(v.referred_by) ?? null) : null,
@@ -353,6 +355,8 @@ const UpdateBody = z.object({
   billingStatus: z.enum(['trial', 'active', 'paused', 'cancelled']).optional(),
   /** monthly = 12 invoices of the fee; annual = one invoice of 10 × fee per year. */
   billingPeriod: z.enum(['monthly', 'annual']).optional(),
+  /** 'YYYY-MM-DD' end of the free pilot; '' or null clears it. */
+  trialEndsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().or(z.literal('')).optional(),
   paidSince: z.string().trim().max(20).nullable().optional(),
   /** Referral code of the partner who brought this venue; '' clears it. */
   partnerCode: z.string().trim().max(40).nullable().optional(),
@@ -444,6 +448,10 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     }
     if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
     if (i.billingPeriod !== undefined) patch.billing_period = i.billingPeriod;
+    if (i.trialEndsAt !== undefined) {
+      // End of that day in Bucharest, so "14 days" means fourteen whole days.
+      patch.trial_ends_at = i.trialEndsAt ? `${i.trialEndsAt}T23:59:59+03:00` : null;
+    }
     if (i.plan !== undefined) patch.plan = i.plan;
     if (i.addons !== undefined) patch.addons = i.addons;
     if (i.staffSeats !== undefined) patch.staff_seats = i.staffSeats;

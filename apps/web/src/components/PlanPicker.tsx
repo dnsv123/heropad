@@ -38,6 +38,8 @@ interface Props {
     staffSeats: number;
     billingPeriod: BillingPeriod;
     billingStatus?: 'trial' | 'active';
+    /** 'YYYY-MM-DD' when applied as a pilot, '' when paying from today. */
+    trialEndsAt: string;
   }) => Promise<void> | void;
 }
 
@@ -80,6 +82,9 @@ export default function PlanPicker({
         staffSeats: preview.seats + extraSeats,
         billingPeriod: period,
         billingStatus: asTrial ? 'trial' : 'active',
+        trialEndsAt: asTrial
+          ? new Date(Date.now() + preview.trialDays * 86_400_000).toISOString().slice(0, 10)
+          : '',
       });
       setOpen(null);
     } finally {
