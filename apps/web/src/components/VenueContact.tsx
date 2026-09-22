@@ -21,6 +21,7 @@ export interface VenueBranding {
   instagram?: string;
   facebook?: string;
   website?: string;
+  orderUrl?: string;
 }
 
 /**
