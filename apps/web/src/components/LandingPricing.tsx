@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useT } from '../i18n';
 import { annualPrice } from '../lib/plans';
+import { priceNumber } from '../lib/money';
 import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Landing → public pricing, paper face. We tell café owners "competitors hide
@@ -13,8 +14,10 @@ import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact
 // by default. Annual is "ten months paid, twelve served" and is said as
 // "2 months free". The Founding Partner offer is NOT on the public site.
 export default function LandingPricing() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [annual, setAnnual] = useState(true);
+  // Lei in Romanian, dollars in English — see lib/money.ts.
+  const money = (ron: number) => priceNumber(lang, ron) + (lang === 'ro' ? ' lei' : '');
 
   const tiers = [
     { name: 'Starter', monthly: 99, feats: t('lp.s.feats'), hl: false, chain: false },
@@ -80,11 +83,11 @@ export default function LandingPricing() {
               <p className="font-display font-semibold text-ink-2">{tier.name}</p>
               <p className="tnum mt-2 font-display text-4xl font-bold leading-none text-ink">
                 {tier.chain && <span className="mr-1 text-base font-normal text-ink-3">{t('lp.from')}</span>}
-                {perMonth}
-                <span className="ml-1.5 text-base font-normal text-ink-3">{t('lp.mo')}</span>
+                {priceNumber(lang, perMonth)}
+                <span className="ml-1.5 text-base font-normal text-ink-3">{lang === 'ro' ? 'lei' : ''} {t('lp.mo')}</span>
               </p>
               <p className="tnum mt-1.5 min-h-[18px] text-[12px] text-ink-3">
-                {tier.chain ? t('lp.c.bill') : annual ? t('lp.billed.annual', { n: annualPrice(tier.monthly) }) : t('lp.billed.monthly')}
+                {tier.chain ? t('lp.c.bill') : annual ? t('lp.billed.annual', { n: money(annualPrice(tier.monthly)) }) : t('lp.billed.monthly')}
               </p>
 
               <ul className="mt-5 flex-1 space-y-2.5">

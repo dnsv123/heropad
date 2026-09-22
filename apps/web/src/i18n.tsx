@@ -46,7 +46,7 @@ const en = {
   'strip.1': "Tested live at Bătrânu' Sas, Sibiu",
   'strip.2': '0 apps to install',
   'strip.3': '10 seconds from tap to first stamp',
-  'strip.4': '99 lei a month, unlimited customers',
+  'strip.4': 'From $22 a month, unlimited customers',
   'how3.eyebrow': 'How it works',
   'how3.title': 'Tap. Collect. Keep.',
   'how3.sub': 'Three moments at the counter. None takes longer than paying.',
@@ -73,7 +73,7 @@ const en = {
   'kit.4.t': 'The counter screen.',
   'kit.4.d': "On the barista's phone. Three numbers and one gold button. No training.",
   'kit.cap': 'The hero on the counter. The pin display arrives in October.',
-  'biz.foot': 'Installed in 20 minutes · from 99 lei/month',
+  'biz.foot': 'Installed in 20 minutes · from $22/month',
   // --- Landing: hero ---
   'hero.eyebrow': 'Loyalty customers actually love',
   'hero.subtitle':
@@ -102,7 +102,7 @@ const en = {
   'biz.b3.d': 'Stamps granted only from your counter; redemptions need one-time codes that expire in 5 minutes.',
   'biz.b4.t': 'Zero GDPR headaches',
   'biz.b4.d': 'You never see customers’ emails or personal data — only anonymous counts.',
-  'biz.pricing': 'Free 2-month pilot · then from 99 lei/month',
+  'biz.pricing': 'Free 2-month pilot · then from $22/month',
   'biz.cta': 'Book a free demo',
   // --- Landing: ecosystem ---
   'eco.title': 'Part of the SuperVictor Universe',
@@ -449,7 +449,7 @@ const en = {
   'lp.sub': 'No hidden quotes, no "let\'s talk". Unlimited customers on every plan.',
   'lp.founding':
     'FOUNDING PARTNER — the first 3 cafés in Sibiu: 0 lei for 2 months, then 99 lei/month FOR LIFE with the full Growth package + the SuperVictor NFC figurine + the BITS display and 20 pins, as a gift. In the contract.',
-  'lp.mo': 'lei / month',
+  'lp.mo': '/ month',
   'lp.s.feats': 'The complete loyalty system · QR counter kit · Live statistics · 2 team accounts · Unlimited customers',
   'lp.b.feats': 'Everything in Starter · SuperVictor NFC figurine on your counter · Your logo and colour on the card · BITS display with the first 20 pins included',
   'lp.g.feats': 'Everything in Branded · Happy Hour ×2/×3 · Google review invites · Birthday surprises · Advanced analytics',
@@ -460,7 +460,7 @@ const en = {
   'lp.toggle.annual': 'Annual',
   'lp.toggle.free': '2 months free',
   'lp.billed.monthly': 'Billed monthly · cancel anytime',
-  'lp.billed.annual': '{n} lei once a year · 12 months, 10 paid',
+  'lp.billed.annual': '{n} once a year · 12 months, 10 paid',
   'lp.guarantee': 'Annual plans come with a 30-day money-back guarantee. Not for you? Full refund, no questions, keep the figurine.',
   'lp.c.cta': 'Talk to us',
   'lp.c.bill': 'Quote · 3+ locations, one invoice',
@@ -470,7 +470,7 @@ const en = {
   'eco.league.d': 'The donations platform — heroes help for real.',
   'eco.soon': 'Coming soon',
   'lp.note': 'Automatic e-invoice · pay by bank transfer or card · no setup fee, no penalties.',
-  'lp.chain': 'Running a chain with 3+ locations? Chain — from 699 lei/month, with consolidated reporting.',
+  'lp.chain': 'Running a chain with 3+ locations? Chain — from $152/month, with consolidated reporting.',
   'lp.chain.cta': 'Write to us',
 
   // --- Collection + BITS ledger ---
@@ -1041,7 +1041,7 @@ const ro: Record<TranslationKey, string> = {
   'lp.sub': 'Fără oferte ascunse, fără „hai să vorbim". Clienți nelimitați la orice pachet.',
   'lp.founding':
     'FOUNDING PARTNER — primele 3 cafenele din Sibiu: 0 lei 2 luni, apoi 99 lei/lună PE VIAȚĂ cu tot pachetul Growth + figurina SuperVictor cu NFC + vitrina BITS și 20 de pin-uri, cadou. Scris în contract.',
-  'lp.mo': 'lei / lună',
+  'lp.mo': '/ lună',
   'lp.s.feats': 'Sistemul complet de fidelizare · Kit QR pentru tejghea · Statistici live · 2 conturi de angajat · Clienți nelimitați',
   'lp.b.feats': 'Tot din Starter · Figurina SuperVictor cu NFC pe tejghea · Logo-ul și culoarea voastră pe card · Vitrina BITS cu primele 20 de pin-uri incluse',
   'lp.g.feats': 'Tot din Branded · Happy Hour ×2/×3 · Invitații la recenzii Google · Surprize de zi de naștere · Analitice avansate',
@@ -1052,7 +1052,7 @@ const ro: Record<TranslationKey, string> = {
   'lp.toggle.annual': 'Anual',
   'lp.toggle.free': '2 luni gratis',
   'lp.billed.monthly': 'Facturat lunar · reziliere oricând',
-  'lp.billed.annual': '{n} lei o dată pe an · 12 luni, 10 plătite',
+  'lp.billed.annual': '{n} o dată pe an · 12 luni, 10 plătite',
   'lp.guarantee': 'Planurile anuale au garanție 30 de zile, banii înapoi. Nu e pentru voi? Returnăm tot, fără întrebări, păstrați figurina.',
   'lp.c.cta': 'Vorbim',
   'lp.c.bill': 'Ofertă · 3+ locații, o singură factură',
