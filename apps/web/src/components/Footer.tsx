@@ -43,6 +43,18 @@ export default function Footer() {
           <span className={c.dim}>v1.1</span>
         </div>
       </div>
+
+      {/* ANPC: the two consumer-dispute badges Romanian law expects on any
+          site that sells. SAL = the national alternative-resolution body,
+          SOL = the EU online-dispute platform. Both open in a new tab. */}
+      <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 px-5 pb-6 sm:px-6 md:justify-end ${c.text}`}>
+        <a href="https://anpc.ro/ce-este-sal/" target="_blank" rel="noopener noreferrer" aria-label="ANPC — Soluționarea alternativă a litigiilor">
+          <img src="/brand/anpc-sal.webp" alt="ANPC SAL" width={636} height={160} loading="lazy" className="h-[40px] w-auto" />
+        </a>
+        <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" aria-label="Soluționarea online a litigiilor">
+          <img src="/brand/anpc-sol.svg" alt="SOL" width={212} height={53} loading="lazy" className="h-[40px] w-auto" />
+        </a>
+      </div>
     </footer>
   );
 }
