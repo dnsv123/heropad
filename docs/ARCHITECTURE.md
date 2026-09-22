@@ -15,7 +15,8 @@ product uses no crypto vocabulary at all; this document does.
 
 ## 1. What HeroPad is
 
-HeroPad is a stamp-card loyalty system for cafés where the customer's card
+HeroPad is a stamp-card loyalty system for cafés and other local businesses
+with regulars, where the customer's card
 lives in a browser tab, the barista's counter is a phone, and a completed card
 produces a compressed NFT trophy on Solana. The customer signs in with email
 or Google; a Solana wallet is created for them by Privy and they never see a
@@ -331,8 +332,7 @@ ownership queries depend on an indexer rather than on-chain accounts.
     transaction; a crash between them consumes the code without writing the
     reward.
 11. One hot admin key in a Railway env var owns the tree and pays every
-    mint; no rotation or spend limit beyond the daily caps. It is backed up
-    offline by the founder.
+    mint; no rotation or spend limit beyond the daily caps.
 12. Two ways to create a tree exist (`scripts/create-tree.ts` and Admin →
     Network); both write the per-cluster key via `treeConfigKey()`, but
     nothing stops the two from being run on different machines pointed at
@@ -359,7 +359,7 @@ ownership queries depend on an indexer rather than on-chain accounts.
 | Backups | GitHub Actions | `db-backup.yml` daily 02:23 UTC `pg_dump` to a 30-day artifact; `db-restore-test.yml` monthly restore into a throwaway Postgres asserting ≥ 15 tables and non-empty `venues`/`user_identity`/`stamps`. |
 | Solana | Helius RPC via `SOLANA_RPC_URL` | Production points at Helius **devnet** today; the mainnet move is scheduled for the week of 2026-09-22. The tree key is per cluster (`solana_config.bubblegum_tree` / `bubblegum_tree_mainnet`), created from Admin → Network (`POST /api/admin/solana/tree`). `BUBBLEGUM_TREE_ADDRESS` is an override, normally unset. Explorer links use `VITE_SOLANA_CLUSTER`. |
 | Auth / wallets | Privy | `PRIVY_APP_ID` / `PRIVY_APP_SECRET` server-side; `VITE_PRIVY_APP_ID` in the bundle. |
-| Invoicing | Oblio (Romanian e-invoicing) | `billing.yml` daily 07:00 UTC `POST /api/billing/cron` with `x-cron-secret`. `OBLIO_DRY_RUN=1` in production. The Oblio account is shared with another company product; HeroPad uses its own document series. |
+| Invoicing | Oblio (Romanian e-invoicing) | `billing.yml` daily 07:00 UTC `POST /api/billing/cron` with `x-cron-secret`. `OBLIO_DRY_RUN=1` in production. |
 | Analytics | Vercel Analytics component in `App.tsx` | Whether the dashboard toggle is on is unclear. |
 
 Env separation: development loads the repo-root `.env`; production values

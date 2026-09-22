@@ -729,7 +729,6 @@ from code:
 18. Is Vercel Analytics switched on in the dashboard?
 19. Should the stamp daily cap and revoke window use the venue time zone
     rather than UTC?
-20. `oblio.ts` references `hoh-backend`; is that the same Oblio account and
     series, and does anything else issue invoices from it?
 21. Is there a staging Supabase/Railway environment, or is dev run against
     production data?

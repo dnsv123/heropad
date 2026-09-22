@@ -1,6 +1,6 @@
 # HeroPad
 
-Stamp-card loyalty for cafés. The customer's card is a browser tab, the
+Stamp-card loyalty for cafés and any local business with regulars. The customer's card is a browser tab, the
 barista's counter is a phone, and a completed card mints a compressed NFT
 trophy on Solana that the customer keeps in a wallet they never had to set up.
 
@@ -8,8 +8,8 @@ trophy on Solana that the customer keeps in a wallet they never had to set up.
 [![Solana](https://img.shields.io/badge/Solana-compressed%20NFTs-14F195?style=flat-square)](https://developers.metaplex.com/bubblegum)
 [![Trademark](https://img.shields.io/badge/EUIPO-019287298-F5C842?style=flat-square)](https://euipo.europa.eu)
 
-**Who it is for.** Independent cafés in Romania that run a paper stamp card
-today, and their regulars. The café pays a monthly fee invoiced in lei; the
+**Who it is for.** Independent cafés, bakeries, barbers, gyms and similar local
+businesses that run a paper stamp card today, and their regulars. First market: Romania. The café pays a monthly fee invoiced in lei; the
 customer pays nothing.
 
 **What problem it removes.** Paper cards get lost, stamps get forged with a
