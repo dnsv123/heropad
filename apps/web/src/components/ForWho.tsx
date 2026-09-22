@@ -24,16 +24,16 @@ export default function ForWho() {
   ];
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-      <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
-        {t('fw.title')}
-      </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-400 md:text-base">
-        {t('fw.sub')}
-      </p>
-      <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 md:py-20">
+      <div className="mx-auto max-w-[60ch] text-center">
+        <h2 className="text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight text-ink md:text-4xl">
+          {t('fw.title')}
+        </h2>
+        <p className="mt-3 text-base text-ink-2">{t('fw.sub')}</p>
+      </div>
+      <div className="mt-8 grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 md:grid-cols-6">
         {verticals.map(([img, label]) => (
-          <div key={img} className="card-sm p-3 text-center transition hover:border-white/20">
+          <div key={img} className="pcard min-w-0 p-2.5 text-center sm:p-3">
             <img
               src={`/venues/${img}.webp`}
               alt={label}
@@ -43,11 +43,11 @@ export default function ForWho() {
               decoding="async"
               className="mx-auto aspect-square w-full max-w-[120px] object-contain"
             />
-            <span className="mt-1.5 block text-[13px] text-slate-300">{label}</span>
+            <span className="mt-1.5 block text-[12px] leading-tight text-ink-2 sm:text-[13px]">{label}</span>
           </div>
         ))}
       </div>
-      <p className="mt-4 text-center text-xs text-slate-500">{t('fw.more')}</p>
+      <p className="mt-4 text-center text-xs text-ink-3">{t('fw.more')}</p>
     </section>
   );
 }

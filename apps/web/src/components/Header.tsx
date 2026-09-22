@@ -1,69 +1,104 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { usePrivy } from '../lib/auth';
 import { useSolanaWallets } from '../lib/auth';
 
 import { useT } from '../i18n';
 
 // Single source of truth for the top navigation + auth button.
-// Layout strategy:
-//   - Desktop (md+): inline nav links + login button to the right of the wordmark.
-//   - Mobile: only logo + login button visible; tapping the menu icon reveals
-//     a slide-down drawer with the nav links. Keeps things readable on 375px.
+//
+// Two faces, one component. The landing is paper (cream, navy ink, brass);
+// every app screen is navy. The route decides, so the header never has to
+// be told. Layout is the same in both: wordmark left, links + login right,
+// a drawer on phones.
 //
 // Privy hooks:
 //   - `ready` flips to true once the SDK has loaded + checked existing session.
 //   - `authenticated` is true after a successful login (or returning visit).
-//   - `login()` opens the Privy modal; `logout()` clears the session and any
-//     embedded-wallet keys from local storage.
+//   - `login()` opens the Privy modal; `logout()` clears the session.
 //
-// The markup of the wordmark row is mirrored as static HTML in index.html
-// (#prehero) so the first paint already shows it. Change one, change both.
+// The wordmark row is mirrored as static HTML in index.html (#prehero) so the
+// first paint already shows it. Change one, change both.
 export default function Header() {
   const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { lang, setLang, t } = useT();
+  const paper = useLocation().pathname === '/';
 
-  // One-tap language toggle: shows the language you would SWITCH TO.
+  const c = paper
+    ? {
+        bar: 'border-ink/10 bg-paper/85',
+        drawer: 'border-ink/10 bg-paper',
+        wm: 'text-ink',
+        link: 'text-ink-2 hover:text-ink',
+        active: 'text-ink',
+        pill: 'border-ink/20 text-ink-2 hover:border-ink/40 hover:text-ink',
+        chip: 'border-ink/20 text-ink',
+        muted: 'text-ink-3 hover:text-ink',
+        btn: 'btn btn-ink btn-sm',
+      }
+    : {
+        bar: 'border-white/[0.06] bg-hero-deep/85',
+        drawer: 'border-white/[0.06] bg-hero-deep',
+        wm: 'text-white',
+        link: 'text-slate-400 hover:text-white',
+        active: 'text-white',
+        pill: 'border-white/15 text-slate-300 hover:border-white/30 hover:text-white',
+        chip: 'border-white/15 text-hero-cyan',
+        muted: 'text-slate-400 hover:text-white',
+        btn: 'btn btn-primary btn-sm',
+      };
+
   const langToggle = (
     <button
       type="button"
       onClick={() => setLang(lang === 'ro' ? 'en' : 'ro')}
       aria-label={lang === 'ro' ? 'Switch to English' : 'Schimbă în română'}
-      className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300 transition hover:border-white/30 hover:text-white"
+      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${c.pill}`}
     >
       {lang === 'ro' ? 'EN' : 'RO'}
     </button>
   );
 
-  // Pick the first Solana wallet (embedded if user signed in with email/Google,
-  // external if they connected Phantom/Solflare). Both share the same shape.
   const solanaAddress = wallets[0]?.address;
   const shortAddress = solanaAddress
     ? `${solanaAddress.slice(0, 4)}…${solanaAddress.slice(-4)}`
     : null;
-
-  // Friendly label fallback when wallet is still provisioning (~1–2s after login).
-  const userLabel =
-    shortAddress ??
-    user?.email?.address ??
-    user?.google?.email ??
-    'Connected';
+  const userLabel = shortAddress ?? user?.email?.address ?? user?.google?.email ?? 'Connected';
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    isActive
-      ? 'text-white'
-      : 'text-slate-400 hover:text-white transition-colors';
+    isActive ? c.active : `${c.link} transition-colors`;
+
+  const links = (onClick?: () => void) => (
+    <>
+      <NavLink to="/" end className={navLinkClass} onClick={onClick}>
+        {t('nav.home')}
+      </NavLink>
+      {paper && (
+        <a href="#pricing" className={`${c.link} transition-colors`} onClick={onClick}>
+          {t('nav.pricing')}
+        </a>
+      )}
+      <NavLink to="/rewards" className={navLinkClass} onClick={onClick}>
+        {t('nav.rewards')}
+      </NavLink>
+      <NavLink to="/v-dash" className={navLinkClass} onClick={onClick}>
+        {t('nav.vdash')}
+      </NavLink>
+      <NavLink to="/profile" className={navLinkClass} onClick={onClick}>
+        {t('nav.profile')}
+      </NavLink>
+    </>
+  );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-hero-deep/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
-        {/* Wordmark — the mascot's face beside the name. Solid white, gold
-            "Pad": one colour of ink, one of paint, no gradient. */}
+    <header className={`sticky top-0 z-40 border-b backdrop-blur ${c.bar}`}>
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:py-4">
+        {/* Wordmark: the mascot's face beside the name, one word, brass "Pad". */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight md:text-xl"
+          className={`flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight md:text-xl ${c.wm}`}
           onClick={() => setMobileOpen(false)}
         >
           <img
@@ -71,58 +106,28 @@ export default function Header() {
             alt=""
             width={28}
             height={28}
-            className="h-7 w-7 rounded-full bg-hero-navy2 object-cover"
+            className="h-7 w-7 shrink-0 rounded-full bg-hero-navy2 object-cover"
           />
-          <span>
-            Hero<span className="text-hero-gold">Pad</span>
+          <span className="whitespace-nowrap">
+            Hero<span className={paper ? 'text-brass' : 'text-hero-gold'}>Pad</span>
           </span>
         </Link>
 
-        {/* Desktop nav (hidden on mobile). */}
+        {/* Desktop nav */}
         <nav className="hidden items-center gap-6 text-sm md:flex">
-          <NavLink to="/" end className={navLinkClass}>
-            {t('nav.home')}
-          </NavLink>
-          {/* "Claim" intentionally hidden from nav until physical QR/NFC
-              products ship — the page stays live via /claim + Ecosystem card. */}
-          {/* The shelf sits in the main nav on purpose: BITS only mean
-              something if what they buy is one tap away from anywhere. */}
-          <NavLink to="/rewards" className={navLinkClass}>
-            {t('nav.rewards')}
-          </NavLink>
-          <NavLink to="/v-dash" className={navLinkClass}>
-            {t('nav.vdash')}
-          </NavLink>
-          {/* Always rendered: a guest clicking it lands on the Profile login
-             prompt, and the link no longer POPS IN when Privy resolves —
-             that pop was shifting the whole nav (the page's biggest CLS). */}
-          <NavLink to="/profile" className={navLinkClass}>
-            {t('nav.profile')}
-          </NavLink>
+          {links()}
           {langToggle}
-
-          {/* Fixed-width slot: the login button and the account chip swap
-             inside reserved space instead of resizing the nav. */}
-          <div className="flex min-w-[190px] items-center justify-end gap-3">
+          <div className="flex min-w-[150px] items-center justify-end gap-3">
             {!authenticated ? (
-              <button
-                type="button"
-                onClick={login}
-                disabled={!ready}
-                className="btn btn-primary btn-sm"
-              >
+              <button type="button" onClick={login} disabled={!ready} className={c.btn}>
                 {ready ? t('nav.login') : t('nav.loading')}
               </button>
             ) : (
               <>
-                <span className="max-w-[150px] truncate rounded-full border border-white/15 px-3 py-1 font-mono text-xs text-hero-cyan">
+                <span className={`max-w-[150px] truncate rounded-full border px-3 py-1 font-mono text-xs ${c.chip}`}>
                   {userLabel}
                 </span>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="text-xs text-slate-400 transition hover:text-white"
-                >
+                <button type="button" onClick={logout} className={`text-xs transition ${c.muted}`}>
                   {t('nav.logout')}
                 </button>
               </>
@@ -130,20 +135,15 @@ export default function Header() {
           </div>
         </nav>
 
-        {/* Mobile controls: compact login + hamburger. */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* Phone controls */}
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
           {langToggle}
           {!authenticated ? (
-            <button
-              type="button"
-              onClick={login}
-              disabled={!ready}
-              className="btn btn-primary btn-sm"
-            >
+            <button type="button" onClick={login} disabled={!ready} className={c.btn}>
               {ready ? t('nav.login') : '…'}
             </button>
           ) : (
-            <span className="rounded-full border border-white/15 px-2.5 py-1 font-mono text-[11px] text-hero-cyan">
+            <span className={`rounded-full border px-2.5 py-1 font-mono text-[11px] ${c.chip}`}>
               {shortAddress ?? '...'}
             </span>
           )}
@@ -151,15 +151,15 @@ export default function Header() {
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-slate-200 transition hover:border-white/30 hover:text-white"
+            aria-expanded={mobileOpen}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${c.pill}`}
           >
-            {/* Tiny inline hamburger / close — no extra icon library needed. */}
             {mobileOpen ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             )}
@@ -167,24 +167,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer — only mounts when open, and on small screens only. */}
       {mobileOpen && (
-        <nav className="border-t border-white/[0.06] bg-hero-deep px-4 py-3 md:hidden">
+        <nav className={`border-t px-4 py-3 md:hidden ${c.drawer}`}>
           <div className="flex flex-col gap-3 text-sm">
-            <NavLink to="/" end className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              {t('nav.home')}
-            </NavLink>
-            <NavLink to="/rewards" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              {t('nav.rewards')}
-            </NavLink>
-            <NavLink to="/v-dash" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-              {t('nav.vdash')}
-            </NavLink>
-            {authenticated && (
-              <NavLink to="/profile" className={navLinkClass} onClick={() => setMobileOpen(false)}>
-                {t('nav.profile')}
-              </NavLink>
-            )}
+            {links(() => setMobileOpen(false))}
             {authenticated && (
               <button
                 type="button"
@@ -192,7 +178,7 @@ export default function Header() {
                   void logout();
                   setMobileOpen(false);
                 }}
-                className="self-start text-xs text-slate-400 hover:text-white"
+                className={`self-start text-xs ${c.muted}`}
               >
                 {t('nav.logout')}
               </button>

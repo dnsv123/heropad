@@ -69,8 +69,15 @@ const Terms = lazy(() => import('./pages/Terms'));
 // All routes are rewritten to /index.html on Vercel (see vercel.json), which
 // keeps deep-links like /claim?c=ABC working when shared as QR / NFC URLs.
 export default function App() {
+  // The landing wears paper; every app screen wears navy. index.html gives
+  // <body> the paper colours so the landing's first paint is already right.
+  const paper = useLocation().pathname === '/';
   return (
-    <div className="flex min-h-screen flex-col bg-hero-deep text-slate-100">
+    <div
+      className={`flex min-h-screen flex-col ${
+        paper ? 'bg-paper text-ink' : 'bg-hero-deep text-slate-100'
+      }`}
+    >
       <AuthRouteWatcher />
       <PreheroRemover />
       <Header />

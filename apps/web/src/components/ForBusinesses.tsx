@@ -51,11 +51,11 @@ export default function ForBusinesses() {
 
   return (
     <section id="business" className="relative scroll-mt-20">
-      <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-5 py-6 sm:px-6 md:py-8">
         {/* One step up from the page: the sales section is its own panel,
             with the mascot flying in the top corner on wide screens — inside
             the panel, fully, like a sticker on the card. */}
-        <div className="card relative overflow-hidden p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-[28px] bg-hero-deep p-6 text-white md:p-10">
           <img
             src="/super-victor-fly-1.webp"
             alt=""
@@ -97,7 +97,7 @@ export default function ForBusinesses() {
             >
               {t('biz.cta')}
             </a>
-            <p className="text-sm text-slate-400">{t('biz.pricing')}</p>
+            <p className="text-sm text-slate-400">{t('biz.foot')}</p>
           </div>
         </div>
       </div>

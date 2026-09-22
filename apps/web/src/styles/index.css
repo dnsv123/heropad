@@ -105,6 +105,33 @@ html {
   .tnum {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ---- Paper face (landing only) ------------------------------------ */
+  .pcard {
+    @apply rounded-3xl border border-ink/10 bg-paper-2;
+  }
+  .btn-brass {
+    @apply bg-brass-2 text-hero-deep hover:bg-brass-3;
+  }
+  .btn-ink {
+    @apply bg-hero-deep text-white hover:bg-hero-navy2;
+  }
+  .btn-line {
+    @apply border-ink/20 text-ink hover:border-ink/40;
+  }
+  .eyebrow-brass {
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brass;
+  }
+  /* Photo tiles: the image fills, the caption sits on it, nothing shifts. */
+  .photo {
+    @apply relative overflow-hidden rounded-3xl bg-hero-deep;
+  }
+  .photo > img {
+    @apply absolute inset-0 h-full w-full object-cover;
+  }
+  .photo .cap {
+    @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-hero-deep/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

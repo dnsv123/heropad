@@ -31,6 +31,12 @@ export default {
           'purple-deep': '#7d34d6',
           green: '#14F195',
         },
+        // The landing's "paper" face. Marketing is cream + navy ink + brass;
+        // the app itself stays navy, which is why the phones in the photos
+        // read as the product against the page.
+        paper: { DEFAULT: '#F6F1E7', 2: '#FFFDF9' },
+        ink: { DEFAULT: '#0A1B3A', 2: '#3B4661', 3: '#6B7590' },
+        brass: { DEFAULT: '#C99A2E', 2: '#E8B93E', 3: '#F2C55A' },
       },
       fontFamily: {
         display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
