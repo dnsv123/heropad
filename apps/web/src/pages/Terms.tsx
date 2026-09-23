@@ -101,7 +101,7 @@ const SECTIONS_EN: Section[] = [
     penalty, effective at the end of the paid month. Annual plans are invoiced once a
     year for ten months' fee and cover twelve months of service. Annual plans come
     with a thirty-day money-back guarantee: a venue that cancels within thirty days of
-    its first annual invoice receives a full refund, no questions asked, and keeps the
+    its first annual invoice receives a full refund, no questions asked, and returns the
     figurine. Invoices are issued as electronic invoices (e-Factura) and are payable by
     bank transfer within fourteen days. Physical items (figurine, display, pins) are
     provided as stated in the plan; the figurine remains our property and is returned
@@ -236,7 +236,7 @@ const SECTIONS_RO: Section[] = [
     dată pe an, la valoarea a zece luni de abonament, și acoperă douăsprezece luni de
     serviciu. Planurile anuale au garanție de treizeci de zile: un local care reziliază
     în treizeci de zile de la prima factură anuală primește banii înapoi integral, fără
-    întrebări, și păstrează figurina. Facturile se emit ca facturi electronice
+    întrebări, și returnează figurina. Facturile se emit ca facturi electronice
     (e-Factura) și se plătesc prin transfer bancar în paisprezece zile. Obiectele fizice
     (figurină, vitrină, pinuri) se livrează conform planului; figurina rămâne
     proprietatea noastră și se returnează la încetarea abonamentului, dacă în contract

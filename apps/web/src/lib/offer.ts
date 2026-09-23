@@ -78,7 +78,7 @@ export function offerHtml(o: OfferInput): string {
 
 <div class="box">
   ${o.trial && o.plan.trialDays > 0 ? `<b>Pilot gratuit ${o.plan.trialDays} de zile.</b> Prima factură se emite la sfârșitul pilotului, doar dacă doriți să continuați.<br>` : ''}
-  ${annual ? `<b>Garanție 30 de zile.</b> Dacă în primele 30 de zile de la prima factură anuală nu sunteți mulțumiți, returnăm integral suma, fără întrebări, și păstrați figurina.<br>` : `<b>Fără angajament.</b> Abonamentul lunar se poate opri oricând, fără penalități, cu efect la sfârșitul lunii plătite.<br>`}
+  ${annual ? `<b>Garanție 30 de zile.</b> Dacă în primele 30 de zile de la prima factură anuală nu sunteți mulțumiți, returnăm integral suma, fără întrebări; figurina, dată în comodat, se returnează.<br>` : `<b>Fără angajament.</b> Abonamentul lunar se poate opri oricând, fără penalități, cu efect la sfârșitul lunii plătite.<br>`}
   Clienți nelimitați. Factură electronică (e-Factura), plată prin transfer bancar în 14 zile. Prețurile nu conțin TVA (neplătitor de TVA). Termenii compleți: heropad.supervictoruniverse.com/terms.
 </div>
 
