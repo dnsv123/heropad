@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useT } from '../i18n';
+import LogoMark from './LogoMark';
+import { readableOnNavy } from '../lib/color';
 
 // The loyalty card as an object: what a customer holds, not a progress bar.
 // ---------------------------------------------------------------------------
@@ -99,6 +101,8 @@ export default function CardFace({
       `radial-gradient(120% 90% at ${tilt.mx}% ${tilt.my}%, rgba(255,255,255,0.16), transparent 45%),` +
       'repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 7px),' +
       'repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 9px),' +
+      // the venue's own colour, a soft light from the logo's corner
+      (accent ? `radial-gradient(90% 70% at 0% 0%, ${accent}55, transparent 60%),` : '') +
       'linear-gradient(145deg, #14357F 0%, #0A2766 42%, #061A47 100%)',
   };
 
@@ -127,13 +131,20 @@ export default function CardFace({
         )}
       </AnimatePresence>
 
+      {/* A branded venue signs the card with its colour along the top edge. */}
+      {accent && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[3px]"
+          style={{ background: `linear-gradient(90deg, ${accent}, ${accent}00 85%)` }}
+        />
+      )}
+
       {/* Top row: the venue, and whose card it is. */}
       <div className="relative z-10 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {logo ? (
-            <span className="flex h-9 max-w-[96px] shrink-0 items-center rounded-lg bg-white px-1.5">
-              <img src={logo} alt="" className="h-7 w-auto max-w-full object-contain" width={96} height={28} />
-            </span>
+            <LogoMark src={logo} height={lg ? 34 : 26} maxWidth={lg ? 120 : 92} />
           ) : (
             <img src="/super-victor-face.webp" alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-full ring-1 ring-white/20" />
           )}
@@ -147,7 +158,7 @@ export default function CardFace({
       {/* Middle: the count, and the hero at this level. */}
       <div className={`relative z-10 grid items-end ${lg ? 'mt-3 grid-cols-[minmax(0,1fr)_132px] sm:grid-cols-[minmax(0,1fr)_160px]' : 'mt-2 grid-cols-[minmax(0,1fr)_84px]'}`}>
         <div className="min-w-0 pb-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: `${tint}` }}>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: accent ? readableOnNavy(accent) : AMBER }}>
             {t('cf.stamps')}
           </p>
           <p className="mt-1 flex items-baseline gap-1 font-display font-bold leading-none">

@@ -4,6 +4,7 @@ import { usePrivy } from '../lib/auth';
 
 import { getJson, type ApiClientError } from '../services/apiClient';
 import { useT } from '../i18n';
+import Glyph from './Glyph';
 
 // The venue's own transaction log — every stamp and reward IT handed out.
 //
@@ -245,14 +246,19 @@ export default function VenueHistory({
     { k: 'all', l: t('b.hist.all') },
   ];
 
+  const revokeCount = (events ?? []).filter((e) => e.kind === 'revoke').length;
+  const inputCls =
+    'mt-1.5 w-full rounded-xl border border-white/10 bg-hero-deep px-3 py-2 text-xs text-white focus:border-[#F7A30C]/60 focus:outline-none';
+
   return (
     <div className={embedded ? '' : 'mt-4'}>
       {!embedded && (
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-white"
         >
+          <Glyph name="history" />
           {open ? t('b.hist.hide') : t('b.hist')}
         </button>
       )}
@@ -265,18 +271,35 @@ export default function VenueHistory({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 space-y-3">
-              {/* Presets — the common questions, one tap each */}
-              <div className="flex flex-wrap gap-2">
+            <div className={`${embedded ? '' : 'mt-4'} space-y-4`}>
+              {embedded && (
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F7A30C]">{t('b.tab.hist')}</p>
+                    <h3 className="mt-1 font-display text-xl font-bold text-white">{t('b.hist.title')}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={exportCsv}
+                    disabled={!events || events.length === 0}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1.5 text-xs text-slate-200 transition hover:bg-white/[0.12] disabled:opacity-40"
+                  >
+                    <Glyph name="download" className="h-3.5 w-3.5" />
+                    {t('b.hist.csv')}
+                  </button>
+                </div>
+              )}
+
+              {/* Presets: the common questions, one tap each. */}
+              <div role="group" className="flex gap-1 rounded-2xl border border-white/[0.08] bg-hero-deep/70 p-1">
                 {presets.map((p) => (
                   <button
                     key={p.k}
                     type="button"
                     onClick={() => applyPreset(p.k)}
-                    className={`rounded-full px-3 py-1 text-xs transition ${
-                      preset === p.k
-                        ? 'bg-hero-cyan font-semibold text-hero-deep'
-                        : 'border border-white/[0.08] text-slate-400 hover:border-white/30 hover:text-white'
+                    aria-pressed={preset === p.k}
+                    className={`flex-1 rounded-xl px-2 py-2 text-xs font-medium transition ${
+                      preset === p.k ? 'bg-[#F7A30C] text-hero-deep' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {p.l}
@@ -285,8 +308,8 @@ export default function VenueHistory({
               </div>
 
               {/* Exact range + code search */}
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_1.2fr_auto]">
+                <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
                   {t('b.hist.from')}
                   <input
                     type="date"
@@ -295,10 +318,10 @@ export default function VenueHistory({
                       setFrom(e.target.value);
                       setPreset('all');
                     }}
-                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 text-xs text-white"
+                    className={inputCls}
                   />
                 </label>
-                <label className="text-[10px] uppercase tracking-wider text-slate-500">
+                <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
                   {t('b.hist.to')}
                   <input
                     type="date"
@@ -307,10 +330,10 @@ export default function VenueHistory({
                       setTo(e.target.value);
                       setPreset('all');
                     }}
-                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 text-xs text-white"
+                    className={inputCls}
                   />
                 </label>
-                <label className="col-span-2 text-[10px] uppercase tracking-wider text-slate-500 sm:col-span-1">
+                <label className="col-span-2 text-[10px] font-medium uppercase tracking-wider text-slate-500 sm:col-span-1">
                   {t('b.hist.search')}
                   <input
                     value={codeInput}
@@ -320,38 +343,39 @@ export default function VenueHistory({
                     }}
                     placeholder="K7M3PQ"
                     maxLength={6}
-                    className="mt-1 w-full rounded-lg border border-white/[0.08] bg-hero-navy px-2 py-1.5 font-mono text-xs uppercase tracking-widest text-white"
+                    className={`${inputCls} font-mono uppercase tracking-widest placeholder:text-slate-700`}
                   />
                 </label>
                 <button
                   type="button"
                   onClick={search}
-                  className="self-end rounded-lg bg-hero-blue/80 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-hero-cyan hover:text-hero-deep"
+                  className="col-span-2 inline-flex items-center justify-center gap-1.5 self-end rounded-xl bg-white px-4 py-2 text-xs font-semibold text-hero-deep transition hover:bg-slate-200 sm:col-span-1"
                 >
+                  <Glyph name="search" className="h-3.5 w-3.5" strokeWidth={2.2} />
                   {t('b.hist.apply')}
                 </button>
               </div>
 
-              {/* The applied customer filter, stated. Without this banner,
-                  narrowing to one code looks like nothing happened. */}
+              {/* The applied filters, stated. Without this, narrowing to one
+                  code looks like nothing happened. */}
               <AnimatePresence>
                 {activeBy && (
                   <motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hero-cyan/40 bg-hero-cyan/10 px-3 py-2"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#F7A30C]/35 bg-[#F7A30C]/10 px-3 py-2.5"
                   >
-                    <p className="text-xs text-slate-300">
-                      {t('b.hist.byfilter')}{' '}
-                      <span className="font-semibold text-hero-cyan">{activeBy}</span>
+                    <p className="flex items-center gap-2 text-xs text-slate-300">
+                      <Glyph name="user" className="h-3.5 w-3.5 text-[#FFC45A]" />
+                      {t('b.hist.byfilter')} <span className="font-semibold text-white">{activeBy}</span>
                     </p>
                     <button
                       type="button"
                       onClick={() => void load(from, to, activeCode, '')}
-                      className="rounded-full border border-hero-cyan/40 px-3 py-0.5 text-[11px] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                      className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-3 py-1 text-[11px] text-white transition hover:bg-white/[0.15]"
                     >
-                      ✕ {t('b.hist.clearcode')}
+                      <Glyph name="x" className="h-3 w-3" /> {t('b.hist.clearcode')}
                     </button>
                   </motion.div>
                 )}
@@ -360,89 +384,81 @@ export default function VenueHistory({
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hero-cyan/40 bg-hero-cyan/10 px-3 py-2"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#F7A30C]/35 bg-[#F7A30C]/10 px-3 py-2.5"
                   >
                     <p className="text-xs text-slate-300">
                       {t('b.hist.filtered')}{' '}
-                      <span className="font-mono tracking-widest text-hero-cyan">
-                        {activeCode}
-                      </span>
-                      {events && events.length > 0 && (
-                        <span className="ml-2 text-[10px] text-slate-500">
-                          {t('b.hist.sum')
-                            .replace('{s}', String(stampCount))
-                            .replace('{r}', String(rewardCount))}
-                        </span>
-                      )}
+                      <span className="font-mono font-semibold tracking-widest text-white">{activeCode}</span>
                     </p>
                     <button
                       type="button"
                       onClick={clearCustomer}
-                      className="rounded-full border border-hero-cyan/40 px-3 py-0.5 text-[11px] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                      className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-3 py-1 text-[11px] text-white transition hover:bg-white/[0.15]"
                     >
-                      ✕ {t('b.hist.clearcode')}
+                      <Glyph name="x" className="h-3 w-3" /> {t('b.hist.clearcode')}
                     </button>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="text-[11px] text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                >
-                  {t('b.hist.clear')}
-                </button>
-                <button
-                  type="button"
-                  onClick={exportCsv}
-                  disabled={!events || events.length === 0}
-                  className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-slate-300 transition hover:border-white/30 hover:text-white disabled:opacity-40"
-                >
-                  {t('b.hist.csv')}
-                </button>
-              </div>
-
               {error && (
-                <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-                  {error}
-                </p>
+                <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>
               )}
 
               {loading && (
                 <div className="space-y-2">
                   {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="h-11 animate-pulse rounded-xl border border-white/[0.08] bg-hero-navy"
-                    />
+                    <div key={i} className="h-14 animate-pulse rounded-2xl border border-white/[0.06] bg-hero-deep/60" />
                   ))}
                 </div>
               )}
 
               {!loading && events && events.length === 0 && (
-                <p className="rounded-xl border border-white/[0.08] bg-hero-navy px-3 py-6 text-center text-xs text-slate-500">
-                  {t('b.hist.empty')}
-                </p>
+                <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.06] text-slate-400">
+                    <Glyph name="history" className="h-5 w-5" />
+                  </span>
+                  <p className="text-xs text-slate-400">{t('b.hist.empty')}</p>
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="mt-1 text-[11px] text-slate-400 underline underline-offset-2 hover:text-white"
+                  >
+                    {t('b.hist.clear')}
+                  </button>
+                </div>
               )}
 
               {!loading && events && events.length > 0 && (
                 <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                      {t('b.hist.count').replace('{n}', String(events.length))}
-                    </p>
-                    <p className="text-[10px] text-slate-600">{t('b.hist.tapdetails')}</p>
+                  {/* What this range adds up to, before the lines. */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { v: stampCount, l: t('b.today.stamps'), c: 'text-white' },
+                      { v: rewardCount, l: t('b.today.rewards'), c: 'text-[#FFC45A]' },
+                      { v: revokeCount, l: t('b.hist.k.revokes'), c: revokeCount > 0 ? 'text-red-300' : 'text-slate-500' },
+                    ].map((k) => (
+                      <div key={k.l} className="rounded-2xl border border-white/[0.07] bg-hero-deep/50 px-2 py-3 text-center">
+                        <p className={`tnum font-display text-2xl font-bold leading-none ${k.c}`}>{k.v}</p>
+                        <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-500">{k.l}</p>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="tnum text-[11px] text-slate-500">
+                      {t('b.hist.count').replace('{n}', String(events.length))}
+                    </p>
+                    <p className="text-[11px] text-slate-600">{t('b.hist.tapdetails')}</p>
+                  </div>
+
+                  <div className="max-h-[32rem] space-y-4 overflow-y-auto pr-0.5">
                     {groups.map((g) => (
                       <div key={g.label}>
-                        <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-hero-gold/70">
+                        <p className="sticky top-0 z-10 mb-1.5 bg-hero-navy/95 px-1 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 backdrop-blur">
                           {g.label}
                         </p>
-                        <ul className="divide-y divide-hero-blue/10 overflow-hidden rounded-xl border border-white/[0.08] bg-hero-navy">
+                        <ul className="divide-y divide-white/[0.05] overflow-hidden rounded-2xl border border-white/[0.07] bg-hero-deep/50">
                           {g.items.map(({ e, id }) => {
                             const isOpen = expanded === id;
                             return (
@@ -450,68 +466,60 @@ export default function VenueHistory({
                                 <button
                                   type="button"
                                   onClick={() => setExpanded(isOpen ? null : id)}
-                                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition ${
-                                    isOpen ? 'bg-hero-blue/10' : 'hover:bg-hero-blue/5'
+                                  aria-expanded={isOpen}
+                                  className={`flex w-full items-center gap-3 px-3 py-3 text-left transition ${
+                                    isOpen ? 'bg-white/[0.05]' : 'hover:bg-white/[0.03]'
                                   }`}
                                 >
-                                  {/* Type badge — reward vs stamp readable at a glance */}
                                   <span
-                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
+                                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${
                                       e.kind === 'reward'
-                                        ? 'bg-hero-gold/15 text-hero-gold'
+                                        ? 'bg-[#F7A30C]/15 text-[#FFC45A]'
                                         : e.kind === 'revoke'
                                           ? 'bg-red-500/10 text-red-300'
-                                          : 'bg-hero-cyan/10 text-hero-cyan'
+                                          : 'bg-white/[0.06] text-white'
                                     }`}
                                   >
-                                    {e.kind === 'reward' ? '🏆' : e.kind === 'revoke' ? '↩' : '☕'}
+                                    <Glyph
+                                      name={e.kind === 'reward' ? 'trophy' : e.kind === 'revoke' ? 'back' : 'stamp'}
+                                      className="h-4 w-4"
+                                    />
                                   </span>
                                   <span className="min-w-0 flex-1">
-                                    <span className="block truncate text-xs text-slate-200">
+                                    <span className="block truncate text-[13px]">
                                       {e.kind === 'reward' ? (
-                                        <span className="text-hero-gold">
-                                          {t('b.hist.reward')}
-                                        </span>
+                                        <span className="font-semibold text-[#FFC45A]">{t('b.hist.reward')}</span>
                                       ) : e.kind === 'revoke' ? (
-                                        <span className="text-red-300">
-                                          {t('b.hist.revoked')}
-                                        </span>
+                                        <span className="font-semibold text-red-300">{t('b.hist.revoked')}</span>
                                       ) : (
-                                        <span
-                                          className={
-                                            e.revoked
-                                              ? 'text-slate-500 line-through'
-                                              : 'text-hero-cyan'
-                                          }
-                                        >
+                                        <span className={e.revoked ? 'text-slate-500 line-through' : 'font-semibold text-white'}>
                                           +1 {t('b.hist.stamp')}
                                         </span>
                                       )}
-                                      {' · '}
-                                      <span className="font-mono tracking-widest text-white">
-                                        {e.code}
-                                      </span>
+                                      <span className="ml-2 font-mono text-xs tracking-widest text-slate-300">{e.code}</span>
                                     </span>
-                                    <span className="mt-0.5 block text-[10px] text-slate-500">
-                                      {time(e.at)}
+                                    <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+                                      <span className="tnum">{time(e.at)}</span>
                                       {e.grantedBy && (
                                         <>
                                           {' · '}
-                                          {t('b.hist.by')}{' '}
-                                          {e.grantedBy === 'owner'
-                                            ? t('b.hist.owner')
-                                            : e.grantedBy}
+                                          {t('b.hist.by')} {e.grantedBy === 'owner' ? t('b.hist.owner') : e.grantedBy}
                                         </>
                                       )}
                                     </span>
                                   </span>
-                                  <span
-                                    className={`shrink-0 text-slate-600 transition-transform ${
-                                      isOpen ? 'rotate-180' : ''
-                                    }`}
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className={`h-4 w-4 shrink-0 text-slate-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                    aria-hidden
                                   >
-                                    ⌄
-                                  </span>
+                                    <path d="m6 9 6 6 6-6" />
+                                  </svg>
                                 </button>
 
                                 <AnimatePresence initial={false}>
@@ -520,9 +528,9 @@ export default function VenueHistory({
                                       initial={{ opacity: 0, height: 0 }}
                                       animate={{ opacity: 1, height: 'auto' }}
                                       exit={{ opacity: 0, height: 0 }}
-                                      className="overflow-hidden bg-hero-deep"
+                                      className="overflow-hidden bg-hero-deep/80"
                                     >
-                                      <dl className="space-y-1.5 px-3 pb-3 pt-1 text-[11px]">
+                                      <dl className="space-y-2 px-4 pb-4 pt-2 text-[11px]">
                                         <Row label={t('b.hist.d.when')}>
                                           {new Date(e.at).toLocaleString(locale, {
                                             weekday: 'long',
@@ -538,52 +546,44 @@ export default function VenueHistory({
                                           {e.kind === 'revoke'
                                             ? t('b.hist.revoked')
                                             : e.kind === 'reward'
-                                            ? `${t('b.hist.reward')} (−${
-                                                e.stampsConsumed ?? 0
-                                              } ${t('b.hist.stamps')})`
+                                              ? `${t('b.hist.reward')} (−${e.stampsConsumed ?? 0} ${t('b.hist.stamps')})`
                                               : `+1 ${t('b.hist.stamp')}`}
                                         </Row>
                                         <Row label={t('b.hist.d.who')}>
                                           <button
                                             type="button"
                                             onClick={() => copyCode(e.code)}
-                                            className="font-mono tracking-widest text-white underline-offset-2 hover:underline"
+                                            className="inline-flex items-center gap-1.5 font-mono tracking-widest text-white underline-offset-2 hover:underline"
                                           >
-                                            {e.code} ⧉
+                                            {e.code}
+                                            <Glyph name="copy" className="h-3 w-3 text-slate-500" />
                                           </button>
                                         </Row>
                                         {e.grantedBy && (
                                           <Row label={t('b.hist.d.by')}>
-                                            {e.grantedBy === 'owner'
-                                              ? t('b.hist.owner')
-                                              : e.grantedBy}
+                                            {e.grantedBy === 'owner' ? t('b.hist.owner') : e.grantedBy}
                                           </Row>
                                         )}
                                         {e.kind === 'stamp' && e.source && (
-                                          <Row label={t('b.hist.d.source')}>
-                                            {e.source.toUpperCase()}
-                                          </Row>
+                                          <Row label={t('b.hist.d.source')}>{e.source.toUpperCase()}</Row>
                                         )}
                                         {e.kind === 'reward' && (
                                           <Row label={t('b.hist.d.trophy')}>
                                             {e.trophyAssetId ? (
-                                              <span className="text-hero-gold">
-                                                {t('b.hist.d.minted')}
-                                              </span>
+                                              <span className="text-[#FFC45A]">{t('b.hist.d.minted')}</span>
                                             ) : (
-                                              <span className="text-slate-500">
-                                                {t('b.hist.d.notminted')}
-                                              </span>
+                                              <span className="text-slate-500">{t('b.hist.d.notminted')}</span>
                                             )}
                                           </Row>
                                         )}
-                                        <div className="pt-1">
+                                        <div className="pt-1.5">
                                           <button
                                             type="button"
                                             onClick={() => focusCustomer(e.code)}
-                                            className="rounded-full border border-hero-cyan/40 px-3 py-1 text-[11px] text-hero-cyan transition hover:bg-hero-cyan hover:text-hero-deep"
+                                            className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] px-3 py-1.5 text-[11px] font-medium text-white transition hover:bg-white/[0.14]"
                                           >
-                                            {t('b.hist.seeall')} →
+                                            {t('b.hist.seeall')}
+                                            <Glyph name="arrow" className="h-3.5 w-3.5" />
                                           </button>
                                         </div>
                                       </dl>
@@ -599,14 +599,35 @@ export default function VenueHistory({
                   </div>
 
                   {truncated && (
-                    <p className="text-[10px] text-hero-gold/80">
+                    <p className="text-[11px] text-[#FFC45A]/90">
                       {t('b.hist.truncated').replace('{n}', String(events.length))}
                     </p>
                   )}
+
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="text-[11px] text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                    >
+                      {t('b.hist.clear')}
+                    </button>
+                    {!embedded && (
+                      <button
+                        type="button"
+                        onClick={exportCsv}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] text-slate-200 transition hover:bg-white/[0.12]"
+                      >
+                        <Glyph name="download" className="h-3.5 w-3.5" />
+                        {t('b.hist.csv')}
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
 
-              <p className="text-center text-[10px] leading-relaxed text-slate-600">
+              <p className="flex items-start gap-2 rounded-2xl bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-slate-500">
+                <Glyph name="shield" className="mt-0.5 h-3.5 w-3.5 text-slate-400" />
                 {t('b.hist.pii')}
               </p>
             </div>
@@ -620,7 +641,7 @@ export default function VenueHistory({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-hero-cyan px-4 py-2 text-xs font-semibold text-hero-deep shadow-lg"
+            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-hero-deep shadow-lg"
           >
             {toast}
           </motion.p>
@@ -632,9 +653,9 @@ export default function VenueHistory({
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-3">
       <dt className="w-24 shrink-0 text-slate-500">{label}</dt>
-      <dd className="min-w-0 flex-1 break-words text-slate-300">{children}</dd>
+      <dd className="min-w-0 flex-1 break-words text-slate-200">{children}</dd>
     </div>
   );
 }

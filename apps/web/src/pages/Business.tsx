@@ -30,6 +30,9 @@ import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
 import VenueStaff from '../components/VenueStaff';
 import FolderTabs from '../components/FolderTabs';
+import Glyph from '../components/Glyph';
+import LogoMark from '../components/LogoMark';
+import { readableOnNavy } from '../lib/color';
 
 // Business page — the barista / merchant device.
 // ---------------------------------------------------------------------------
@@ -785,29 +788,44 @@ export default function Business() {
           const logo = typeof b.logo === 'string' && b.logo.startsWith('data:image/') ? b.logo : null;
           const accent =
             typeof b.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(b.accent) ? b.accent : null;
-          // One compact row: whose counter this is and who is working it.
-          // The big centred title took a third of a phone screen at the
-          // moment the barista needs the customer, not the venue's name.
+          // The venue's own band: their logo large, their colour as the light
+          // in the corner, their name. Left-aligned and one band high: the
+          // barista needs the customer, not a title, but the owner should
+          // see their brand the moment the screen opens. The logo decides
+          // its own backing (LogoMark): a white logo stands on the navy, a
+          // dark one gets a white chip.
           return (
-            <div className="flex items-center gap-3">
-              {logo ? (
-                <span className="flex h-12 max-w-[120px] shrink-0 items-center rounded-2xl bg-white px-2">
-                  <img src={logo} alt="" className="h-9 w-auto max-w-full object-contain" width={110} height={36} />
-                </span>
-              ) : (
-                <img src="/super-victor-face.webp" alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-2xl bg-hero-navy2 ring-1 ring-white/10" />
-              )}
-              <div className="min-w-0 flex-1">
-                <h1 className="truncate font-display text-xl font-bold md:text-2xl">{venue?.name ?? '…'}</h1>
-                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                  <span style={accent ? { color: accent } : undefined} className={accent ? '' : 'text-hero-gold'}>
+            <div
+              className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-hero-navy px-4 py-4 shadow-[0_24px_48px_-30px_rgba(0,0,0,0.8)] sm:px-5"
+              style={{
+                backgroundImage: `radial-gradient(130% 160% at 0% 0%, ${accent ? `${accent}47` : 'rgba(31,79,168,0.35)'}, transparent 58%), repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 8px)`,
+              }}
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+                style={{ background: `linear-gradient(90deg, ${accent ?? '#F7A30C'}, transparent 80%)` }}
+              />
+              <div className="flex items-center gap-4">
+                {logo ? (
+                  <LogoMark src={logo} height={44} maxWidth={132} />
+                ) : (
+                  <img src="/super-victor-face.webp" alt="" width={52} height={52} className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-hero-navy2 ring-1 ring-white/10" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: accent ? readableOnNavy(accent) : '#F7A30C' }}>
                     {t('b.counter')}
-                  </span>
-                  {role === 'owner' && <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px]">{t('b.role.owner')}</span>}
-                  {role === 'staff' && staffName && (
-                    <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px]">{staffName}</span>
+                  </p>
+                  <h1 className="mt-0.5 truncate font-display text-xl font-bold leading-tight text-white md:text-2xl">
+                    {venue?.name ?? '…'}
+                  </h1>
+                  {(role === 'owner' || (role === 'staff' && staffName)) && (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                      <Glyph name="user" className="h-3.5 w-3.5" />
+                      {role === 'owner' ? t('b.role.owner') : staffName}
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           );
@@ -932,9 +950,10 @@ export default function Business() {
                     }
                   }}
                   title={muted ? t('b.sound.on') : t('b.sound.off')}
-                  className="rounded-full px-2 py-0.5 text-sm text-slate-500 transition hover:text-white"
+                  aria-label={muted ? t('b.sound.on') : t('b.sound.off')}
+                  className="rounded-full p-1.5 text-slate-500 transition hover:bg-white/5 hover:text-white"
                 >
-                  {muted ? '🔇' : '🔊'}
+                  <Glyph name={muted ? 'soundOff' : 'soundOn'} />
                 </button>
               </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
@@ -943,9 +962,9 @@ export default function Business() {
                   { v: today?.rewards ?? 0, l: t('b.today.rewards') },
                   { v: today?.customers ?? 0, l: t('b.today.customers') },
                 ].map((x) => (
-                  <div key={x.l} className="card-sm bg-gradient-to-b from-hero-navy2/60 to-hero-navy px-2 py-3.5 text-center">
-                    <p className="font-display text-3xl font-bold leading-none text-white">{x.v}</p>
-                    <p className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500">{x.l}</p>
+                  <div key={x.l} className="rounded-2xl border border-white/[0.07] bg-gradient-to-b from-hero-navy2/70 to-hero-navy px-2 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <p className="tnum font-display text-3xl font-bold leading-none text-white">{x.v}</p>
+                    <p className="mt-2 text-[10px] font-medium uppercase tracking-wider text-slate-400">{x.l}</p>
                   </div>
                 ))}
               </div>
@@ -953,8 +972,8 @@ export default function Business() {
               {/* Figurine check-ins — codes arrive by themselves, nobody types. */}
               {checkins.length > 0 && (
                 <div className="card mt-3 border-hero-cyan/40 p-4">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-hero-cyan">
-                    📡 {t('b.checkin.title')}
+                  <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-hero-cyan">
+                    <Glyph name="signal" className="h-3.5 w-3.5" /> {t('b.checkin.title')}
                   </p>
                   {/* One tall row per customer at the counter: the code big
                       enough to read from a step back, one gold button. */}
@@ -987,8 +1006,8 @@ export default function Business() {
 
               {queued.length > 0 && (
                 <div className="card-sm card-gold mt-3 flex items-center justify-between gap-2 px-4 py-2.5">
-                  <p className="text-xs text-hero-gold">
-                    ⏳ {t('b.queued.n', { n: queued.length })}
+                  <p className="flex items-center gap-1.5 text-xs text-hero-gold">
+                    <Glyph name="clock" className="h-3.5 w-3.5" /> {t('b.queued.n', { n: queued.length })}
                   </p>
                   <button
                     type="button"
@@ -1014,8 +1033,8 @@ export default function Business() {
                     className="mt-3 rounded-[28px] border border-white/[0.08] bg-hero-navy/60 p-3 sm:p-4"
                   >
                     {customer.birthdayToday && (
-                      <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
-                        🎂 {t('b.birthday')}
+                      <div className="mb-3 flex items-center justify-center gap-2 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
+                        <Glyph name="cake" /> {t('b.birthday')}
                       </div>
                     )}
 
@@ -1098,7 +1117,9 @@ export default function Business() {
                             <span className="font-semibold">{t('b.ms.waiting', { label: m.label })}</span>
                             <span className="block text-[11px] text-slate-400">{t('b.ms.askcode')}</span>
                           </p>
-                          <span className="shrink-0 text-2xl" aria-hidden>🎁</span>
+                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#F7A30C]/15 text-[#FFC45A]">
+                            <Glyph name="gift" className="h-5 w-5" />
+                          </span>
                         </div>
                       ))}
 
@@ -1205,12 +1226,13 @@ export default function Business() {
 
               {/* THE action. One big button: scan the customer's QR. Typing
                   the code is the fallback underneath, never the headline. */}
-              <div className="card mt-3 p-4">
+              <div className="mt-3 rounded-[28px] border border-white/[0.08] bg-hero-navy/70 p-4 sm:p-5">
                 <button
                   type="button"
                   onClick={() => setScanning(true)}
-                  className="btn btn-primary w-full py-4 text-base"
+                  className="btn btn-primary w-full gap-2 py-4 text-base"
                 >
+                  <Glyph name="scan" className="h-5 w-5" strokeWidth={2.2} />
                   {t('b.scan.btn')}
                 </button>
                 <label htmlFor="code" className="mt-4 block text-center text-[10px] uppercase tracking-[0.18em] text-slate-500">
@@ -1294,7 +1316,7 @@ export default function Business() {
                         onClick={() => void redeemWith(redeemChoice.code, 'full')}
                         className="btn btn-primary w-full justify-between"
                       >
-                        <span>🏆 {t('b.choose.full')}</span>
+                        <span className="flex items-center gap-2"><Glyph name="trophy" /> {t('b.choose.full')}</span>
                         <span className="text-xs opacity-80">{redeemChoice.rewardLabel ?? ''}</span>
                       </button>
                     )}
@@ -1306,7 +1328,7 @@ export default function Business() {
                         onClick={() => void redeemWith(redeemChoice.code, m.at)}
                         className="btn btn-secondary w-full justify-between"
                       >
-                        <span>🎁 {m.label}</span>
+                        <span className="flex items-center gap-2"><Glyph name="gift" /> {m.label}</span>
                         <span className="text-xs opacity-80">{t('ms.at', { n: m.at })}</span>
                       </button>
                     ))}
@@ -1367,6 +1389,11 @@ export default function Business() {
               )}
               {role === 'owner' && (
               <FolderTabs
+                accent={
+                  typeof venue?.branding?.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(venue.branding.accent)
+                    ? venue.branding.accent
+                    : null
+                }
                 active={folderTab}
                 onOpen={(k) => {
                   setFolderTab(k);
@@ -1377,7 +1404,7 @@ export default function Business() {
                 tabs={[
                   {
                     key: 'team',
-                    icon: '👥',
+                    icon: <Glyph name="team" />,
                     label: t('b.tab.team'),
                     render: () => (
                       <VenueStaff
@@ -1391,7 +1418,7 @@ export default function Business() {
                   },
                   {
                     key: 'stats',
-                    icon: '📊',
+                    icon: <Glyph name="stats" />,
                     label: t('b.tab.stats'),
                     render: () =>
                       analytics ? (
@@ -1404,7 +1431,7 @@ export default function Business() {
                   },
                   {
                     key: 'history',
-                    icon: '🧾',
+                    icon: <Glyph name="history" />,
                     label: t('b.tab.hist'),
                     render: () => (
                       <VenueHistory slug={slug} embedded byStaff={inspectStaff} />
@@ -1412,7 +1439,7 @@ export default function Business() {
                   },
                   {
                     key: 'settings',
-                    icon: '⚙️',
+                    icon: <Glyph name="settings" />,
                     label: t('b.tab.set'),
                     render: () => (
                       <div onChangeCapture={() => setSettingsDirty(true)}>
@@ -1749,9 +1776,12 @@ export default function Business() {
           )}
         </div>
 
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-600">
-          {t('b.footer')}
-        </p>
+        {/* Staff already read this, in their own name, above. */}
+        {role !== 'staff' && (
+          <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-600">
+            {t('b.footer')}
+          </p>
+        )}
 
         {scanning && (
           <QrScanner
