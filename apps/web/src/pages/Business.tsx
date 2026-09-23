@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
@@ -25,6 +25,7 @@ import {
 import { useT } from '../i18n';
 import MilestoneEditor, { type MilestoneEditorHandle } from '../components/MilestoneEditor';
 import OwnerDashboard, { type OwnerAnalytics } from '../components/OwnerDashboard';
+import CardFace from '../components/CardFace';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
 import VenueStaff from '../components/VenueStaff';
@@ -89,6 +90,17 @@ interface ApiErr {
 
 type VenueAnalytics = OwnerAnalytics;
 
+/** One group of owner settings: a title, one line of why, the fields. */
+function SetSection({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
+  return (
+    <section className="mt-4 rounded-2xl border border-white/[0.08] bg-hero-navy/60 p-4 first:mt-3 sm:p-5">
+      <h3 className="font-display text-sm font-semibold text-white">{title}</h3>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{hint}</p>
+      <div className="[&>*:first-child]:mt-3">{children}</div>
+    </section>
+  );
+}
+
 export default function Business() {
   const [params] = useSearchParams();
   // Constrain the venue slug to the shape the API accepts — a raw query value
@@ -115,6 +127,8 @@ export default function Business() {
   const [codeInput, setCodeInput] = useState('');
   const [redeemInput, setRedeemInput] = useState('');
   const [redeemChoice, setRedeemChoice] = useState<RedeemChoice | null>(null);
+  /** A stamp just landed: the counter's card pops and sweeps, like the customer's. */
+  const [justGranted, setJustGranted] = useState(false);
   // Settings save as one: any edited field (or milestone row) lights the
   // sticky "save changes" bar, and one tap saves the form and the milestones
   // together, threshold first, so the milestones are always checked against
@@ -472,6 +486,8 @@ export default function Business() {
         token ?? undefined
       );
       hapticTap(15);
+      setJustGranted(true);
+      window.setTimeout(() => setJustGranted(false), 900);
       // The card completing is the moment worth hearing across the bar.
       if (r.canRedeem) playReward();
       else playGrant();
@@ -922,8 +938,8 @@ export default function Business() {
                   { v: today?.rewards ?? 0, l: t('b.today.rewards') },
                   { v: today?.customers ?? 0, l: t('b.today.customers') },
                 ].map((x) => (
-                  <div key={x.l} className="card-sm px-2 py-3 text-center">
-                    <p className="tnum font-display text-2xl font-bold leading-none text-white">{x.v}</p>
+                  <div key={x.l} className="card-sm bg-gradient-to-b from-hero-navy2/60 to-hero-navy px-2 py-3.5 text-center">
+                    <p className="font-display text-3xl font-bold leading-none text-white">{x.v}</p>
                     <p className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500">{x.l}</p>
                   </div>
                 ))}
@@ -990,7 +1006,7 @@ export default function Business() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="card mt-3 p-5"
+                    className="mt-3 rounded-[28px] border border-white/[0.08] bg-hero-navy/60 p-3 sm:p-4"
                   >
                     {customer.birthdayToday && (
                       <div className="mb-3 rounded-xl border border-hero-gold/50 bg-hero-gold/10 px-3 py-2 text-center text-sm text-hero-gold">
@@ -1029,44 +1045,57 @@ export default function Business() {
                         ))}
                       </div>
                     )}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('b.code.label')}</p>
-                        <p className="mt-0.5 font-mono text-lg tracking-[0.25em] text-hero-cyan">
-                          {customer.code}
-                        </p>
-                      </div>
-                      <p className="tnum font-display text-4xl font-bold leading-none">
-                        <span className={customer.canRedeem ? 'text-hero-gold' : 'text-white'}>
-                          {customer.stamps}
-                        </span>
-                        <span className="text-xl text-slate-500">/{customer.required}</span>
-                      </p>
-                    </div>
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-hero-navy2">
-                      <div
-                        className="h-full rounded-full bg-hero-gold transition-[width]"
-                        style={{ width: `${Math.min(100, (customer.stamps / Math.max(1, customer.required)) * 100)}%` }}
-                      />
-                    </div>
-
-                    {/* Where this customer stands on the milestones: a gold
-                        chip means something is waiting to be handed over. */}
-                    {customer.milestones && customer.milestones.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {customer.milestones.map((m) => (
-                          <span
-                            key={m.at}
-                            className={`chip ${
-                              m.claimable ? 'chip-gold' : m.claimed ? 'border-solana-green/40 text-solana-green' : 'opacity-60'
-                            }`}
-                          >
-                            🎁 {m.label} · {t('ms.at', { n: m.at })}
-                            {m.claimed ? ` · ${t('ms.claimed')}` : ''}
-                          </span>
-                        ))}
+                    {/* A first visit is worth a word from the barista. */}
+                    {customer.stamps === 0 && customer.cardsCompleted === 0 && (
+                      <div className="mb-3 rounded-xl border border-hero-cyan/40 bg-hero-cyan/10 px-3 py-2 text-center text-sm font-semibold text-hero-cyan">
+                        {t('b.newcustomer')}
                       </div>
                     )}
+
+                    {/* The same card the customer sees on their phone: both
+                        sides of the counter look at one object. */}
+                    <motion.div
+                      animate={justGranted ? { scale: [1, 1.02, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                    >
+                      <CardFace
+                        size="md"
+                        venueName={venue?.name ?? ''}
+                        logo={
+                          typeof venue?.branding?.logo === 'string' && venue.branding.logo.startsWith('data:image/')
+                            ? venue.branding.logo
+                            : null
+                        }
+                        accent={
+                          typeof venue?.branding?.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(venue.branding.accent)
+                            ? venue.branding.accent
+                            : null
+                        }
+                        current={customer.stamps}
+                        required={customer.required}
+                        rewardLabel={typeof venue?.branding?.reward === 'string' ? venue.branding.reward : null}
+                        code={customer.code}
+                        justCharged={justGranted}
+                        milestones={(customer.milestones ?? []).map((m) => m.at)}
+                      />
+                    </motion.div>
+
+                    {/* A milestone waiting is the one thing the barista must
+                        not miss: a wide amber band, in words. */}
+                    {(customer.milestones ?? [])
+                      .filter((m) => m.claimable)
+                      .map((m) => (
+                        <div
+                          key={m.at}
+                          className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#F7A30C]/50 bg-[#F7A30C]/10 px-3 py-2.5"
+                        >
+                          <p className="min-w-0 text-sm text-[#FFC45A]">
+                            <span className="font-semibold">{t('b.ms.waiting', { label: m.label })}</span>
+                            <span className="block text-[11px] text-slate-400">{t('b.ms.askcode')}</span>
+                          </p>
+                          <span className="shrink-0 text-2xl" aria-hidden>🎁</span>
+                        </div>
+                      ))}
 
                     <div className="mt-5">
                       <p className="mb-2 text-xs text-slate-500">{t('b.coffees')}</p>
@@ -1090,7 +1119,7 @@ export default function Business() {
                                 ? 'Correction: removes the most recent stamps from today'
                                 : undefined
                             }
-                            className={`tnum rounded-2xl border py-4 font-display text-xl font-bold transition disabled:opacity-40 ${
+                            className={`tnum rounded-2xl border py-5 font-display text-2xl font-bold transition active:scale-95 disabled:opacity-40 ${
                               n < 0
                                 ? 'border-white/10 text-slate-400 hover:border-red-400/60 hover:text-red-300'
                                 : 'border-transparent bg-hero-gold text-hero-deep hover:bg-hero-gold-bright'
@@ -1382,6 +1411,7 @@ export default function Business() {
                     label: t('b.tab.set'),
                     render: () => (
                       <div onChangeCapture={() => setSettingsDirty(true)}>
+                        <SetSection title={t('b.sec.card')} hint={t('b.sec.card.d')}>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <label className="text-xs text-slate-500">
                           {t('b.set.required')}
@@ -1418,53 +1448,10 @@ export default function Business() {
                         onDirty={setMsDirty}
                         onNotice={setNotice}
                       />
+                        </SetSection>
 
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <label className="text-xs text-slate-500">
-                          {t('b.set.review')}
-                          <input
-                            type="url"
-                            maxLength={300}
-                            value={setReview}
-                            onChange={(e) => setSetReview(e.target.value)}
-                            placeholder="https://g.page/r/..."
-                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-                          />
-                        </label>
-                        <label className="text-xs text-slate-500">
-                          {t('b.set.phone')}
-                          <input
-                            type="tel"
-                            maxLength={20}
-                            value={setPhone}
-                            onChange={(e) => setSetPhone(e.target.value)}
-                            placeholder="+40 7xx xxx xxx"
-                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-                          />
-                        </label>
-                      </div>
-
-                      {/* "Order ahead": a link to whatever they already use.
-                          Renders as a button on the customer's card. */}
-                      <label className="mt-3 block text-xs text-slate-500">
-                        {t('b.set.order')}
-                        <input
-                          type="url"
-                          maxLength={300}
-                          value={setOrder}
-                          onChange={(e) => {
-                            setSetOrder(e.target.value);
-                            setOrderTouched(true);
-                          }}
-                          placeholder="https://…"
-                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
-                        />
-                        <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
-                          {t('b.set.order.hint')}
-                        </span>
-                      </label>
-
-                      {/* "What's on this week" — the one thing here that
+                        <SetSection title={t('b.sec.promo')} hint={t('b.sec.promo.d')}>
+{/* "What's on this week" — the one thing here that
                           changes weekly rather than once at setup, so it gets
                           its own full-width row and a visible character
                           budget. */}
@@ -1515,7 +1502,7 @@ export default function Business() {
                         </span>
                       </label>
 
-                      {/* Happy Hour scheduler */}
+{/* Happy Hour scheduler */}
                       <div className="mt-3 rounded-xl border border-hero-gold/30 bg-hero-gold/5 p-3">
                         <p className="text-xs font-semibold text-hero-gold">{t('b.set.hh')}</p>
                         <div className="mt-2">
@@ -1590,8 +1577,55 @@ export default function Business() {
                         </div>
                         <p className="mt-1.5 text-[10px] text-slate-600">{t('b.set.hh.hint')}</p>
                       </div>
+                        </SetSection>
 
-                      {/* Contact, shown to customers on their card page. A
+                        <SetSection title={t('b.sec.contact')} hint={t('b.sec.contact.d')}>
+<div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.review')}
+                          <input
+                            type="url"
+                            maxLength={300}
+                            value={setReview}
+                            onChange={(e) => setSetReview(e.target.value)}
+                            placeholder="https://g.page/r/..."
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                        <label className="text-xs text-slate-500">
+                          {t('b.set.phone')}
+                          <input
+                            type="tel"
+                            maxLength={20}
+                            value={setPhone}
+                            onChange={(e) => setSetPhone(e.target.value)}
+                            placeholder="+40 7xx xxx xxx"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                          />
+                        </label>
+                      </div>
+
+{/* "Order ahead": a link to whatever they already use.
+                          Renders as a button on the customer's card. */}
+                      <label className="mt-3 block text-xs text-slate-500">
+                        {t('b.set.order')}
+                        <input
+                          type="url"
+                          maxLength={300}
+                          value={setOrder}
+                          onChange={(e) => {
+                            setSetOrder(e.target.value);
+                            setOrderTouched(true);
+                          }}
+                          placeholder="https://…"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-hero-deep px-3 py-2 text-sm text-slate-100 focus:border-hero-gold focus:outline-none"
+                        />
+                        <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
+                          {t('b.set.order.hint')}
+                        </span>
+                      </label>
+
+{/* Contact, shown to customers on their card page. A
                           loyalty page people already open is the cheapest place
                           a café has to be findable. */}
                       <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -1632,8 +1666,10 @@ export default function Business() {
                           />
                         </label>
                       </div>
+                        </SetSection>
 
-                      {/* Happy Hour is read in this zone. Without it the
+                        <SetSection title={t('b.sec.clock')} hint={t('b.sec.clock.d')}>
+{/* Happy Hour is read in this zone. Without it the
                           window is evaluated in Romania for everyone, which is
                           a confident wrong answer rather than a missing one. */}
                       <label className="mt-4 block text-xs text-slate-500">
@@ -1666,8 +1702,9 @@ export default function Business() {
                           {t('b.set.tz.hint')}
                         </span>
                       </label>
+                        </SetSection>
 
-                      <button
+                        <button
                         type="button"
                         disabled={busy}
                         onClick={() => void saveSettings()}

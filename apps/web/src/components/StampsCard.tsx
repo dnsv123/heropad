@@ -161,9 +161,12 @@ export default function StampsCard({
                   {isMilestone && (
                     <span
                       aria-hidden
-                      className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-hero-gold text-[11px] leading-none shadow"
+                      className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-hero-gold text-hero-deep shadow"
                     >
-                      🎁
+                      {/* A drawn gift, not an emoji: emoji fonts differ by phone. */}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                        <path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                      </svg>
                     </span>
                   )}
                 </div>

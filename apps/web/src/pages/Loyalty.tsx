@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
 import { useSolanaWallets } from '../lib/auth';
 
-import PowerMeter from '../components/PowerMeter';
+import CardFace from '../components/CardFace';
 import StampsCard from '../components/StampsCard';
 import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
@@ -455,47 +455,49 @@ export default function Loyalty() {
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
 
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
-        {/* Venue header */}
-        <div className="text-center">
-          {/* Branded venue: ONE row — logo beside the name — and their own
-              line underneath. The "⚡ Power Pass" eyebrow steps aside; the
-              logo is the eyebrow now. Three stacked lines (eyebrow, logo,
-              name) ate a third of a phone screen for no extra meaning. */}
-          {brandLogo ? (
-            <div className="flex items-center justify-center gap-3">
-              <img
-                src={brandLogo}
-                alt=""
-                className="h-10 max-w-[110px] object-contain"
-                width={110}
-                height={40}
-              />
-              <h1 className="font-display text-2xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
-            </div>
-          ) : (
-            <>
-              <p
-                className="text-xs uppercase tracking-[0.3em] text-hero-cyan"
-                style={brandAccent ? { color: brandAccent } : undefined}
-              >
-                {t('loy.eyebrow')}
-              </p>
-              <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
-                {venue?.name ?? '…'}
-              </h1>
-            </>
-          )}
-          {typeof venue?.branding?.tagline === 'string' && venue.branding.tagline.trim() && (
-            <p className="mt-1 text-sm text-slate-400">{venue.branding.tagline.trim()}</p>
-          )}
-          {venueError && (
-            <p className="mt-2 text-sm text-red-300">{venueError}</p>
-          )}
-
-        </div>
+        {/* The card IS the header: venue name, logo, count, reward and the
+            customer's code live on it, the way a real card carries them. The
+            heading stays for screen readers and search. */}
+        <h1 className="sr-only">{venue?.name ?? 'HeroPad'}</h1>
 
         {/* A regular at several cafés switches here, not through the menu. */}
         <MyCards currentSlug={slug} />
+
+        <div className="mt-4">
+          {required === null ? (
+            // Skeleton in the card's own shape, so nothing jumps when it lands.
+            <div className="h-[236px] animate-pulse rounded-[28px] bg-hero-navy2 sm:h-[256px]" aria-busy="true" />
+          ) : (
+            <CardFace
+              venueName={venue?.name ?? '…'}
+              logo={brandLogo}
+              accent={brandAccent}
+              current={stamps}
+              required={required}
+              rewardLabel={rewardLabel}
+              code={me?.code ?? null}
+              justCharged={justCharged}
+              milestones={(venue?.milestones ?? []).map((m) => m.at)}
+            />
+          )}
+          {typeof venue?.branding?.tagline === 'string' && venue.branding.tagline.trim() && (
+            <p className="mt-3 px-1 text-center text-sm text-slate-400">{venue.branding.tagline.trim()}</p>
+          )}
+          {venueError && <p className="mt-2 text-center text-sm text-red-300">{venueError}</p>}
+        </div>
+
+        {/* Not signed in yet: the card is already on screen, empty, with its
+            reward. The ask comes right under it, once, and says what it buys:
+            the first stamp. */}
+        {ready && !authenticated && (
+          <div className="mt-4 rounded-3xl border border-hero-gold/30 bg-hero-gold/[0.07] p-5 text-center">
+            <p className="font-display text-lg font-semibold text-white">{t('loy.cta.t')}</p>
+            <p className="mx-auto mt-1 max-w-[36ch] text-sm leading-relaxed text-slate-300">{t('loy.cta.d')}</p>
+            <button type="button" onClick={login} className="btn btn-primary mt-4 w-full sm:w-auto">
+              {t('loy.login.btn')}
+            </button>
+          </div>
+        )}
 
         {/* Figurine tap acknowledged — the customer knows the counter saw them. */}
         {tappedIn && (
@@ -566,7 +568,7 @@ export default function Loyalty() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                 onClick={(e) => e.stopPropagation()}
-                className="card relative w-full max-w-sm border-hero-gold/60 p-6 text-center"
+                className="card relative w-full max-w-sm overflow-visible border-hero-gold/60 p-6 text-center"
               >
                 <button
                   type="button"
@@ -579,10 +581,40 @@ export default function Loyalty() {
                   </svg>
                 </button>
 
-                <div className="text-5xl leading-none">🎉</div>
+                {/* The trophy they just earned, landing, with a short fall of
+                    confetti in the logo's colours. Pure CSS/transform, once. */}
+                <div className="relative mx-auto h-36 w-36">
+                  <span aria-hidden className="pointer-events-none absolute inset-0">
+                    {Array.from({ length: 22 }, (_, i) => (
+                      <motion.span
+                        key={i}
+                        className="absolute left-1/2 top-1/2 block h-2 w-1 rounded-[1px]"
+                        style={{ backgroundColor: ['#F7A30C', '#FFFFFF', '#5DD3FF', '#F5C842'][i % 4] }}
+                        initial={{ opacity: 0, x: 0, y: 0, rotate: 0 }}
+                        animate={{
+                          opacity: [0, 1, 1, 0],
+                          x: Math.cos((i / 22) * Math.PI * 2) * (80 + (i % 3) * 22),
+                          y: Math.sin((i / 22) * Math.PI * 2) * (70 + (i % 4) * 14) + 30,
+                          rotate: (i % 2 ? 1 : -1) * 220,
+                        }}
+                        transition={{ duration: 1.4, delay: 0.15 + (i % 6) * 0.03, ease: 'easeOut' }}
+                      />
+                    ))}
+                  </span>
+                  <motion.img
+                    src="/cnft/trophy-starter.webp"
+                    alt=""
+                    width={288}
+                    height={288}
+                    className="relative h-full w-full object-contain drop-shadow-[0_14px_24px_rgba(0,0,0,0.45)]"
+                    initial={{ scale: 0.4, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.1 }}
+                  />
+                </div>
                 <p
                   id="celebrate-title"
-                  className="mt-3 font-display text-2xl font-bold text-solana-green"
+                  className="mt-3 font-display text-2xl font-bold text-hero-gold"
                 >
                   {t('loy.celebrate.title')}
                 </p>
@@ -619,55 +651,11 @@ export default function Loyalty() {
           )}
         </AnimatePresence>
 
-        <div
-          className="card mt-8 p-6 md:p-8"
-          style={brandAccent ? { borderColor: `${brandAccent}66` } : undefined}
-        >
-          {required === null ? (
-            // Skeleton, not a guess. Same height as the meter so nothing jumps.
-            <div className="flex flex-col items-center gap-4 py-6" aria-busy="true">
-              <div className="h-28 w-28 animate-pulse rounded-full bg-hero-navy2" />
-              <div className="h-4 w-40 animate-pulse rounded-full bg-hero-navy2" />
-            </div>
-          ) : (
-            <PowerMeter
-              current={Math.min(stamps, required)}
-              required={required}
-              justCharged={justCharged}
-            />
-          )}
-
-          {/* THE REWARD. A progress bar without a destination is just a bar —
-              "2 more stamps" only motivates when you can see what is at the
-              end of it. This is the venue's own promise, in its own words. */}
-          {rewardLabel && required !== null && (
-            <div
-              className="mt-4 rounded-xl border border-hero-gold/35 bg-hero-gold/10 px-4 py-3 text-center"
-              style={
-                brandAccent
-                  ? { borderColor: `${brandAccent}59`, background: `${brandAccent}1A` }
-                  : undefined
-              }
-            >
-              <p
-                className="text-[11px] uppercase tracking-wider text-hero-gold/80"
-                style={brandAccent ? { color: `${brandAccent}CC` } : undefined}
-              >
-                {t('loy.reward.label', { n: required })}
-              </p>
-              <p
-                className="mt-0.5 font-display text-lg font-semibold text-hero-gold"
-                style={brandAccent ? { color: brandAccent } : undefined}
-              >
-                {rewardLabel}
-              </p>
-            </div>
-          )}
-
+        <div className="card mt-4 p-5 md:p-6">
           {/* Milestones on the way: the venue's small promises before the
               end, each with its photo, each with where this customer stands. */}
           {venue?.milestones && venue.milestones.length > 0 && required !== null && (
-            <div className="mt-4">
+            <div className="mb-5">
               <p className="text-[11px] uppercase tracking-wider text-slate-500">{t('ms.title')}</p>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {venue.milestones.map((m) => {
@@ -720,12 +708,14 @@ export default function Loyalty() {
             </div>
           )}
 
-          {/* The cardboard-card feel, with our hero in it. */}
-          {me && required !== null && (
+          {/* The stamps as a small collection: each one a level of the hero,
+              grey until earned. Shown before sign-in too: the empty card is
+              the invitation. */}
+          {required !== null && (
             <StampsCard
               stamps={stamps}
               required={required}
-              canRedeem={Boolean(me.canRedeem)}
+              canRedeem={Boolean(me?.canRedeem)}
               newStamp={newStamp}
               onFlightDone={flightDone}
               milestones={(venue?.milestones ?? []).map((m) => m.at)}
@@ -796,19 +786,8 @@ export default function Loyalty() {
             </motion.div>
           )}
 
-          <div className="mt-6 border-t border-white/[0.08] pt-6">
-            {!ready ? null : !authenticated ? (
-              <div className="text-center">
-                <p className="mb-3 text-xs text-slate-500">{t('loy.login.hint')}</p>
-                <button
-                  type="button"
-                  onClick={login}
-                  className="btn btn-primary"
-                >
-                  {t('loy.login.btn')}
-                </button>
-              </div>
-            ) : me ? (
+          <div className={ready && !authenticated ? 'hidden' : 'mt-6 border-t border-white/[0.08] pt-6'}>
+            {!ready || !authenticated ? null : me ? (
               <div className="text-center">
                 <p className="text-xs uppercase tracking-wider text-slate-500">
                   {t('loy.yourcode')}
