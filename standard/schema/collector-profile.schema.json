@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://heropad.supervictoruniverse.com/standard/schema/collector-profile.schema.json",
-  "title": "Collector Profile (ovc/0.1)",
+  "title": "Collector Profile (sigil/0.1)",
   "description": "A holder's venue credentials, derived by a reader from the wallets' assets. Not stored on chain.",
   "type": "object",
   "required": ["standard", "holder", "credentials", "derived_at"],
   "properties": {
-    "standard": { "type": "string", "pattern": "^ovc/0\\.[0-9]+$" },
+    "standard": { "type": "string", "pattern": "^sigil/0\\.[0-9]+$" },
     "holder": {
       "type": "object",
       "required": ["wallets"],

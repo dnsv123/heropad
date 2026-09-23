@@ -5,32 +5,44 @@ import ForBusinesses from '../components/ForBusinesses';
 import ForWho from '../components/ForWho';
 import LandingPricing from '../components/LandingPricing';
 import Ecosystem from '../components/Ecosystem';
-import { useT } from '../i18n';
+import { useT, type TranslationKey } from '../i18n';
 
-// Landing, paper face. The narrative:
-//   Hero (the promise, with a real counter photo) → four facts in a strip →
-//   how it works (three real moments) → what lands on the counter → the one
-//   navy panel that sells to owners → who it fits → pricing → the universe.
+// Landing, "Counter Editorial". The narrative:
+//   the promise, with a real counter photo → four facts, each a number we can
+//   stand behind → how it works (three real moments) → what lands on the
+//   counter → the blue panel that sells to owners → who it fits → pricing →
+//   the universe it belongs to.
 //
 // No framer-motion: every section renders at rest. A page that is simply
 // there feels faster than one that fades itself in.
+const FACTS: Array<[TranslationKey, TranslationKey]> = [
+  ['strip.1.v', 'strip.1.l'],
+  ['strip.2.v', 'strip.2.l'],
+  ['strip.3.v', 'strip.3.l'],
+  ['strip.4.v', 'strip.4.l'],
+];
+
 export default function Home() {
   const { t } = useT();
   return (
     <div className="relative">
       <Hero />
 
-      {/* Four facts. Not stats we do not have — facts about the product. */}
-      <div className="border-y border-ink/10 bg-paper-2">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-5 py-4 text-[13px] text-ink-3 sm:px-6">
-          <span className="flex items-center gap-2">
-            <i className="inline-block h-2 w-2 rounded-full bg-[#14a36a] shadow-[0_0_0_4px_rgba(20,163,106,.15)]" />
-            {t('strip.1')}
-          </span>
-          <span>{t('strip.2')}</span>
-          <span>{t('strip.3')}</span>
-          <span>{t('strip.4')}</span>
-        </div>
+      {/* Four facts about the product, not stats we do not have. */}
+      <div className="border-y-2 border-ink bg-paper-2">
+        <dl className="mx-auto grid max-w-6xl grid-cols-2 md:grid-cols-4">
+          {FACTS.map(([v, l], i) => (
+            <div
+              key={v}
+              className={`min-w-0 px-4 py-5 sm:px-6 md:py-6 ${i % 2 === 1 ? 'border-l-2 border-ink' : ''} ${
+                i >= 2 ? 'border-t-2 border-ink md:border-t-0' : ''
+              } ${i === 2 ? 'md:border-l-2' : ''}`}
+            >
+              <dt className="font-display text-[1.7rem] font-bold leading-none tracking-tight text-ink sm:text-3xl">{t(v)}</dt>
+              <dd className="mt-1.5 text-[13px] leading-snug text-ink-2 sm:text-sm">{t(l)}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       <HowItWorks />

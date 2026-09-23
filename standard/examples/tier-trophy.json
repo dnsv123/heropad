@@ -9,7 +9,7 @@
     { "trait_type": "Tier", "value": "Gold" }
   ],
   "credential": {
-    "standard": "ovc/0.1",
+    "standard": "sigil/0.1",
     "type": "tier",
     "issuer": { "id": "cafe-victor.example", "name": "Café Victor", "url": "https://cafe-victor.example" },
     "tier": { "level": 3, "label": "Gold" },

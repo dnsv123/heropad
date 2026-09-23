@@ -9,7 +9,7 @@
     { "trait_type": "Edition", "value": "37 / 200" }
   ],
   "credential": {
-    "standard": "ovc/0.1",
+    "standard": "sigil/0.1",
     "type": "limited_edition",
     "issuer": { "id": "sibiu-jazz.example", "name": "Sibiu Jazz Weekend", "location": "Sibiu" },
     "edition": { "serial": 37, "of": 200 },

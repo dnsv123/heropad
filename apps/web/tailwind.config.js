@@ -31,15 +31,34 @@ export default {
           'purple-deep': '#7d34d6',
           green: '#14F195',
         },
-        // The landing's "paper" face. Marketing is cream + navy ink + brass;
-        // the app itself stays navy, which is why the phones in the photos
-        // read as the product against the page.
-        paper: { DEFAULT: '#F6F1E7', 2: '#FFFDF9' },
-        ink: { DEFAULT: '#0A1B3A', 2: '#3B4661', 3: '#6B7590' },
-        brass: { DEFAULT: '#C99A2E', 2: '#E8B93E', 3: '#F2C55A' },
+        // The landing's paper face, from the SuperVictor Universe brand sheet
+        // (repos/supervictoruniverse/BRAND.md): Porcelain page, ink text and
+        // panel lines, Electric blue for the thing you press, the logo's Sun
+        // yellow for the thing you win. Cream is HeroPad's own surface in the
+        // family (the umbrella paints the HeroPad door with it). The app
+        // itself stays navy, which is why the phones in the photos read as
+        // the product against the page.
+        paper: { DEFAULT: '#F8F7F4', 2: '#FFFFFF' },
+        ink: { DEFAULT: '#0A1030', 2: '#3E4566', 3: '#646A87' },
+        electric: { DEFAULT: '#0055FE', deep: '#01205F', soft: '#E6EEFF' },
+        sun: { DEFAULT: '#FFD50A', soft: '#FFF4CC' },
       },
       fontFamily: {
-        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', '"Space Grotesk Fallback"', 'system-ui', 'sans-serif'],
+        // The one big word on a screen (brand sheet). Capitals only: the
+        // file is cut to A–Z, digits and punctuation, plus two tiny files
+        // for Ă Â Î Ș Ț.
+        sigmar: ['Sigmar', '"Sigmar Fallback"', '"Arial Black"', 'Impact', 'sans-serif'],
+      },
+      boxShadow: {
+        // Glows are retired. The tokens remain so older call sites keep
+        // compiling, but every one of them now renders flat.
+        'hero-gold': '0 0 #0000',
+        'hero-purple': '0 0 #0000',
+        // The comic-panel shadow of the family: hard, offset, ink.
+        panel: '5px 5px 0 #0A1030',
+        'panel-sm': '3px 3px 0 #0A1030',
+        'panel-lg': '8px 8px 0 #0A1030',
       },
       backgroundImage: {
         // A faint navy wash at the top of a page — the only "atmosphere" we
@@ -47,12 +66,6 @@ export default {
         // game lobby. Same class name so nothing else had to change.
         'hero-glow':
           'radial-gradient(ellipse 70% 45% at 50% -5%, rgba(21,48,106,0.6), transparent)',
-      },
-      boxShadow: {
-        // Glows are retired. The tokens remain so older call sites keep
-        // compiling, but every one of them now renders flat.
-        'hero-gold': '0 0 #0000',
-        'hero-purple': '0 0 #0000',
       },
       transitionDuration: {
         DEFAULT: '150ms',

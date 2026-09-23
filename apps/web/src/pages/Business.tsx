@@ -24,6 +24,7 @@ import {
 } from '../services/offlineQueue';
 import { useT } from '../i18n';
 import MilestoneEditor, { type MilestoneEditorHandle } from '../components/MilestoneEditor';
+import OwnerDashboard, { type OwnerAnalytics } from '../components/OwnerDashboard';
 import QrScanner from '../components/QrScanner';
 import VenueHistory from '../components/VenueHistory';
 import VenueStaff from '../components/VenueStaff';
@@ -86,16 +87,7 @@ interface ApiErr {
   message: string;
 }
 
-interface VenueAnalytics {
-  uniqueCustomers: number;
-  totalStamps: number;
-  stampsLast30: number;
-  rewardsClaimed: number;
-  repeatCustomers: number;
-  trophiesMinted: number;
-  daily: Array<{ day: string; stamps: number; customers: number }>;
-  progress: { early: number; mid: number; almost: number; full: number };
-}
+type VenueAnalytics = OwnerAnalytics;
 
 export default function Business() {
   const [params] = useSearchParams();
@@ -1369,87 +1361,7 @@ export default function Business() {
                     label: t('b.tab.stats'),
                     render: () =>
                       analytics ? (
-                        <div>
-                          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {[
-                          { v: analytics.uniqueCustomers, l: t('b.stats.unique') },
-                          { v: analytics.stampsLast30, l: t('b.stats.30') },
-                          { v: analytics.rewardsClaimed, l: t('b.stats.rewards') },
-                          {
-                            v:
-                              analytics.uniqueCustomers > 0
-                                ? `${Math.round(
-                                    (analytics.repeatCustomers /
-                                      analytics.uniqueCustomers) *
-                                      100
-                                  )}%`
-                                : '—',
-                            l: t('b.stats.repeat'),
-                          },
-                        ].map((t) => (
-                          <div
-                            key={t.l}
-                            className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center"
-                          >
-                            <p className="font-display text-xl font-bold text-hero-cyan">
-                              {t.v}
-                            </p>
-                            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">
-                              {t.l}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Daily activity — CSS bars, most recent 14 active days */}
-                      {analytics.daily.length > 0 && (
-                        <div className="mt-4 rounded-xl border border-white/[0.08] bg-hero-navy p-3">
-                          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                            {t('b.stats.daily')}
-                          </p>
-                          <div className="mt-2 flex h-20 items-end gap-1">
-                            {analytics.daily.map((d) => {
-                              const max = Math.max(
-                                ...analytics.daily.map((x) => x.stamps)
-                              );
-                              return (
-                                <div
-                                  key={d.day}
-                                  title={`${d.day}: ${d.stamps} stamps, ${d.customers} customers`}
-                                  className="flex-1 rounded-t bg-gradient-to-t from-hero-blue to-hero-cyan"
-                                  style={{
-                                    height: `${Math.max(8, (d.stamps / max) * 100)}%`,
-                                  }}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Progress buckets — "how close are customers to a reward" */}
-                      <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-                        {[
-                          { v: analytics.progress.early, l: t('b.stats.starting') },
-                          { v: analytics.progress.mid, l: t('b.stats.halfway') },
-                          { v: analytics.progress.almost, l: t('b.stats.almost') },
-                          { v: analytics.progress.full, l: t('b.stats.full') },
-                        ].map((b) => (
-                          <div
-                            key={b.l}
-                            className="rounded-xl border border-white/[0.08] bg-hero-navy p-2"
-                          >
-                            <p className="font-display text-lg font-bold text-hero-gold">
-                              {b.v}
-                            </p>
-                            <p className="text-[10px] text-slate-500">{b.l}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-center text-[10px] text-slate-600">
-                        {t('b.stats.pii')}
-                      </p>
-                        </div>
+                        <OwnerDashboard a={analytics} required={venue?.stampsRequired ?? 10} />
                       ) : (
                         <p className="py-6 text-center text-xs text-slate-500">
                           {t('b.hist.loading')}

@@ -1,12 +1,17 @@
 import { useT } from '../i18n';
 import { contactHref, contactIsWhatsApp } from '../lib/contact';
+import Pic from './Pic';
 
-// Landing hero, paper face. The promise as the headline, a real photo from a
-// real counter as the proof, the customer card in a small navy tile on top
-// of it. No mascot here: he is in the header and in the sales panel below.
+// Landing hero, "Counter Editorial".
 //
-// The photo is the LCP element. It paints the instant it arrives (preloaded
-// from index.html with the same srcset), nothing starts at opacity 0.
+// Text first on every screen: an owner in a phone's in-app browser has to
+// read the promise and see the button before anything else. The one big
+// word ("pierde." / "lose.") is set in Sigmar on a sun marker, the family's
+// signature; everything else is Space Grotesk and system text.
+//
+// The photo is real (the counter at Bătrânu' Sas) and sits in a comic panel;
+// the customer's card rides on it as a sticker, drawn the way the umbrella
+// site draws HeroPad: blue stamps with a white V.
 //
 // index.html paints this exact block as static HTML before React boots
 // (#prehero). Markup and classes are mirrored there — change one, change both.
@@ -14,66 +19,75 @@ export default function Hero() {
   const { t } = useT();
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-10 sm:px-6 md:grid-cols-[1.05fr_0.95fr] md:gap-10 md:py-16 lg:py-20">
-        <div className="order-2 min-w-0 text-center md:order-1 md:text-left">
-          <p className="eyebrow-brass">{t('hero.eyebrow2')}</p>
-          <h1 className="mt-3 text-balance font-display text-[2.1rem] font-bold leading-[1.04] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-6xl">
+    <section className="relative">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:gap-12 md:pb-16 md:pt-14 lg:pb-20">
+        <div className="min-w-0">
+          <p className="kicker">{t('hero.eyebrow2')}</p>
+          <h1 className="mt-3 text-balance font-display text-[2.15rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-[3.65rem]">
             {t('hero.h1.a')}
-            <span className="text-brass">{t('hero.h1.b')}</span>
+            <span className="big-word text-[0.86em]">{t('hero.h1.b')}</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-[52ch] text-base text-ink-2 sm:text-lg md:mx-0 md:mt-5">
-            {t('hero.lede')}
-          </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+          <p className="mt-5 max-w-[50ch] text-[17px] leading-relaxed text-ink-2 sm:text-lg">{t('hero.lede')}</p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
             <a
               href={contactHref()}
               target={contactIsWhatsApp() ? '_blank' : undefined}
               rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
-              className="btn btn-brass"
+              className="pbtn pbtn-blue"
             >
               {t('biz.cta')}
             </a>
-            <a href="#pricing" className="btn btn-line">
+            <a href="#pricing" className="pbtn pbtn-white">
               {t('hero.cta.prices')}
             </a>
           </div>
-          <p className="mt-6 flex items-center justify-center gap-3 text-sm text-ink-3 md:justify-start">
+          <p className="mt-4 text-[13px] font-semibold text-ink-3">{t('hero.fine')}</p>
+          <p className="mt-6 flex items-center gap-3 text-sm text-ink-2">
             <img
               src="/super-victor-face.webp"
               alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full border border-ink/10 bg-white"
+              width={36}
+              height={36}
+              className="h-9 w-9 shrink-0 rounded-full border-2 border-ink bg-electric-deep"
             />
             <span>{t('hero.proof')}</span>
           </p>
         </div>
 
-        {/* The photo, with the card tile. aspect-ratio + width/height keep
-            the box stable before the image lands: CLS 0. */}
-        <div className="order-1 mx-auto w-full max-w-[420px] md:order-2 md:max-w-none">
+        {/* The photo panel, with the card sticker in its own corner. The
+            sticker overlaps the photo, never the text. */}
+        <div className="relative mx-auto w-full max-w-[440px] pb-6 pl-2 md:max-w-none md:pb-8 md:pl-6">
           <div className="photo aspect-[4/5]">
-            <img
-              src="/photos/hero-card-720.webp"
-              srcSet="/photos/hero-card-480.webp 480w, /photos/hero-card-720.webp 720w, /photos/hero-card-960.webp 960w"
-              sizes="(min-width: 1024px) 520px, (min-width: 768px) 46vw, min(92vw, 420px)"
+            <Pic
+              base="/photos/hero-card"
+              widths={[480, 720, 960]}
+              fallback={720}
+              sizes="(min-width: 1024px) 480px, (min-width: 768px) 42vw, min(90vw, 420px)"
               width={1280}
               height={1600}
+              eager
               alt="A customer holding their HeroPad card at the counter of Bătrânu' Sas, the SuperVictor figurine beside the till"
-              decoding="async"
             />
-            <div className="absolute bottom-4 left-4 w-[164px] rounded-2xl bg-hero-deep/95 p-3 text-left text-white shadow-[0_20px_40px_-20px_rgba(10,27,58,.6)] backdrop-blur sm:w-[178px] sm:p-3.5">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-hero-cyan">{t('hero.card.label')}</p>
-              <p className="mt-0.5 text-[11px] font-medium text-slate-300">Bătrânu' Sas</p>
-              <p className="tnum mt-1.5 font-display text-[26px] font-bold leading-none">
-                4<span className="text-[15px] text-slate-400">/5</span>
+          </div>
+          <div data-overlay="card" className="absolute bottom-0 left-0 w-[190px] -rotate-2 rounded-[10px] border-2 border-ink bg-paper-2 p-3 shadow-panel-sm sm:w-[210px]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-electric">{t('hero.card.label')}</p>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <p className="truncate text-[13px] font-bold text-ink">Bătrânu' Sas</p>
+              <p className="shrink-0 font-display text-lg font-bold leading-none text-ink">
+                4<span className="text-[13px] text-ink-3">/5</span>
               </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-hero-navy2">
-                <div className="h-full w-4/5 rounded-full bg-brass-2" />
-              </div>
-              <p className="mt-2 text-[10px] font-semibold text-brass-2">🎁 {t('hero.card.reward')}</p>
             </div>
+            <div className="mt-2 grid grid-cols-5 gap-1.5" aria-hidden>
+              <span className="stamp stamp-on" />
+              <span className="stamp stamp-on" />
+              <span className="stamp stamp-on" />
+              <span className="stamp stamp-on" />
+              <span className="stamp" />
+            </div>
+            <p className="mt-2 text-[12px] font-semibold text-ink-2">
+              {t('hero.card.at', { n: 5 })}{' '}
+              <span className="bg-sun px-1 font-bold text-ink">{t('hero.card.reward')}</span>
+            </p>
           </div>
         </div>
       </div>

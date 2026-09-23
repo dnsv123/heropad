@@ -825,75 +825,155 @@ export interface VenueAnalytics {
   uniqueCustomers: number;
   totalStamps: number;
   stampsLast30: number;
+  /** Same count for the 30 days before that, for the delta on the tile. */
+  stampsPrev30: number;
+  /** Distinct customers in the last 30 days, and in the 30 before. */
+  customers30: number;
+  customersPrev30: number;
   rewardsClaimed: number;
+  /** Milestones handed over on the way to a full card (migration 025). */
+  milestonesClaimed: number;
   /** Customers who came on 2+ distinct days — the loyalty proof number. */
   repeatCustomers: number;
   trophiesMinted: number;
-  /** Daily activity, oldest→newest, up to the last 14 active days. */
+  /** Daily activity, oldest→newest, up to the last 14 active days (legacy). */
   daily: Array<{ day: string; stamps: number; customers: number }>;
+  /**
+   * The last 30 venue-local days, every day present (zero days included), so
+   * a chart is a real time axis and not a list of active days. A customer is
+   * "new" on the day of their first stamp here, "returning" on any later day.
+   */
+  series30: Array<{ day: string; stamps: number; newCustomers: number; returning: number }>;
+  /**
+   * Stamps by venue-local weekday (0 = Monday) × hour (0–23), all time: when
+   * the regulars actually come. What Happy Hour should be placed against.
+   */
+  heat: number[][];
   /** How many customers sit in each progress bucket right now. */
   progress: { early: number; mid: number; almost: number; full: number };
+  /** Customers one or two stamps from the reward: the ones to nudge. */
+  nearReward: number;
+  /** The venue's clock, echoed so the client labels days and hours right. */
+  timeZone: string;
+}
+
+/** 'YYYY-MM-DD', weekday (0 = Mon) and hour of an instant, on a venue's clock. */
+function localParts(fmt: Intl.DateTimeFormat, iso: string): { day: string; wd: number; hour: number } {
+  const parts = fmt.formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  const WD: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+  const hour = Number(get('hour')) % 24; // some engines print 24 for midnight
+  return { day: `${get('year')}-${get('month')}-${get('day')}`, wd: WD[get('weekday')] ?? 0, hour };
 }
 
 /**
- * The pilot merchant dashboard numbers. Computed in JS from two queries —
- * trivial at validation scale, replaced by SQL aggregates when volume grows.
- * PII-free by construction: only counts, never emails or codes.
+ * The merchant dashboard numbers. Computed in JS from three queries — fine
+ * at pilot scale, replaced by SQL aggregates when volume grows. PII-free by
+ * construction: only counts, never emails or codes.
+ *
+ * Days and hours are the VENUE's (its time zone), the same clock the counter
+ * uses for the daily cap: a stamp at 00:30 in Sibiu belongs to that Sibiu
+ * day, not to yesterday in UTC.
  */
 export async function getVenueAnalytics(
   venueId: string,
-  required: number
+  required: number,
+  timeZone = 'Europe/Bucharest'
 ): Promise<VenueAnalytics> {
   const supa = getSupabaseAdmin();
 
-  const [{ data: stampRows, error: sErr }, { data: rewardRows, error: rErr }] =
-    await Promise.all([
-      supa
-        .from('stamps')
-        .select('user_identity_id, stamp_day, created_at')
-        .eq('venue_id', venueId)
-        .is('revoked_at', null),
-      supa
-        .from('rewards_redeemed')
-        .select('user_identity_id, stamps_consumed, trophy_asset_id')
-        .eq('venue_id', venueId),
-    ]);
+  const [
+    { data: stampRows, error: sErr },
+    { data: rewardRows, error: rErr },
+    { count: milestoneCount, error: mErr },
+  ] = await Promise.all([
+    supa
+      .from('stamps')
+      .select('user_identity_id, created_at')
+      .eq('venue_id', venueId)
+      .is('revoked_at', null),
+    supa
+      .from('rewards_redeemed')
+      .select('user_identity_id, stamps_consumed, trophy_asset_id')
+      .eq('venue_id', venueId),
+    supa
+      .from('milestone_claims')
+      .select('id', { count: 'exact', head: true })
+      .eq('venue_id', venueId),
+  ]);
   if (sErr) throw new Error(`[Supabase] analytics stamps: ${sErr.message}`);
   if (rErr) throw new Error(`[Supabase] analytics rewards: ${rErr.message}`);
+  // Milestones are additive (migration 025); a missing table must not take
+  // the whole dashboard down.
+  if (mErr) console.warn('[analytics] milestones count skipped:', mErr.message);
 
-  const stamps = (stampRows ?? []) as Array<{
-    user_identity_id: string;
-    stamp_day: string;
-    created_at: string;
-  }>;
+  let fmt: Intl.DateTimeFormat;
+  try {
+    fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short',
+      hour: '2-digit',
+      hourCycle: 'h23',
+    });
+  } catch {
+    timeZone = 'Europe/Bucharest';
+    fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short',
+      hour: '2-digit',
+      hourCycle: 'h23',
+    });
+  }
+
+  const stamps = (stampRows ?? []) as Array<{ user_identity_id: string; created_at: string }>;
   const rewards = (rewardRows ?? []) as Array<{
     user_identity_id: string;
     stamps_consumed: number;
     trophy_asset_id: string | null;
   }>;
 
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+  const cutoff30 = now - 30 * DAY;
+  const cutoff60 = now - 60 * DAY;
+
   const daysByCustomer = new Map<string, Set<string>>();
+  const firstDay = new Map<string, string>();
   const stampsByCustomer = new Map<string, number>();
   const byDay = new Map<string, { stamps: number; customers: Set<string> }>();
-  const cutoff30 = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const heat: number[][] = Array.from({ length: 7 }, () => Array<number>(24).fill(0));
+  const cust30 = new Set<string>();
+  const custPrev = new Set<string>();
   let stampsLast30 = 0;
+  let stampsPrev30 = 0;
 
   for (const s of stamps) {
-    if (!daysByCustomer.has(s.user_identity_id)) {
-      daysByCustomer.set(s.user_identity_id, new Set());
-    }
-    daysByCustomer.get(s.user_identity_id)!.add(s.stamp_day);
-    stampsByCustomer.set(
-      s.user_identity_id,
-      (stampsByCustomer.get(s.user_identity_id) ?? 0) + 1
-    );
-    if (!byDay.has(s.stamp_day)) {
-      byDay.set(s.stamp_day, { stamps: 0, customers: new Set() });
-    }
-    const d = byDay.get(s.stamp_day)!;
+    const { day, wd, hour } = localParts(fmt, s.created_at);
+    const who = s.user_identity_id;
+    if (!daysByCustomer.has(who)) daysByCustomer.set(who, new Set());
+    daysByCustomer.get(who)!.add(day);
+    const first = firstDay.get(who);
+    if (!first || day < first) firstDay.set(who, day);
+    stampsByCustomer.set(who, (stampsByCustomer.get(who) ?? 0) + 1);
+    if (!byDay.has(day)) byDay.set(day, { stamps: 0, customers: new Set() });
+    const d = byDay.get(day)!;
     d.stamps += 1;
-    d.customers.add(s.user_identity_id);
-    if (new Date(s.created_at).getTime() > cutoff30) stampsLast30 += 1;
+    d.customers.add(who);
+    heat[wd][hour] += 1;
+    const t = new Date(s.created_at).getTime();
+    if (t > cutoff30) {
+      stampsLast30 += 1;
+      cust30.add(who);
+    } else if (t > cutoff60) {
+      stampsPrev30 += 1;
+      custPrev.add(who);
+    }
   }
 
   const consumedByCustomer = new Map<string, number>();
@@ -907,6 +987,7 @@ export async function getVenueAnalytics(
   }
 
   const progress = { early: 0, mid: 0, almost: 0, full: 0 };
+  let nearReward = 0;
   for (const [customer, total] of stampsByCustomer) {
     const current = Math.max(0, total - (consumedByCustomer.get(customer) ?? 0));
     if (current <= 0) continue;
@@ -914,6 +995,21 @@ export async function getVenueAnalytics(
     else if (current >= required * 0.7) progress.almost += 1;
     else if (current >= required * 0.4) progress.mid += 1;
     else progress.early += 1;
+    if (current < required && current >= required - 2) nearReward += 1;
+  }
+
+  // New customers per local day, from each customer's first day here.
+  const newByDay = new Map<string, number>();
+  for (const d of firstDay.values()) newByDay.set(d, (newByDay.get(d) ?? 0) + 1);
+
+  // Thirty consecutive local days ending today. Noon avoids DST edges.
+  const series30: VenueAnalytics['series30'] = [];
+  for (let i = 29; i >= 0; i--) {
+    const { day } = localParts(fmt, new Date(now - i * DAY).toISOString());
+    const d = byDay.get(day);
+    const all = d?.customers.size ?? 0;
+    const fresh = newByDay.get(day) ?? 0;
+    series30.push({ day, stamps: d?.stamps ?? 0, newCustomers: fresh, returning: Math.max(0, all - fresh) });
   }
 
   const daily = [...byDay.entries()]
@@ -925,11 +1021,19 @@ export async function getVenueAnalytics(
     uniqueCustomers: daysByCustomer.size,
     totalStamps: stamps.length,
     stampsLast30,
+    stampsPrev30,
+    customers30: cust30.size,
+    customersPrev30: custPrev.size,
     rewardsClaimed: rewards.length,
+    milestonesClaimed: mErr ? 0 : milestoneCount ?? 0,
     repeatCustomers: [...daysByCustomer.values()].filter((set) => set.size >= 2).length,
     trophiesMinted,
     daily,
+    series30,
+    heat,
     progress,
+    nearReward,
+    timeZone,
   };
 }
 

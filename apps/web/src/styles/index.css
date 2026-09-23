@@ -2,6 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fonts, self-hosted (no request leaves our domain). Space Grotesk is one
+   variable file per script: latin for every page, latin-ext only when the
+   text has ă, ș, ț — i.e. Romanian headings. Sigmar is cut to capitals,
+   digits and punctuation: it only ever sets the one big word. */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sigmar';
+  font-display: swap;
+  src: url('/fonts/sigmar-caps.woff2') format('woff2');
+  unicode-range: U+0020-0040, U+0041-005A, U+00B7, U+2013, U+2019;
+}
+/* Metric-matched fallbacks. Until a web font arrives, the text is set in a
+   local font scaled to the same widths and line heights (measured from the
+   font files with fontTools), so the swap moves nothing on screen: no layout
+   shift when Space Grotesk, its Romanian diacritics or Sigmar land. */
+@font-face {
+  font-family: 'Space Grotesk Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Arial'), local('Roboto Bold'), local('Roboto');
+  size-adjust: 103%;
+  ascent-override: 95.54%;
+  descent-override: 28.35%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Sigmar Fallback';
+  src: local('Arial Black'), local('Arial-Black'), local('Arial Bold'), local('Roboto Black');
+  size-adjust: 96.11%;
+  ascent-override: 121.94%;
+  descent-override: 48.49%;
+  line-gap-override: 0%;
+}
+/* Romanian capitals for Sigmar (Ă Â Î Ș Ț, both comma and cedilla forms):
+   two tiny files, fetched only on a page whose Sigmar words need them. */
+@font-face {
+  font-family: 'Sigmar';
+  font-display: swap;
+  src: url('/fonts/sigmar-ro.woff2') format('woff2');
+  unicode-range: U+0102, U+015E, U+0162, U+0218, U+021A;
+}
+@font-face {
+  font-family: 'Sigmar';
+  font-display: swap;
+  src: url('/fonts/sigmar-ro-a.woff2') format('woff2');
+  unicode-range: U+00C2, U+00CE;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -106,31 +167,88 @@ html {
     font-variant-numeric: tabular-nums;
   }
 
-  /* ---- Paper face (landing only) ------------------------------------ */
-  .pcard {
-    @apply rounded-3xl border border-ink/10 bg-paper-2;
+  /* ---- Paper face (landing only) ------------------------------------
+     "Counter Editorial": the SuperVictor Universe comic panel (ink line,
+     hard offset shadow) used with restraint. Panels frame the product —
+     photos, the card, the price you pick — and nothing else. Text sits on
+     the page, not in boxes. */
+  .panel {
+    @apply relative rounded-[10px] border-2 border-ink bg-paper-2 shadow-panel;
   }
-  .btn-brass {
-    @apply bg-brass-2 text-hero-deep hover:bg-brass-3;
+  .panel-quiet {
+    @apply relative rounded-[10px] border-2 border-ink bg-paper-2;
   }
-  .btn-ink {
-    @apply bg-hero-deep text-white hover:bg-hero-navy2;
+  /* Buttons of the paper face: a pill with an ink line and a hard shadow
+     that lifts a pixel on hover, like the umbrella's. */
+  .pbtn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-full border-2 border-ink px-5 py-3 text-[15px] font-bold leading-tight shadow-panel-sm transition;
   }
-  .btn-line {
-    @apply border-ink/20 text-ink hover:border-ink/40;
+  .pbtn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 #0A1030;
   }
-  .eyebrow-brass {
-    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brass;
+  .pbtn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #0A1030;
+  }
+  .pbtn-blue {
+    @apply bg-electric text-white;
+  }
+  .pbtn-white {
+    @apply bg-paper-2 text-ink;
+  }
+  .pbtn-sun {
+    @apply bg-sun text-ink;
+  }
+  .pbtn-sm {
+    @apply px-4 py-2 text-[13px];
+  }
+  .kicker {
+    @apply text-[12px] font-extrabold uppercase tracking-[0.14em] text-electric;
+  }
+  /* The family's section caption: an ink box with paper letters, tilted a
+     degree, as on a comic page. Used for section titles on the landing. */
+  .caption {
+    @apply inline-block -rotate-1 bg-ink px-3.5 pb-2 pt-2.5 font-sigmar text-[17px] uppercase leading-none tracking-[0.02em] text-paper;
+  }
+  /* The one big word: Sigmar, electric, with a sun marker under it. */
+  .big-word {
+    @apply font-sigmar uppercase text-electric;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    background: linear-gradient(transparent 58%, #FFD50A 58%, #FFD50A 92%, transparent 92%);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 0.06em;
   }
   /* Photo tiles: the image fills, the caption sits on it, nothing shifts. */
   .photo {
-    @apply relative overflow-hidden rounded-3xl bg-hero-deep;
+    @apply relative overflow-hidden rounded-[10px] border-2 border-ink bg-electric-deep shadow-panel;
   }
-  .photo > img {
+  .photo > img,
+  .photo > picture > img {
     @apply absolute inset-0 h-full w-full object-cover;
   }
   .photo .cap {
-    @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-hero-deep/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur;
+    @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-md border-2 border-ink bg-paper-2 px-2.5 py-1 text-[11px] font-bold text-ink;
+  }
+  /* The customer's stamp, as drawn on the umbrella's HeroPad door: a blue
+     disc with a white V. Empty stamps are a dashed ring. */
+  .stamp {
+    @apply relative aspect-square rounded-full border-2 border-dashed border-ink/35;
+  }
+  .stamp-on {
+    @apply border-solid border-ink bg-electric;
+  }
+  .stamp-on::after {
+    content: '';
+    position: absolute;
+    inset: 26%;
+    background: #fff;
+    clip-path: polygon(0 0, 30% 0, 50% 55%, 70% 0, 100% 0, 60% 100%, 40% 100%);
+  }
+  .stamp-gift {
+    @apply border-solid border-ink bg-sun;
   }
 }
 

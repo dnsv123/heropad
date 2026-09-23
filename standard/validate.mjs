@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Validator for Open Venue Credentials 0.1. No dependencies.
+// Validator for Sigil 0.1. No dependencies.
 //
 //   node validate.mjs <file.json> [...more]     → conformance of each file
 //   node validate.mjs --examples                → runs every file in examples/
@@ -52,8 +52,8 @@ export function validateCredential(doc) {
     p('$.credential', 'required object');
     return scanPersonalData(doc, problems);
   }
-  if (typeof c.standard !== 'string') p('$.credential.standard', 'required, e.g. "ovc/0.1"');
-  else if (!/^ovc\/0\.[0-9]+$/.test(c.standard)) p('$.credential.standard', `unsupported "${c.standard}"; this validator knows ovc/0.x`);
+  if (typeof c.standard !== 'string') p('$.credential.standard', 'required, e.g. "sigil/0.1"');
+  else if (!/^sigil\/0\.[0-9]+$/.test(c.standard)) p('$.credential.standard', `unsupported "${c.standard}"; this validator knows sigil/0.x`);
 
   if (!TYPES.includes(c.type)) p('$.credential.type', `required, one of ${TYPES.join(', ')}`);
 
@@ -120,7 +120,7 @@ export function validateProfile(doc) {
   const problems = [];
   const p = (path, msg) => problems.push({ path, message: msg });
   if (!isObj(doc)) return [{ path: '$', message: 'must be a JSON object' }];
-  if (typeof doc.standard !== 'string' || !/^ovc\/0\.[0-9]+$/.test(doc.standard)) p('$.standard', 'required, "ovc/0.x"');
+  if (typeof doc.standard !== 'string' || !/^sigil\/0\.[0-9]+$/.test(doc.standard)) p('$.standard', 'required, "sigil/0.x"');
   const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
   if (!isObj(doc.holder) || !Array.isArray(doc.holder.wallets) || doc.holder.wallets.length === 0) p('$.holder.wallets', 'required, at least one wallet address');
   else doc.holder.wallets.forEach((w, i) => { if (!B58.test(String(w))) p(`$.holder.wallets[${i}]`, 'base58 Solana address'); });

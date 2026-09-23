@@ -2,7 +2,7 @@
   "name": "Café Victor — card #3",
   "image": "https://cafe-victor.example/cards/3.webp",
   "credential": {
-    "standard": "ovc/0.1",
+    "standard": "sigil/0.1",
     "type": "stamp_card",
     "issuer": { "id": "Cafe-Victor.example", "name": "Café Victor" },
     "issued_at": "2026-09-22T14:03:00Z",

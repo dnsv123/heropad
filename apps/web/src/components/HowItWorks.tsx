@@ -1,8 +1,10 @@
 import { useT } from '../i18n';
+import Pic from './Pic';
 
 // Landing → three moments at the counter, each with the real photo of it.
 // Square photos: the NFC notification at the bottom of the lock screen is
-// the proof in step one, and a 4:3 crop was cutting it off.
+// the proof in step one, and a 4:3 crop was cutting it off. The step number
+// is a Sigmar numeral on a sun disc, inside the photo's corner.
 const STEPS = [
   { file: 'tap-nfc', k: 'how3.1.k', t: 'how3.1.t', d: 'how3.1.d', cap: 'how3.1.cap' },
   { file: 'plus-one', k: 'how3.2.k', t: 'how3.2.t', d: 'how3.2.d', cap: 'how3.2.cap' },
@@ -13,37 +15,42 @@ export default function HowItWorks() {
   const { t } = useT();
 
   return (
-    <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:px-6 md:py-20">
-      <div className="max-w-[60ch]">
-        <p className="eyebrow-brass">{t('how3.eyebrow')}</p>
-        <h2 className="mt-3 text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight text-ink md:text-4xl">
+    <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
+      <div className="max-w-[62ch]">
+        <h2 className="caption">{t('how3.eyebrow')}</h2>
+        <p className="mt-5 text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight text-ink md:text-[2.6rem]">
           {t('how3.title')}
-        </h2>
-        <p className="mt-3 text-base text-ink-2">{t('how3.sub')}</p>
+        </p>
+        <p className="mt-3 text-base text-ink-2 md:text-lg">{t('how3.sub')}</p>
       </div>
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-3 sm:gap-4 md:mt-10 md:gap-6">
-        {STEPS.map((s) => (
-          <div key={s.file} className="min-w-0">
+      <ol className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-5 md:gap-8">
+        {STEPS.map((s, i) => (
+          <li key={s.file} className="min-w-0">
             <div className="photo aspect-square">
-              <img
-                src={`/photos/${s.file}-640.webp`}
-                srcSet={`/photos/${s.file}-400.webp 400w, /photos/${s.file}-640.webp 640w, /photos/${s.file}-900.webp 900w`}
-                sizes="(min-width: 1024px) 352px, (min-width: 640px) 30vw, 92vw"
+              <Pic
+                base={`/photos/${s.file}`}
+                widths={[400, 640, 900]}
+                fallback={640}
+                sizes="(min-width: 1024px) 340px, (min-width: 640px) 30vw, 92vw"
                 width={1600}
                 height={1600}
                 alt={t(s.t)}
-                loading="lazy"
-                decoding="async"
               />
+              <span
+                aria-hidden
+                className="absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink bg-sun font-sigmar text-xl leading-none text-ink"
+              >
+                {i + 1}
+              </span>
               <span className="cap">{t(s.cap)}</span>
             </div>
-            <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.12em] text-brass">{t(s.k)}</p>
-            <h3 className="mt-1 font-display text-lg font-semibold text-ink">{t(s.t)}</h3>
-            <p className="mt-1 text-sm text-ink-2">{t(s.d)}</p>
-          </div>
+            <p className="kicker mt-5">{t(s.k)}</p>
+            <h3 className="mt-1 font-display text-xl font-bold text-ink">{t(s.t)}</h3>
+            <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{t(s.d)}</p>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { usePrivy } from '../lib/auth';
 import { useSolanaWallets } from '../lib/auth';
 
 import { useT } from '../i18n';
+import { contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Single source of truth for the top navigation + auth button.
 //
@@ -28,15 +29,15 @@ export default function Header() {
 
   const c = paper
     ? {
-        bar: 'border-ink/10 bg-paper/85',
+        bar: 'border-ink/10 bg-paper/90',
         drawer: 'border-ink/10 bg-paper',
         wm: 'text-ink',
-        link: 'text-ink-2 hover:text-ink',
-        active: 'text-ink',
-        pill: 'border-ink/20 text-ink-2 hover:border-ink/40 hover:text-ink',
-        chip: 'border-ink/20 text-ink',
+        link: 'font-semibold text-ink-2 hover:text-ink',
+        active: 'font-semibold text-ink',
+        pill: 'border-ink text-ink hover:bg-paper-2',
+        chip: 'border-ink text-ink',
         muted: 'text-ink-3 hover:text-ink',
-        btn: 'btn btn-ink btn-sm',
+        btn: 'pbtn pbtn-white pbtn-sm',
       }
     : {
         bar: 'border-white/[0.06] bg-hero-deep/85',
@@ -55,7 +56,7 @@ export default function Header() {
       type="button"
       onClick={() => setLang(lang === 'ro' ? 'en' : 'ro')}
       aria-label={lang === 'ro' ? 'Switch to English' : 'Schimbă în română'}
-      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${c.pill}`}
+      className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition ${paper ? 'border-2' : 'border'} ${c.pill}`}
     >
       {lang === 'ro' ? 'EN' : 'RO'}
     </button>
@@ -106,10 +107,10 @@ export default function Header() {
             alt=""
             width={28}
             height={28}
-            className="h-7 w-7 shrink-0 rounded-full bg-hero-navy2 object-cover"
+            className={`h-7 w-7 shrink-0 rounded-full object-cover ${paper ? 'border-2 border-ink bg-electric-deep' : 'bg-hero-navy2'}`}
           />
           <span className="whitespace-nowrap">
-            Hero<span className={paper ? 'text-brass' : 'text-hero-gold'}>Pad</span>
+            Hero<span className={paper ? 'text-electric' : 'text-hero-gold'}>Pad</span>
           </span>
         </Link>
 
@@ -118,6 +119,17 @@ export default function Header() {
           {links()}
           {langToggle}
           <div className="flex min-w-[150px] items-center justify-end gap-3">
+            {/* On the landing the owner's action leads; login is for customers. */}
+            {paper && (
+              <a
+                href={contactHref()}
+                target={contactIsWhatsApp() ? '_blank' : undefined}
+                rel={contactIsWhatsApp() ? 'noopener noreferrer' : undefined}
+                className="pbtn pbtn-blue pbtn-sm hidden lg:inline-flex"
+              >
+                {t('nav.demo')}
+              </a>
+            )}
             {!authenticated ? (
               <button type="button" onClick={login} disabled={!ready} className={c.btn}>
                 {ready ? t('nav.login') : t('nav.loading')}
@@ -152,7 +164,7 @@ export default function Header() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
-            className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${c.pill}`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition ${paper ? 'border-2' : 'border'} ${c.pill}`}
           >
             {mobileOpen ? (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>

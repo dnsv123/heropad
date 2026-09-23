@@ -1407,7 +1407,8 @@ loyaltyRouter.get(
       if (!owned) return;
       const analytics = await getVenueAnalytics(
         owned.venue.id,
-        owned.venue.stamps_required
+        owned.venue.stamps_required,
+        owned.venue.timezone ?? undefined
       );
       return res.status(200).json({ ok: true, ...analytics });
     } catch (err) {

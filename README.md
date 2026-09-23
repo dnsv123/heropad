@@ -118,7 +118,7 @@ packages/
   db/migrations/          001_initial_schema … 023_billing_period (applied by hand)
   db/seeds/               loyalty_test_venue.sql
 docs/                     ARCHITECTURE.md, AI_ASSET_REGISTER.md
-standard/                 Open Venue Credentials (draft 0.1): spec, JSON schemas,
+standard/                 Sigil (draft 0.1): spec, JSON schemas,
                           examples, validator — the vendor-neutral format trophies
                           are moving to; MIT, to become its own repository
 .github/workflows/        db-backup, db-restore-test, billing, keepalive

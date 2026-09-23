@@ -1,4 +1,4 @@
-# Open Venue Credentials (working name)
+# Sigil
 
 A small, vendor-neutral standard for collectibles issued by physical
 places: a completed stamp card, a tier a regular reached, a numbered pin
@@ -51,8 +51,8 @@ Draft 0.1, September 2026. One production implementation (HeroPad, Sibiu,
 Romania), which does **not yet** emit conforming metadata — see
 `IMPLEMENTATIONS.md` for exactly what it emits and the migration path.
 Field names may still move before 1.0. Feedback: open an issue on the
-HeroPad repository for now; this directory will become its own repository
-once a name is chosen.
+HeroPad repository for now; this directory will become its own repository,
+`sigil`, under a neutral organisation.
 
 ## Language
 

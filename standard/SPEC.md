@@ -1,6 +1,6 @@
-# Open Venue Credentials — specification 0.1 (draft)
+# Sigil — specification 0.1 (draft)
 
-*Working name. See README for the naming decision still open.*
+*Sigil: the seal a place puts on what it gives you.*
 
 A **venue credential** is a collectible issued by a physical place to a
 person who did something there: completed a stamp card, reached a tier,
@@ -32,7 +32,7 @@ at it. Nothing in this standard requires a new on-chain program or account.
     { "trait_type": "Venue", "value": "Bătrânu' Sas" }
   ],
   "credential": {
-    "standard": "ovc/0.1",
+    "standard": "sigil/0.1",
     "type": "stamp_card",
     "issuer": { "id": "batranu-sas.example", "name": "Bătrânu' Sas" },
     "edition": { "serial": 12 },
@@ -47,7 +47,7 @@ Top level of `credential`:
 
 | Field | Required | Type | Meaning |
 |---|---|---|---|
-| `standard` | yes | string | `"ovc/0.1"`. Readers reject other majors. |
+| `standard` | yes | string | `"sigil/0.1"`. Readers reject other majors. |
 | `type` | yes | enum | What was earned. See §2.1. |
 | `issuer` | yes | object | The venue. See §2.2. |
 | `issued_at` | yes | string | Calendar day, `YYYY-MM-DD`, in the venue's own time zone. A day, not a timestamp: it dates the memento without timing the person. |
@@ -110,7 +110,7 @@ demand, by any application, from what the holder's wallet(s) already own:
 1. Enumerate the wallet's assets with the DAS API (`getAssetsByOwner`), or
    any equivalent indexer.
 2. Fetch each asset's off-chain JSON. Keep those whose
-   `credential.standard` starts with `ovc/0.` and that validate against
+   `credential.standard` starts with `sigil/0.` and that validate against
    §2.
 3. For each kept asset, establish authenticity per §4 and record the
    result; do not drop inauthentic assets silently, mark them.
@@ -147,7 +147,7 @@ Two facts must hold for a credential to be **authentic**:
 
    ```json
    {
-     "standard": "ovc/0.1",
+     "standard": "sigil/0.1",
      "issuer": { "id": "batranu-sas.example", "name": "Bătrânu' Sas" },
      "creators": [],
      "platforms": [
@@ -195,6 +195,6 @@ wallet, and holding it is holding the memento, nothing more.
 
 ## 6. Versioning
 
-`standard` is `ovc/<major>.<minor>`. Minors add optional fields; majors
+`standard` is `sigil/<major>.<minor>`. Minors add optional fields; majors
 may change required ones. This is 0.1: fields may still move before 1.0,
 and there is one production implementation (see `IMPLEMENTATIONS.md`).

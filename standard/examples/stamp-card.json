@@ -10,7 +10,7 @@
     { "trait_type": "Card", "value": 12 }
   ],
   "credential": {
-    "standard": "ovc/0.1",
+    "standard": "sigil/0.1",
     "type": "stamp_card",
     "issuer": { "id": "batranu-sas.example", "name": "Bătrânu' Sas", "location": "Sibiu" },
     "edition": { "serial": 12 },
