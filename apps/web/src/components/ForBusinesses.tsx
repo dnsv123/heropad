@@ -3,7 +3,7 @@ import { contactHref, contactIsWhatsApp } from '../lib/contact';
 import { Art } from './Pic';
 
 // Landing → "#business": the owner's pitch, in the one deep-navy panel on
-// the page, with the app's gold for the button (the bridge to the product). SuperVictor
+// the page, with the logo's amber for the button, where the owner decides. SuperVictor
 // flies in his own grid column on wide screens, never over the text.
 
 // 1.5px stroke icons: emoji render differently on every OS and the brand
@@ -43,10 +43,10 @@ export default function ForBusinesses() {
   return (
     <section id="business" className="scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-[28px] bg-electric-deep p-6 text-white shadow-soft sm:p-8 md:p-10">
+        <div className="relative overflow-hidden rounded-[28px] bg-brand-deep p-6 text-white shadow-soft sm:p-8 md:p-10">
           <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-gold">{t('hero.cta.business')}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-amber">{t('hero.cta.business')}</p>
               <h2 className="mt-3 text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight md:text-[2.4rem]">
                 {t('biz.title')}
               </h2>

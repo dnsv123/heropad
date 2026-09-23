@@ -48,7 +48,7 @@ export default function Hero() {
               alt=""
               width={36}
               height={36}
-              className="h-9 w-9 shrink-0 rounded-full border border-ink/10 bg-electric-deep"
+              className="h-9 w-9 shrink-0 rounded-full border border-ink/10 bg-brand-deep"
             />
             <span>{t('hero.proof')}</span>
           </p>
@@ -70,7 +70,7 @@ export default function Hero() {
             />
           </div>
           <div data-overlay="card" className="absolute bottom-0 left-0 w-[196px] rounded-2xl border border-ink/10 bg-paper-2 p-3.5 shadow-soft sm:w-[214px]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-electric">{t('hero.card.label')}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-cognac">{t('hero.card.label')}</p>
             <div className="mt-1 flex items-baseline justify-between gap-2">
               <p className="truncate text-[13px] font-bold text-ink">Bătrânu' Sas</p>
               <p className="shrink-0 font-display text-lg font-bold leading-none text-ink">

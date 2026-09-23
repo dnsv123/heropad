@@ -50,7 +50,7 @@ export default function LandingPricing() {
         </button>
         <button type="button" onClick={() => setAnnual(true)} aria-pressed={annual} className={seg(annual)}>
           {t('lp.toggle.annual')}
-          <span className="rounded-full bg-sun px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink">
+          <span className="rounded-full bg-brand-amber px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink">
             {t('lp.toggle.free')}
           </span>
         </button>
@@ -64,11 +64,11 @@ export default function LandingPricing() {
             <div
               key={tier.name}
               className={`relative flex min-w-0 flex-col rounded-3xl bg-paper-2 p-5 sm:p-6 ${
-                tier.hl ? 'border-2 border-electric shadow-soft' : 'border border-ink/10'
+                tier.hl ? 'border-2 border-brand shadow-soft' : 'border border-ink/10'
               }`}
             >
               {tier.hl && (
-                <span className="absolute -top-3 left-5 rounded-full bg-electric px-3 py-1 text-[11px] font-semibold text-white">
+                <span className="absolute -top-3 left-5 rounded-full bg-brand px-3 py-1 text-[11px] font-semibold text-paper">
                   {t('lp.hl')}
                 </span>
               )}
@@ -88,7 +88,7 @@ export default function LandingPricing() {
               <ul className="mt-5 flex-1 space-y-2.5 border-t border-ink/10 pt-5">
                 {tier.feats.split(' · ').map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm leading-snug text-ink-2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0 text-electric" aria-hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden>
                       <path d="m5 12 5 5L20 7" />
                     </svg>
                     {f}

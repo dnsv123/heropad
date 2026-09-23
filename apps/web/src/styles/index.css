@@ -186,20 +186,21 @@ html {
     transform: scale(0.98);
   }
   .pbtn-blue {
-    @apply bg-electric text-white hover:bg-electric-hover;
+    @apply bg-brand text-paper hover:bg-brand-hover;
   }
   .pbtn-white {
     @apply border-ink/20 text-ink hover:border-ink/45;
   }
-  /* On the navy sales panel: the app's gold, the bridge to the product. */
+  /* On the navy sales panel: the logo's amber, the warmest thing on the
+     page, where the owner decides. */
   .pbtn-sun {
-    @apply bg-hero-gold text-ink hover:bg-hero-gold-bright;
+    @apply bg-brand-amber text-ink hover:bg-brand-amber-hover;
   }
   .pbtn-sm {
     @apply px-4 py-2 text-[13px];
   }
   .kicker {
-    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-electric;
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-cognac;
   }
   /* Section label: the same quiet kicker, as a heading element. */
   .caption {
@@ -210,13 +211,17 @@ html {
   .caption-sv {
     @apply inline-block bg-ink px-3 pb-1.5 pt-2 font-sigmar text-[15px] uppercase leading-none tracking-[0.02em] text-paper;
   }
-  /* The last word of the promise, in the brand's blue. */
+  /* The last word of the promise: logo navy on an amber marker. */
   .big-word {
-    @apply text-electric;
+    @apply text-brand;
+    background: linear-gradient(transparent 62%, #F7A30C 62%, #F7A30C 90%, transparent 90%);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 0.04em;
   }
   /* Photo tiles: the image fills, the caption sits on it, nothing shifts. */
   .photo {
-    @apply relative overflow-hidden rounded-3xl bg-electric-deep shadow-soft;
+    @apply relative overflow-hidden rounded-3xl bg-brand-deep shadow-soft;
   }
   .photo > img,
   .photo > picture > img {
@@ -231,7 +236,7 @@ html {
     @apply relative aspect-square rounded-full border-[1.5px] border-dashed border-ink/25;
   }
   .stamp-on {
-    @apply border-solid border-transparent bg-electric;
+    @apply border-solid border-transparent bg-brand;
   }
   .stamp-on::after {
     content: '';

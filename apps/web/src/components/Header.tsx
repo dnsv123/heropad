@@ -107,10 +107,10 @@ export default function Header() {
             alt=""
             width={28}
             height={28}
-            className={`h-7 w-7 shrink-0 rounded-full object-cover ${paper ? 'border border-ink/10 bg-electric-deep' : 'bg-hero-navy2'}`}
+            className={`h-7 w-7 shrink-0 rounded-full object-cover ${paper ? 'border border-ink/10 bg-brand-deep' : 'bg-hero-navy2'}`}
           />
           <span className="whitespace-nowrap">
-            Hero<span className={paper ? 'text-electric' : 'text-hero-gold'}>Pad</span>
+            Hero<span className={paper ? 'text-brand-cognac' : 'text-hero-gold'}>Pad</span>
           </span>
         </Link>
 

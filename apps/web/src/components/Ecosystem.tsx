@@ -64,7 +64,7 @@ export default function Ecosystem() {
             >
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  d.soon ? 'border border-dashed border-ink/25' : 'bg-electric-soft text-electric'
+                  d.soon ? 'border border-dashed border-ink/25' : 'bg-brand-soft text-brand'
                 }`}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>

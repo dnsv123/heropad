@@ -55,11 +55,11 @@ export default function Footer() {
               width={40}
               height={40}
               loading="lazy"
-              className="h-10 w-10 shrink-0 rounded-full border-2 border-paper/80 bg-electric-deep"
+              className="h-10 w-10 shrink-0 rounded-full border-2 border-paper/80 bg-brand-deep"
             />
             <div className="min-w-0">
               <p className="font-display text-lg font-bold text-paper">
-                Hero<span className="text-sun">Pad</span>
+                Hero<span className="text-brand-amber">Pad</span>
               </p>
               <p className="mt-1 max-w-[30ch] text-paper/70">{t('f.tagline')}</p>
             </div>

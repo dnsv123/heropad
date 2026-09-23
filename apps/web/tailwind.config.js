@@ -39,7 +39,21 @@ export default {
         // the phones in the photos read as the product against the page.
         paper: { DEFAULT: '#F6F1E7', 2: '#FFFDF9' },
         ink: { DEFAULT: '#0A1030', 2: '#3E4566', 3: '#646A87' },
-        electric: { DEFAULT: '#0055FE', hover: '#0046D6', deep: '#01205F', soft: '#E8EEFB' },
+        // Straight from the registered SuperVictor logo: its dominant navy
+        // (the thing you press on cream), its amber (warmth: the marker
+        // under the promise, the button on the navy panel) and a deep
+        // cognac of that amber for small text, which the amber itself is
+        // too light to carry on cream. Chosen 23 Sept 2026 over the brand's
+        // Electric blue, which read cold and "SaaS" on the warm page.
+        brand: {
+          DEFAULT: '#0A2766',
+          hover: '#0D3182',
+          deep: '#01205F',
+          soft: '#E7EBF4',
+          amber: '#F7A30C',
+          'amber-hover': '#FFB42A',
+          cognac: '#A85A06',
+        },
         sun: { DEFAULT: '#FFD50A', soft: '#FFF4CC' },
       },
       fontFamily: {
