@@ -785,25 +785,30 @@ export default function Business() {
           const logo = typeof b.logo === 'string' && b.logo.startsWith('data:image/') ? b.logo : null;
           const accent =
             typeof b.accent === 'string' && /^#[0-9A-Fa-f]{6}$/.test(b.accent) ? b.accent : null;
+          // One compact row: whose counter this is and who is working it.
+          // The big centred title took a third of a phone screen at the
+          // moment the barista needs the customer, not the venue's name.
           return (
-            <div className="text-center">
+            <div className="flex items-center gap-3">
               {logo ? (
-                <div className="flex items-center justify-center gap-3">
-                  <img src={logo} alt="" className="h-10 max-w-[110px] object-contain" width={110} height={40} />
-                  <h1 className="font-display text-2xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
-                </div>
+                <span className="flex h-12 max-w-[120px] shrink-0 items-center rounded-2xl bg-white px-2">
+                  <img src={logo} alt="" className="h-9 w-auto max-w-full object-contain" width={110} height={36} />
+                </span>
               ) : (
-                <>
-                  <p
-                    className="text-xs uppercase tracking-[0.3em] text-hero-gold"
-                    style={accent ? { color: accent } : undefined}
-                  >
-                    Business
-                  </p>
-                  <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{venue?.name ?? '…'}</h1>
-                </>
+                <img src="/super-victor-face.webp" alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-2xl bg-hero-navy2 ring-1 ring-white/10" />
               )}
-              <p className="mt-1 text-sm text-slate-400">{t('b.sub')}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate font-display text-xl font-bold md:text-2xl">{venue?.name ?? '…'}</h1>
+                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                  <span style={accent ? { color: accent } : undefined} className={accent ? '' : 'text-hero-gold'}>
+                    {t('b.counter')}
+                  </span>
+                  {role === 'owner' && <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px]">{t('b.role.owner')}</span>}
+                  {role === 'staff' && staffName && (
+                    <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px]">{staffName}</span>
+                  )}
+                </p>
+              </div>
             </div>
           );
         })()}

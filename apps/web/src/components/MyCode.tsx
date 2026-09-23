@@ -5,9 +5,10 @@ import { usePrivy } from '../lib/auth';
 import { getJson } from '../services/apiClient';
 import { useT } from '../i18n';
 
-// Profile → the personal loyalty code, always at hand. Before this card the
-// only way to see your own code was to open some venue's loyalty page — fine
-// at the counter you are standing in, useless everywhere else.
+// Profile → the personal loyalty code, always at hand, drawn like a boarding
+// pass: the QR on white where a scanner reads it best, the code big beside
+// it, one line saying what to do with it. Before this card the only way to
+// see your own code was to open some venue's loyalty page.
 export default function MyCode() {
   const { ready, authenticated, getAccessToken } = usePrivy();
   const { t } = useT();
@@ -21,10 +22,7 @@ export default function MyCode() {
       try {
         const token = await getAccessToken();
         if (!token) return;
-        const r = await getJson<{ ok: true; code: string | null }>(
-          '/api/loyalty/me/code',
-          token
-        );
+        const r = await getJson<{ ok: true; code: string | null }>('/api/loyalty/me/code', token);
         if (active) setCode(r.code);
       } catch {
         /* the card simply does not render */
@@ -51,15 +49,19 @@ export default function MyCode() {
   if (!ready || !authenticated || !code) return null;
 
   return (
-    <div className="rounded-2xl border border-hero-cyan/25 bg-hero-navy p-6 text-center">
-      <p className="text-xs uppercase tracking-wider text-slate-500">{t('mc.title')}</p>
-      {qr && (
-        <img src={qr} alt="" className="mx-auto mt-3 h-36 w-36 rounded-xl bg-white p-1.5 shadow-lg" />
-      )}
-      <p className="mt-2 font-mono text-4xl font-bold tracking-[0.35em] text-hero-cyan">
-        {code}
-      </p>
-      <p className="mt-2 text-xs text-slate-500">{t('mc.hint')}</p>
+    <div className="card flex items-center gap-4 overflow-hidden p-4 sm:gap-5 sm:p-5">
+      <div className="shrink-0 rounded-2xl bg-white p-2 shadow-lg">
+        {qr ? (
+          <img src={qr} alt="" width={128} height={128} className="h-28 w-28 sm:h-32 sm:w-32" />
+        ) : (
+          <div className="h-28 w-28 animate-pulse rounded-xl bg-slate-200 sm:h-32 sm:w-32" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t('mc.title')}</p>
+        <p className="mt-1 font-mono text-3xl font-bold tracking-[0.25em] text-white sm:text-4xl">{code}</p>
+        <p className="mt-2 text-xs leading-relaxed text-slate-400">{t('mc.hint')}</p>
+      </div>
     </div>
   );
 }

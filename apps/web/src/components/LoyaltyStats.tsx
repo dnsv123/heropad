@@ -94,8 +94,8 @@ export default function LoyaltyStats() {
   if (!ready || !authenticated) return null;
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-hero-navy p-6">
-      <h2 className="font-display text-lg font-semibold text-white">⚡ Power Pass</h2>
+    <div>
+      <h2 className="font-display text-lg font-semibold text-white">{t('pp.title2')}</h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('pp.explainer')}</p>
 
       {error ? (
@@ -112,78 +112,73 @@ export default function LoyaltyStats() {
         </p>
       ) : (
         <>
+          {/* Three numbers, each opening its own story. */}
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => setDetail('stamps')}
-              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-white/30 hover:bg-hero-deep"
-            >
-              <p className="font-display text-2xl font-bold text-hero-cyan">
-                {stats.totalStamps}
-              </p>
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                {t('pp.tile.stamps')}
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDetail('rewards')}
-              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-solana-green/50 hover:bg-hero-deep"
-            >
-              <p className="font-display text-2xl font-bold text-solana-green">
-                {stats.cardsCompleted}
-              </p>
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                {t('pp.tile.rewards')}
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDetail('trophies')}
-              className="rounded-xl border border-white/[0.08] bg-hero-navy p-3 text-center transition hover:border-hero-gold/50 hover:bg-hero-deep"
-            >
-              <p className="font-display text-2xl font-bold text-hero-gold">
-                {stats.trophiesMinted}
-              </p>
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                {t('pp.tile.trophies')}
-              </p>
-            </button>
+            {(
+              [
+                { k: 'stamps', v: stats.totalStamps, l: t('pp.tile.stamps'), c: 'text-white' },
+                { k: 'rewards', v: stats.cardsCompleted, l: t('pp.tile.rewards'), c: 'text-white' },
+                { k: 'trophies', v: stats.trophiesMinted, l: t('pp.tile.trophies'), c: 'text-hero-gold' },
+              ] as const
+            ).map((tile) => (
+              <button
+                key={tile.k}
+                type="button"
+                onClick={() => setDetail(tile.k)}
+                className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-hero-navy2/60 to-hero-navy p-3 text-center transition hover:border-white/25"
+              >
+                <p className={`font-display text-3xl font-bold leading-none ${tile.c}`}>{tile.v}</p>
+                <p className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500">{tile.l}</p>
+              </button>
+            ))}
           </div>
           <p className="mt-2 text-center text-[11px] text-slate-600">{t('pp.taphint')}</p>
 
-          {/* The cross-venue passport: collect cafés, not just coffees. */}
-          <Link
-            to="/passport"
-            className="mt-3 flex items-center justify-between rounded-xl border border-hero-gold/25 bg-hero-gold/5 px-4 py-2.5 text-sm transition hover:border-hero-gold/50 hover:bg-hero-gold/10"
-          >
-            <span className="text-slate-200">🗺️ {t('pp.passport')}</span>
-            <span className="font-mono text-xs text-slate-400">
-              {stats.venues.length} <span className="text-hero-gold">→</span>
-            </span>
-          </Link>
-
-          {/* Quick links: jump straight to each venue's loyalty page. */}
+          {/* Every card this customer holds, with where it stands. */}
           {stats.venues.length > 0 && (
-            <div className="mt-3 space-y-2">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                {t('pp.venues.label')}
-              </p>
-              {stats.venues.map((v) => (
-                <Link
-                  key={v.slug}
-                  to={`/loyalty/${v.slug}`}
-                  className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-hero-navy px-4 py-2.5 text-sm transition hover:border-white/30 hover:bg-hero-navy"
-                >
-                  <span className="text-slate-200">☕ {v.name}</span>
-                  <span className="font-mono text-xs text-slate-400">
-                    {Math.min(v.current, v.required)}/{v.required}{' '}
-                    <span className="text-hero-cyan">→</span>
-                  </span>
-                </Link>
-              ))}
+            <div className="mt-5 space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('pp.venues.label')}</p>
+              {stats.venues.map((v) => {
+                const cur = Math.min(v.current, v.required);
+                return (
+                  <Link
+                    key={v.slug}
+                    to={`/loyalty/${v.slug}`}
+                    className="block rounded-2xl border border-white/[0.08] bg-hero-navy px-4 py-3 transition hover:border-white/25"
+                  >
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="truncate font-display text-sm font-semibold text-white">{v.name}</span>
+                      <span className="shrink-0 font-display text-sm font-bold text-white">
+                        {cur}
+                        <span className="text-slate-500">/{v.required}</span>
+                      </span>
+                    </span>
+                    <span className="mt-2 flex gap-[3px]" aria-hidden>
+                      {Array.from({ length: v.required }, (_, i) => (
+                        <span key={i} className={`h-1.5 flex-1 rounded-full ${i < cur ? 'bg-[#F7A30C]' : 'bg-white/[0.1]'}`} />
+                      ))}
+                    </span>
+                    {v.rewardLabel && (
+                      <span className="mt-1.5 block truncate text-[11px] text-slate-400">
+                        {t('cf.at', { n: v.required })} {v.rewardLabel}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           )}
+
+          {/* The cross-venue passport: collect places, not just coffees. */}
+          <Link
+            to="/passport"
+            className="mt-3 flex items-center justify-between rounded-2xl border border-hero-gold/25 bg-hero-gold/5 px-4 py-3 text-sm transition hover:border-hero-gold/50 hover:bg-hero-gold/10"
+          >
+            <span className="font-semibold text-slate-100">{t('pp.passport')}</span>
+            <span className="text-xs text-slate-400">
+              {t('pp.passport.n', { n: stats.venues.length })} <span className="text-hero-gold">→</span>
+            </span>
+          </Link>
 
           {/* ---- Detail sheets (one per tile) ---- */}
           <AnimatePresence>
@@ -230,9 +225,9 @@ export default function LoyaltyStats() {
                                 </span>
                               </div>
                               {/* All lifetime stamps, wrapping in rows of 10 */}
-                              <div className="mt-3 grid grid-cols-10 gap-1 text-base leading-none">
+                              <div className="mt-3 grid grid-cols-10 gap-1">
                                 {Array.from({ length: v.totalStamps }, (_, i) => (
-                                  <span key={i}>☕</span>
+                                  <span key={i} className="aspect-square rounded-full bg-[#F7A30C]" />
                                 ))}
                               </div>
                               <p className="mt-2 text-[11px] text-slate-500">
