@@ -44,7 +44,7 @@ export default function Ecosystem() {
           className="h-24 w-auto md:h-28"
         />
         <div className="min-w-0">
-          <h2 className="caption">SuperVictor Universe</h2>
+          <h2 className="caption-sv">SuperVictor Universe</h2>
           <p className="mt-4 text-balance font-display text-2xl font-bold leading-tight tracking-tight text-ink md:text-3xl">
             {t('eco.title')}
           </p>
@@ -56,15 +56,15 @@ export default function Ecosystem() {
         {doors.map((d) => {
           const inner = (
             <span
-              className={`flex h-full items-start gap-4 rounded-[10px] border-2 p-4 sm:p-5 ${
+              className={`flex h-full items-start gap-4 rounded-3xl border p-4 sm:p-5 ${
                 d.soon
-                  ? 'border-dashed border-ink/40 text-ink-2'
-                  : 'border-ink bg-paper-2 transition hover:-translate-x-px hover:-translate-y-px hover:shadow-panel-sm'
+                  ? 'border-dashed border-ink/20 text-ink-2'
+                  : 'border-ink/10 bg-paper-2 transition hover:border-ink/25'
               }`}
             >
               <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 ${
-                  d.soon ? 'border-dashed border-ink/40' : 'border-ink bg-electric-soft text-electric'
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                  d.soon ? 'border border-dashed border-ink/25' : 'bg-electric-soft text-electric'
                 }`}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
@@ -77,7 +77,7 @@ export default function Ecosystem() {
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-display font-bold text-ink">{d.title}</span>
                   {d.soon && (
-                    <span className="rounded border-2 border-dashed border-ink/50 px-1.5 text-[10px] font-extrabold uppercase tracking-wider text-ink-2">
+                    <span className="rounded-full border border-ink/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-3">
                       {t('eco.soon')}
                     </span>
                   )}

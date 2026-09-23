@@ -168,87 +168,80 @@ html {
   }
 
   /* ---- Paper face (landing only) ------------------------------------
-     "Counter Editorial": the SuperVictor Universe comic panel (ink line,
-     hard offset shadow) used with restraint. Panels frame the product —
-     photos, the card, the price you pick — and nothing else. Text sits on
-     the page, not in boxes. */
+     Warm cream, generous space, one hairline, one soft shadow. The owner
+     decides in seconds whether this is a serious tool, so the frame stays
+     quiet; the character lives in the mascot, the real photos and the
+     customer's card, not in the chrome around them. Electric blue (the
+     logo, the hero's suit) is the one colour you press. */
   .panel {
-    @apply relative rounded-[10px] border-2 border-ink bg-paper-2 shadow-panel;
+    @apply relative rounded-3xl border border-ink/10 bg-paper-2 shadow-soft;
   }
   .panel-quiet {
-    @apply relative rounded-[10px] border-2 border-ink bg-paper-2;
+    @apply relative rounded-3xl border border-ink/10 bg-paper-2;
   }
-  /* Buttons of the paper face: a pill with an ink line and a hard shadow
-     that lifts a pixel on hover, like the umbrella's. */
   .pbtn {
-    @apply inline-flex select-none items-center justify-center gap-2 rounded-full border-2 border-ink px-5 py-3 text-[15px] font-bold leading-tight shadow-panel-sm transition;
-  }
-  .pbtn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0 #0A1030;
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-full border border-transparent px-6 py-3 text-[15px] font-semibold leading-tight transition;
   }
   .pbtn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 #0A1030;
+    transform: scale(0.98);
   }
   .pbtn-blue {
-    @apply bg-electric text-white;
+    @apply bg-electric text-white hover:bg-electric-hover;
   }
   .pbtn-white {
-    @apply bg-paper-2 text-ink;
+    @apply border-ink/20 text-ink hover:border-ink/45;
   }
+  /* On the navy sales panel: the app's gold, the bridge to the product. */
   .pbtn-sun {
-    @apply bg-sun text-ink;
+    @apply bg-hero-gold text-ink hover:bg-hero-gold-bright;
   }
   .pbtn-sm {
     @apply px-4 py-2 text-[13px];
   }
   .kicker {
-    @apply text-[12px] font-extrabold uppercase tracking-[0.14em] text-electric;
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-electric;
   }
-  /* The family's section caption: an ink box with paper letters, tilted a
-     degree, as on a comic page. Used for section titles on the landing. */
+  /* Section label: the same quiet kicker, as a heading element. */
   .caption {
-    @apply inline-block -rotate-1 bg-ink px-3.5 pb-2 pt-2.5 font-sigmar text-[17px] uppercase leading-none tracking-[0.02em] text-paper;
+    @apply kicker;
   }
-  /* The one big word: Sigmar, electric, with a sun marker under it. */
+  /* The universe's own label, where the universe is the subject: Sigmar in
+     an ink box, the family's signature, used once, below the fold. */
+  .caption-sv {
+    @apply inline-block bg-ink px-3 pb-1.5 pt-2 font-sigmar text-[15px] uppercase leading-none tracking-[0.02em] text-paper;
+  }
+  /* The last word of the promise, in the brand's blue. */
   .big-word {
-    @apply font-sigmar uppercase text-electric;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-    background: linear-gradient(transparent 58%, #FFD50A 58%, #FFD50A 92%, transparent 92%);
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    padding: 0 0.06em;
+    @apply text-electric;
   }
   /* Photo tiles: the image fills, the caption sits on it, nothing shifts. */
   .photo {
-    @apply relative overflow-hidden rounded-[10px] border-2 border-ink bg-electric-deep shadow-panel;
+    @apply relative overflow-hidden rounded-3xl bg-electric-deep shadow-soft;
   }
   .photo > img,
   .photo > picture > img {
     @apply absolute inset-0 h-full w-full object-cover;
   }
   .photo .cap {
-    @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-md border-2 border-ink bg-paper-2 px-2.5 py-1 text-[11px] font-bold text-ink;
+    @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur;
   }
-  /* The customer's stamp, as drawn on the umbrella's HeroPad door: a blue
-     disc with a white V. Empty stamps are a dashed ring. */
+  /* The customer's stamp: a blue disc with a white V, as on the family's
+     HeroPad door. Empty stamps are a faint dashed ring. */
   .stamp {
-    @apply relative aspect-square rounded-full border-2 border-dashed border-ink/35;
+    @apply relative aspect-square rounded-full border-[1.5px] border-dashed border-ink/25;
   }
   .stamp-on {
-    @apply border-solid border-ink bg-electric;
+    @apply border-solid border-transparent bg-electric;
   }
   .stamp-on::after {
     content: '';
     position: absolute;
-    inset: 26%;
+    inset: 28%;
     background: #fff;
     clip-path: polygon(0 0, 30% 0, 50% 55%, 70% 0, 100% 0, 60% 100%, 40% 100%);
   }
   .stamp-gift {
-    @apply border-solid border-ink bg-sun;
+    @apply border-solid border-transparent bg-sun;
   }
 }
 

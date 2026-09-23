@@ -3,8 +3,7 @@ import Pic from './Pic';
 
 // Landing → three moments at the counter, each with the real photo of it.
 // Square photos: the NFC notification at the bottom of the lock screen is
-// the proof in step one, and a 4:3 crop was cutting it off. The step number
-// is a Sigmar numeral on a sun disc, inside the photo's corner.
+// the proof in step one, and a 4:3 crop was cutting it off.
 const STEPS = [
   { file: 'tap-nfc', k: 'how3.1.k', t: 'how3.1.t', d: 'how3.1.d', cap: 'how3.1.cap' },
   { file: 'plus-one', k: 'how3.2.k', t: 'how3.2.t', d: 'how3.2.d', cap: 'how3.2.cap' },
@@ -37,15 +36,9 @@ export default function HowItWorks() {
                 height={1600}
                 alt={t(s.t)}
               />
-              <span
-                aria-hidden
-                className="absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink bg-sun font-sigmar text-xl leading-none text-ink"
-              >
-                {i + 1}
-              </span>
               <span className="cap">{t(s.cap)}</span>
             </div>
-            <p className="kicker mt-5">{t(s.k)}</p>
+            <p className="kicker mt-5">{i + 1} · {t(s.k)}</p>
             <h3 className="mt-1 font-display text-xl font-bold text-ink">{t(s.t)}</h3>
             <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{t(s.d)}</p>
           </li>

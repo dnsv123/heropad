@@ -2,8 +2,8 @@ import { useT } from '../i18n';
 import { contactHref, contactIsWhatsApp } from '../lib/contact';
 import { Art } from './Pic';
 
-// Landing → "#business": the owner's pitch, in the one blue panel on the
-// page (the logo's blue, with the logo's yellow for the button). SuperVictor
+// Landing → "#business": the owner's pitch, in the one deep-navy panel on
+// the page, with the app's gold for the button (the bridge to the product). SuperVictor
 // flies in his own grid column on wide screens, never over the text.
 
 // 1.5px stroke icons: emoji render differently on every OS and the brand
@@ -20,7 +20,7 @@ const ICONS: Record<string, string[]> = {
 
 function Icon({ name }: { name: keyof typeof ICONS }) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-sun text-ink">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] text-white">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
         {ICONS[name].map((d) => (
           <path key={d} d={d} />
@@ -43,21 +43,10 @@ export default function ForBusinesses() {
   return (
     <section id="business" className="scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-[10px] border-2 border-ink bg-electric p-6 text-white shadow-panel-lg sm:p-8 md:p-10">
-          {/* The family's halftone, printed in one corner, behind everything. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage: 'radial-gradient(rgba(255,255,255,.2) 1.1px, transparent 1.5px)',
-              backgroundSize: '9px 9px',
-              WebkitMaskImage: 'radial-gradient(90% 70% at 100% 0%, #000 0%, transparent 65%)',
-              maskImage: 'radial-gradient(90% 70% at 100% 0%, #000 0%, transparent 65%)',
-            }}
-          />
+        <div className="relative overflow-hidden rounded-[28px] bg-electric-deep p-6 text-white shadow-soft sm:p-8 md:p-10">
           <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
             <div className="min-w-0">
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-sun">{t('hero.cta.business')}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-gold">{t('hero.cta.business')}</p>
               <h2 className="mt-3 text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight md:text-[2.4rem]">
                 {t('biz.title')}
               </h2>
@@ -65,7 +54,7 @@ export default function ForBusinesses() {
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {benefits.map((b) => (
-                  <div key={b.title} className="flex items-start gap-4 rounded-[10px] border-2 border-ink bg-electric-deep p-4 sm:p-5">
+                  <div key={b.title} className="flex items-start gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4 sm:p-5">
                     <Icon name={b.icon} />
                     <span className="min-w-0">
                       <span className="block font-display font-bold text-white">{b.title}</span>

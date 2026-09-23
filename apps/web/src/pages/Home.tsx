@@ -29,14 +29,14 @@ export default function Home() {
       <Hero />
 
       {/* Four facts about the product, not stats we do not have. */}
-      <div className="border-y-2 border-ink bg-paper-2">
+      <div className="border-y border-ink/10 bg-paper-2">
         <dl className="mx-auto grid max-w-6xl grid-cols-2 md:grid-cols-4">
           {FACTS.map(([v, l], i) => (
             <div
               key={v}
-              className={`min-w-0 px-4 py-5 sm:px-6 md:py-6 ${i % 2 === 1 ? 'border-l-2 border-ink' : ''} ${
-                i >= 2 ? 'border-t-2 border-ink md:border-t-0' : ''
-              } ${i === 2 ? 'md:border-l-2' : ''}`}
+              className={`min-w-0 px-4 py-5 sm:px-6 md:py-6 ${i % 2 === 1 ? 'border-l border-ink/10' : ''} ${
+                i >= 2 ? 'border-t border-ink/10 md:border-t-0' : ''
+              } ${i === 2 ? 'md:border-l' : ''}`}
             >
               <dt className="font-display text-[1.7rem] font-bold leading-none tracking-tight text-ink sm:text-3xl">{t(v)}</dt>
               <dd className="mt-1.5 text-[13px] leading-snug text-ink-2 sm:text-sm">{t(l)}</dd>

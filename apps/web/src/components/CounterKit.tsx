@@ -36,7 +36,7 @@ export default function CounterKit() {
           <ul className="mt-7 grid gap-4">
             {ITEMS.map(([tt, dd], i) => (
               <li key={tt} className="flex items-start gap-3.5">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-2 border-ink bg-electric font-display text-[13px] font-bold text-white">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-electric-soft font-display text-[13px] font-bold text-electric">
                   {i + 1}
                 </span>
                 <span className="text-[15px] leading-relaxed text-ink-2">

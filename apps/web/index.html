@@ -6,7 +6,7 @@
     <!-- PNG fallback: Safari and some Windows builds still ignore SVG favicons. -->
     <link rel="alternate icon" type="image/png" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F8F7F4" />
+    <meta name="theme-color" content="#F6F1E7" />
     <!-- Power-Pass-first, Romanian-first, and deliberately crypto-free: the
          page sells a loyalty system to café owners, and so does its snippet. -->
     <meta name="description" content="Fidelizare digitală pentru cafenele și localuri. Fără aplicație de instalat: clientul atinge figurina de pe tejghea, bonusurile apar live, cardul plin aduce recompensa și un trofeu pe care îl păstrează. De la 99 lei pe lună." />
@@ -60,11 +60,10 @@
     <link rel="preload" as="image" type="image/avif" imagesrcset="/photos/hero-card-480.avif 480w, /photos/hero-card-720.avif 720w, /photos/hero-card-960.avif 960w" imagesizes="(min-width: 1024px) 480px, (min-width: 768px) 42vw, min(90vw, 420px)" fetchpriority="high" />
 
     <!-- Fonts, self-hosted: no request leaves this domain. The headline face
-         (latin + the Romanian diacritics file) and the one Sigmar word are
-         preloaded so the first screen sets in them without a swap. -->
+         (latin + the Romanian diacritics file) is preloaded; Sigmar only
+         appears below the fold and loads when it is needed. -->
     <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/space-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/sigmar-caps.woff2" as="font" type="font/woff2" crossorigin />
 
     <title>Cardul de fidelitate pe care nu îl poți pierde · HeroPad</title>
   </head>
@@ -82,32 +81,32 @@
     <div id="prehero" aria-hidden="true">
       <div class="border-b border-ink/10 bg-paper/90">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:py-4">
-          <span class="flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight text-ink md:text-xl"><img src="/super-victor-face.webp" alt="" width="28" height="28" class="h-7 w-7 shrink-0 rounded-full object-cover border-2 border-ink bg-electric-deep" /><span class="whitespace-nowrap">Hero<span class="text-electric">Pad</span></span></span>
-          <span class="h-9 w-24 rounded-full border-2 border-ink/15 md:w-40"></span>
+          <span class="flex min-w-0 items-center gap-2.5 font-display text-lg font-bold tracking-tight text-ink md:text-xl"><img src="/super-victor-face.webp" alt="" width="28" height="28" class="h-7 w-7 shrink-0 rounded-full object-cover border border-ink/10 bg-electric-deep" /><span class="whitespace-nowrap">Hero<span class="text-electric">Pad</span></span></span>
+          <span class="h-9 w-24 rounded-full border border-ink/15 md:w-40"></span>
         </div>
       </div>
       <section class="relative">
         <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:gap-12 md:pb-16 md:pt-14 lg:pb-20">
           <div class="min-w-0">
             <p class="kicker">Pentru cafenele și localuri cu clienți fideli</p>
-            <h1 class="mt-3 text-balance font-display text-[2.15rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-[3.65rem]">Cardul de fidelitate pe care nu îl poți <span class="big-word text-[0.86em]">pierde.</span></h1>
+            <h1 class="mt-3 text-balance font-display text-[2.15rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-[3.65rem]">Cardul de fidelitate pe care nu îl poți <span class="big-word">pierde.</span></h1>
             <p class="mt-5 max-w-[50ch] text-[17px] leading-relaxed text-ink-2 sm:text-lg">Clientul atinge figurina de pe tejghea cu telefonul. Fără aplicație de instalat, fără carton. Cardul plin aduce cafeaua gratis și un trofeu pe care îl păstrează.</p>
             <div class="mt-7 flex flex-wrap items-center gap-3">
               <span class="pbtn pbtn-blue">Programează un demo gratuit</span>
               <span class="pbtn pbtn-white">Vezi prețurile</span>
             </div>
             <p class="mt-4 text-[13px] font-semibold text-ink-3">Pilot gratuit 14 zile · fără instalare · fără taxă de setup</p>
-            <p class="mt-6 flex items-center gap-3 text-sm text-ink-2"><img src="/super-victor-face.webp" alt="" width="36" height="36" class="h-9 w-9 shrink-0 rounded-full border-2 border-ink bg-electric-deep" /><span>Construit și testat în Sibiu, la tejgheaua de la Bătrânu' Sas.</span></p>
+            <p class="mt-6 flex items-center gap-3 text-sm text-ink-2"><img src="/super-victor-face.webp" alt="" width="36" height="36" class="h-9 w-9 shrink-0 rounded-full border border-ink/10 bg-electric-deep" /><span>Construit și testat în Sibiu, la tejgheaua de la Bătrânu' Sas.</span></p>
           </div>
           <div class="relative mx-auto w-full max-w-[440px] pb-6 pl-2 md:max-w-none md:pb-8 md:pl-6">
             <div class="photo aspect-[4/5]">
               <picture><source type="image/avif" srcset="/photos/hero-card-480.avif 480w, /photos/hero-card-720.avif 720w, /photos/hero-card-960.avif 960w" sizes="(min-width: 1024px) 480px, (min-width: 768px) 42vw, min(90vw, 420px)" /><img src="/photos/hero-card-720.webp" srcset="/photos/hero-card-480.webp 480w, /photos/hero-card-720.webp 720w, /photos/hero-card-960.webp 960w" sizes="(min-width: 1024px) 480px, (min-width: 768px) 42vw, min(90vw, 420px)" width="1280" height="1600" alt="" fetchpriority="high" decoding="async" /></picture>
             </div>
-            <div class="absolute bottom-0 left-0 w-[190px] -rotate-2 rounded-[10px] border-2 border-ink bg-paper-2 p-3 shadow-panel-sm sm:w-[210px]">
-              <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-electric">Cardul clientului</p>
+            <div class="absolute bottom-0 left-0 w-[196px] rounded-2xl border border-ink/10 bg-paper-2 p-3.5 shadow-soft sm:w-[214px]">
+              <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-electric">Cardul clientului</p>
               <div class="mt-1 flex items-baseline justify-between gap-2"><p class="truncate text-[13px] font-bold text-ink">Bătrânu' Sas</p><p class="shrink-0 font-display text-lg font-bold leading-none text-ink">4<span class="text-[13px] text-ink-3">/5</span></p></div>
               <div class="mt-2 grid grid-cols-5 gap-1.5"><span class="stamp stamp-on"></span><span class="stamp stamp-on"></span><span class="stamp stamp-on"></span><span class="stamp stamp-on"></span><span class="stamp"></span></div>
-              <p class="mt-2 text-[12px] font-semibold text-ink-2">La 5: <span class="bg-sun px-1 font-bold text-ink">O cafea gratis</span></p>
+              <p class="mt-2 text-[12px] font-semibold text-ink-2">La 5: <span class="rounded-full bg-sun-soft px-2 py-0.5 font-semibold text-ink">O cafea gratis</span></p>
             </div>
           </div>
         </div>

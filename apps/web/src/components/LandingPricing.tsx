@@ -14,8 +14,8 @@ import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact
 // by default. Annual is "ten months paid, twelve served" and is said as
 // "2 months free". The Founding Partner offer is NOT on the public site.
 //
-// The plan most owners pick is the only raised panel (cream, hard shadow,
-// a sun sticker); the others sit flat. One loud thing per row.
+// The plan most owners pick is the only raised card (blue line, soft
+// shadow, a small label); the others sit flat. One loud thing per row.
 export default function LandingPricing() {
   const { t, lang } = useT();
   const [annual, setAnnual] = useState(true);
@@ -44,13 +44,13 @@ export default function LandingPricing() {
         <p className="mt-3 text-base text-ink-2 md:text-lg">{t('lp.sub')}</p>
       </div>
 
-      <div className="mt-8 inline-flex max-w-full rounded-full border-2 border-ink bg-paper-2 p-1" role="group" aria-label={t('nav.pricing')}>
+      <div className="mt-8 inline-flex max-w-full rounded-full border border-ink/15 bg-paper-2 p-1" role="group" aria-label={t('nav.pricing')}>
         <button type="button" onClick={() => setAnnual(false)} aria-pressed={!annual} className={seg(!annual)}>
           {t('lp.toggle.monthly')}
         </button>
         <button type="button" onClick={() => setAnnual(true)} aria-pressed={annual} className={seg(annual)}>
           {t('lp.toggle.annual')}
-          <span className="rounded-full border-2 border-ink bg-sun px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-ink">
+          <span className="rounded-full bg-sun px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink">
             {t('lp.toggle.free')}
           </span>
         </button>
@@ -63,12 +63,12 @@ export default function LandingPricing() {
           return (
             <div
               key={tier.name}
-              className={`relative flex min-w-0 flex-col rounded-[10px] border-2 border-ink p-5 sm:p-6 ${
-                tier.hl ? 'bg-sun-soft shadow-panel' : 'bg-paper-2'
+              className={`relative flex min-w-0 flex-col rounded-3xl bg-paper-2 p-5 sm:p-6 ${
+                tier.hl ? 'border-2 border-electric shadow-soft' : 'border border-ink/10'
               }`}
             >
               {tier.hl && (
-                <span className="absolute -top-3.5 right-4 rotate-2 rounded-md border-2 border-ink bg-sun px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-ink">
+                <span className="absolute -top-3 left-5 rounded-full bg-electric px-3 py-1 text-[11px] font-semibold text-white">
                   {t('lp.hl')}
                 </span>
               )}
@@ -85,7 +85,7 @@ export default function LandingPricing() {
                 {tier.chain ? t('lp.c.bill') : annual ? t('lp.billed.annual', { n: money(annualPrice(tier.monthly)) }) : t('lp.billed.monthly')}
               </p>
 
-              <ul className="mt-5 flex-1 space-y-2.5 border-t-2 border-ink/10 pt-5">
+              <ul className="mt-5 flex-1 space-y-2.5 border-t border-ink/10 pt-5">
                 {tier.feats.split(' · ').map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm leading-snug text-ink-2">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 h-4 w-4 shrink-0 text-electric" aria-hidden>
@@ -111,7 +111,7 @@ export default function LandingPricing() {
         })}
       </div>
 
-      <div className="mt-9 flex flex-col items-start gap-5 rounded-[10px] border-2 border-dashed border-ink/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-9 flex flex-col items-start gap-5 rounded-3xl border border-ink/10 bg-paper-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-ink">{t('lp.guarantee')}</p>
           <p className="mt-1 text-[13px] text-ink-3">{t('lp.note')}</p>

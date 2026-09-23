@@ -31,16 +31,15 @@ export default {
           'purple-deep': '#7d34d6',
           green: '#14F195',
         },
-        // The landing's paper face, from the SuperVictor Universe brand sheet
-        // (repos/supervictoruniverse/BRAND.md): Porcelain page, ink text and
-        // panel lines, Electric blue for the thing you press, the logo's Sun
-        // yellow for the thing you win. Cream is HeroPad's own surface in the
-        // family (the umbrella paints the HeroPad door with it). The app
-        // itself stays navy, which is why the phones in the photos read as
-        // the product against the page.
-        paper: { DEFAULT: '#F8F7F4', 2: '#FFFFFF' },
+        // The landing's paper face: warm cream, quiet, for the owner who
+        // decides in five seconds whether this is a serious tool. The family
+        // tie is the brand's Electric blue (the logo, the hero's suit) for
+        // the thing you press; the logo's Sun yellow is kept for the thing
+        // you win, in small doses. The app itself stays navy, which is why
+        // the phones in the photos read as the product against the page.
+        paper: { DEFAULT: '#F6F1E7', 2: '#FFFDF9' },
         ink: { DEFAULT: '#0A1030', 2: '#3E4566', 3: '#646A87' },
-        electric: { DEFAULT: '#0055FE', deep: '#01205F', soft: '#E6EEFF' },
+        electric: { DEFAULT: '#0055FE', hover: '#0046D6', deep: '#01205F', soft: '#E8EEFB' },
         sun: { DEFAULT: '#FFD50A', soft: '#FFF4CC' },
       },
       fontFamily: {
@@ -55,10 +54,10 @@ export default {
         // compiling, but every one of them now renders flat.
         'hero-gold': '0 0 #0000',
         'hero-purple': '0 0 #0000',
-        // The comic-panel shadow of the family: hard, offset, ink.
-        panel: '5px 5px 0 #0A1030',
-        'panel-sm': '3px 3px 0 #0A1030',
-        'panel-lg': '8px 8px 0 #0A1030',
+        // Soft, long, low-opacity: the only elevation on the paper face,
+        // used on the product (photos, the card, the chosen plan).
+        soft: '0 28px 56px -32px rgba(10, 16, 48, 0.38)',
+        'soft-sm': '0 12px 28px -18px rgba(10, 16, 48, 0.35)',
       },
       backgroundImage: {
         // A faint navy wash at the top of a page — the only "atmosphere" we

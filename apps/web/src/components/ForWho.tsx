@@ -37,7 +37,7 @@ export default function ForWho() {
         {verticals.map(([img, label]) => (
           <li
             key={img}
-            className="panel-quiet min-w-0 p-3 text-center transition hover:-translate-x-px hover:-translate-y-px hover:shadow-panel-sm"
+            className="panel-quiet min-w-0 p-3 text-center transition hover:border-ink/25"
           >
             <Art
               src={`/venues/${img}.webp`}
