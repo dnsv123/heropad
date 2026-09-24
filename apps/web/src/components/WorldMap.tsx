@@ -32,7 +32,7 @@ export default function WorldMap() {
     return () => io.disconnect();
   }, [v]);
 
-  const points = [t('world.b1'), t('world.b2'), t('world.b3')];
+  const points = [t('world.b1'), t('world.b3'), t('world.b4'), t('world.b2')];
 
   return (
     <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 md:pt-24">
