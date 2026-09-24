@@ -230,8 +230,10 @@ html {
   .photo .cap {
     @apply absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur;
   }
-  /* The customer's stamp: a blue disc with a white V, as on the family's
-     HeroPad door. Empty stamps are a faint dashed ring. */
+  /* The customer's stamp: a blue disc with SuperVictor's silhouette in
+     white (the same alpha mask as the passport cover). It replaced a plain
+     V: the silhouette is the brand at a glance, and reads at 24 px where
+     the full logo does not. Empty stamps are a faint dashed ring. */
   .stamp {
     @apply relative aspect-square rounded-full border-[1.5px] border-dashed border-ink/25;
   }
@@ -241,9 +243,10 @@ html {
   .stamp-on::after {
     content: '';
     position: absolute;
-    inset: 28%;
+    inset: 16%;
     background: #fff;
-    clip-path: polygon(0 0, 30% 0, 50% 55%, 70% 0, 100% 0, 60% 100%, 40% 100%);
+    -webkit-mask: url('/passport-emblem.png') center / contain no-repeat;
+    mask: url('/passport-emblem.png') center / contain no-repeat;
   }
   .stamp-gift {
     @apply border-solid border-transparent bg-sun;
