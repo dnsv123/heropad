@@ -131,8 +131,11 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
 
   return (
     <div className="mt-4 space-y-4">
-      {/* The one number: people in the last 30 days, and which way it moves. */}
-      <div className="grid gap-3 sm:grid-cols-[1.3fr_1fr]">
+      {/* The one number: people in the last 30 days, and which way it moves.
+          Stacked at every width: the dashboard always lives in a narrow
+          column (the owner's folder), and a side-by-side split keyed to the
+          viewport squeezed the small tiles into three-word lines. */}
+      <div className="grid gap-3">
         <div className="card-sm p-4 sm:p-5">
           <p className="text-xs text-slate-400">{t('d.hero')}</p>
           <p className="mt-1 font-display text-5xl font-bold leading-none text-white">{num(a.customers30 ?? 0)}</p>
@@ -229,10 +232,12 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
                   );
                 })}
               </div>
-              {/* x labels: first, every 7th, last */}
+              {/* x labels: first, every 7th, last. A 7th that falls within
+                  four days of the last one is skipped, or the two collide
+                  ("23 sept." over "24 sept." on a 30-day series). */}
               <div className="relative mt-2 h-4 text-[10px] text-slate-500">
                 {series.map((s, i) =>
-                  i % 7 === 0 || i === series.length - 1 ? (
+                  (i % 7 === 0 && series.length - 1 - i >= 4) || i === series.length - 1 ? (
                     <span
                       key={s.day}
                       className="absolute whitespace-nowrap"

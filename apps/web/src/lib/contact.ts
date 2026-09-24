@@ -19,12 +19,24 @@ const CONTACT_EMAIL = 'dinescuioanvalentin@gmail.com';
 
 /** Prefilled first message — so the owner does not face an empty box. */
 const WHATSAPP_TEXT =
-  'Bună! Am văzut HeroPad Power Pass și aș vrea un demo pentru localul meu.';
+  'Bună! Am văzut HeroPad și aș vrea un demo de 15 minute în localul meu.';
 
-const MAIL_SUBJECT = 'HeroPad Power Pass — Demo';
+const MAIL_SUBJECT = 'HeroPad · demo';
 
 export function contactIsWhatsApp(): boolean {
   return WHATSAPP_NUMBER.trim().length > 0;
+}
+
+/** The number as a Romanian reads it ("0752 364 020"), or null without one. */
+export function contactPhoneDisplay(): string | null {
+  const n = WHATSAPP_NUMBER.trim();
+  if (!/^40\d{9}$/.test(n)) return null;
+  const local = `0${n.slice(2)}`;
+  return `${local.slice(0, 4)} ${local.slice(4, 7)} ${local.slice(7)}`;
+}
+
+export function contactPhoneHref(): string {
+  return `tel:+${WHATSAPP_NUMBER.trim()}`;
 }
 
 /** The href for any "talk to us" button on the marketing pages. */

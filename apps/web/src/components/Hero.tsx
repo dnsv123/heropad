@@ -1,6 +1,50 @@
+import { useEffect, useRef, useState } from 'react';
+
 import { useT } from '../i18n';
 import { contactHref, contactIsWhatsApp } from '../lib/contact';
 import Pic from './Pic';
+
+/** The one-minute film, in a dialog. Nothing loads until it is opened. */
+function VideoDialog({ onClose }: { onClose: () => void }) {
+  const { t, lang } = useT();
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (d && !d.open) d.showModal();
+    const close = () => onClose();
+    d?.addEventListener('close', close);
+    return () => d?.removeEventListener('close', close);
+  }, [onClose]);
+  const v = lang === 'ro' ? 'ro' : 'en';
+  return (
+    <dialog
+      ref={ref}
+      aria-label={t('video.title')}
+      onClick={(e) => {
+        if (e.target === ref.current) ref.current?.close();
+      }}
+      className="m-auto w-[min(92vw,420px)] overflow-visible bg-transparent p-0 backdrop:bg-ink/80 backdrop:backdrop-blur-sm"
+    >
+      <div className="relative">
+        <video
+          src={`/video/heropad-world-${v}.mp4`}
+          poster={`/video/heropad-world-${v}.webp`}
+          controls
+          autoPlay
+          playsInline
+          className="aspect-[9/16] w-full rounded-3xl bg-brand-deep shadow-soft"
+        />
+        <button
+          type="button"
+          onClick={() => ref.current?.close()}
+          className="absolute -top-12 right-0 rounded-full bg-paper-2 px-4 py-2 text-sm font-semibold text-ink"
+        >
+          {t('video.close')}
+        </button>
+      </div>
+    </dialog>
+  );
+}
 
 // Landing hero, cream and quiet: the premium face owners asked for.
 //
@@ -17,13 +61,15 @@ import Pic from './Pic';
 // (#prehero). Markup and classes are mirrored there — change one, change both.
 export default function Hero() {
   const { t } = useT();
+  const [video, setVideo] = useState(false);
 
   return (
     <section className="relative">
+      {video && <VideoDialog onClose={() => setVideo(false)} />}
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:gap-12 md:pb-16 md:pt-14 lg:pb-20">
         <div className="min-w-0">
           <p className="kicker">{t('hero.eyebrow2')}</p>
-          <h1 className="mt-3 text-balance font-display text-[2.15rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-[3.65rem]">
+          <h1 className="mt-3 text-balance font-display text-[2.15rem] font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl md:mt-4 lg:text-[3.3rem]">
             {t('hero.h1.a')}
             <span className="big-word">{t('hero.h1.b')}</span>
           </h1>
@@ -37,9 +83,12 @@ export default function Hero() {
             >
               {t('biz.cta')}
             </a>
-            <a href="#pricing" className="pbtn pbtn-white">
-              {t('hero.cta.prices')}
-            </a>
+            <button type="button" onClick={() => setVideo(true)} className="pbtn pbtn-white">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
+                <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z" />
+              </svg>
+              {t('hero.cta.watch')}
+            </button>
           </div>
           <p className="mt-4 text-[13px] font-semibold text-ink-3">{t('hero.fine')}</p>
           <p className="mt-6 flex items-center gap-3 text-sm text-ink-2">

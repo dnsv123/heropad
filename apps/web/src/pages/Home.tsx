@@ -1,17 +1,23 @@
 import Hero from '../components/Hero';
+import DoubleReward from '../components/DoubleReward';
 import HowItWorks from '../components/HowItWorks';
 import CounterKit from '../components/CounterKit';
 import ForBusinesses from '../components/ForBusinesses';
+import WorldMap from '../components/WorldMap';
 import ForWho from '../components/ForWho';
 import LandingPricing from '../components/LandingPricing';
 import Ecosystem from '../components/Ecosystem';
+import ClosingCta from '../components/ClosingCta';
 import { useT, type TranslationKey } from '../i18n';
 
-// Landing, "Counter Editorial". The narrative:
-//   the promise, with a real counter photo → four facts, each a number we can
-//   stand behind → how it works (three real moments) → what lands on the
-//   counter → the blue panel that sells to owners → who it fits → pricing →
-//   the universe it belongs to.
+// Landing v3, for venue owners. Positioning: not another loyalty card, a new
+// reason to come back; HeroPad is the door, SuperVictor is the world. The
+// narrative:
+//   the promise, a real counter photo and the one-minute film → four facts
+//   we can stand behind → the double reward → how it works (three real
+//   moments) → the hero on the counter → the owner's Monday (the real
+//   dashboard) → the world as a map of portals (the one playful window) →
+//   who it fits → pricing → the universe behind the door → the invitation.
 //
 // No framer-motion: every section renders at rest. A page that is simply
 // there feels faster than one that fades itself in.
@@ -45,12 +51,15 @@ export default function Home() {
         </dl>
       </div>
 
+      <DoubleReward />
       <HowItWorks />
       <CounterKit />
       <ForBusinesses />
+      <WorldMap />
       <ForWho />
       <LandingPricing />
       <Ecosystem />
+      <ClosingCta />
     </div>
   );
 }

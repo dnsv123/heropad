@@ -1,10 +1,11 @@
 import { useT } from '../i18n';
 import { contactHref, contactIsWhatsApp } from '../lib/contact';
-import { Art } from './Pic';
+import Pic from './Pic';
 
-// Landing → "#business": the owner's pitch, in the one deep-navy panel on
-// the page, with the logo's amber for the button, where the owner decides. SuperVictor
-// flies in his own grid column on wide screens, never over the text.
+// Landing → "#business": the owner's side, "what you see on Monday morning",
+// in the deep-navy panel, with the logo's amber for the button. Beside the
+// four promises, the real owner dashboard (a screenshot with demo data, and
+// labelled as such): the outcome the owner buys, shown rather than claimed.
 
 // 1.5px stroke icons: emoji render differently on every OS and the brand
 // sheet keeps them out of interface text.
@@ -31,7 +32,8 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
 }
 
 export default function ForBusinesses() {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const dash = lang === 'ro' ? 'ro' : 'en';
 
   const benefits: Array<{ icon: keyof typeof ICONS; title: string; text: string }> = [
     { icon: 'repeat', title: t('biz.b1.t'), text: t('biz.b1.d') },
@@ -44,13 +46,13 @@ export default function ForBusinesses() {
     <section id="business" className="scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
         <div className="relative overflow-hidden rounded-[28px] bg-brand-deep p-6 text-white shadow-soft sm:p-8 md:p-10">
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
+          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-amber">{t('hero.cta.business')}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-amber">{t('mon.kicker')}</p>
               <h2 className="mt-3 text-balance font-display text-3xl font-bold leading-[1.08] tracking-tight md:text-[2.4rem]">
-                {t('biz.title')}
+                {t('mon.title')}
               </h2>
-              <p className="mt-3 max-w-[56ch] text-base text-white/85 md:text-lg">{t('biz.sub')}</p>
+              <p className="mt-3 max-w-[56ch] text-base text-white/85 md:text-lg">{t('mon.sub')}</p>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {benefits.map((b) => (
@@ -77,9 +79,21 @@ export default function ForBusinesses() {
               </div>
             </div>
 
-            <div className="hidden lg:block">
-              <Art src="/super-victor-fly-1.webp" width={428} height={640} alt="" className="w-full" />
-            </div>
+            <figure className="mx-auto w-full max-w-[420px] lg:max-w-none">
+              <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
+                <Pic
+                  base={`/photos/owner-dash-${dash}`}
+                  widths={[480, 720, 960]}
+                  fallback={720}
+                  sizes="(min-width: 1024px) 360px, min(92vw, 420px)"
+                  width={1152}
+                  height={1422}
+                  alt={t('mon.alt')}
+                  className="block h-auto w-full"
+                />
+              </div>
+              <figcaption className="mt-2 text-center text-[12px] text-white/60">{t('mon.cap')}</figcaption>
+            </figure>
           </div>
         </div>
       </div>
