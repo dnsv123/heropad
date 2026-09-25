@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 
 import { useT } from '../i18n';
+import { PLANS } from '../lib/plans';
+
+const STARTER_FEE = PLANS.find((p) => p.key === 'starter')?.price ?? 99;
 
 // The owner's dashboard (Business → Statistics). One question per block:
 //   Are more people coming?        → the hero number, last 30 days, with delta
@@ -120,6 +123,21 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
   const bMax = Math.max(1, ...buckets.map((b) => b.v));
   const num = (n: number) => n.toLocaleString(lang === 'ro' ? 'ro-RO' : 'en-GB');
 
+  // The month's report. A return visit is a day on which a customer who has
+  // been here before gets at least one stamp: the same unit a pay-on-results
+  // plan would bill, counted from data the owner already sees. Priced against
+  // the public Starter fee, so a venue still in its free month can read what
+  // a comeback would cost it.
+  const returns30 = series.reduce((s, d) => s + d.returning, 0);
+  const new30 = series.reduce((s, d) => s + d.newCustomers, 0);
+  const perReturn =
+    returns30 > 0
+      ? (STARTER_FEE / returns30).toLocaleString(lang === 'ro' ? 'ro-RO' : 'en-GB', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : null;
+
   if (a.uniqueCustomers === 0) {
     return (
       <div className="mt-4 rounded-2xl border border-dashed border-white/15 p-6 text-center">
@@ -167,6 +185,25 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
           </div>
         </div>
       </div>
+
+      {series.length > 0 && (
+        <div className="card-sm p-4 sm:p-5">
+          <p className="font-display text-sm font-semibold text-white">{t('d.report.t')}</p>
+          <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-2">
+            <p>
+              <span className="font-display text-4xl font-bold leading-none text-[#F7A30C]">{num(returns30)}</span>
+              <span className="ml-2 text-sm text-slate-300">{t('d.report.returns')}</span>
+            </p>
+            <p className="text-sm text-slate-300">
+              <span className="font-display text-xl font-bold text-white">{num(new30)}</span> {t('d.report.new')}
+            </p>
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">
+            {perReturn === null ? t('d.report.none') : t('d.report.cost', { fee: STARTER_FEE, x: perReturn })}
+          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t('d.report.note')}</p>
+        </div>
+      )}
 
       {/* Customers per day, returning under new: the loyalty is the dark
           part growing. One axis, clean ticks, hover for the day. */}

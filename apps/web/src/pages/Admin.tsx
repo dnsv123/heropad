@@ -732,7 +732,7 @@ export default function Admin() {
                                 </label>
                                 <label className="text-[10px] uppercase tracking-wider text-slate-500">
                                   Pilot until
-                                  <InfoTip text="Set by the plan button (today + 14 days, Founding + 60). No invoice is issued before this date. Clear it when the café starts paying." />
+                                  <InfoTip text="Set by the plan button (today + 30 days, Founding + 60). No invoice is issued before this date. Clear it when the café starts paying." />
                                   <input
                                     type="date"
                                     defaultValue={v.trialEndsAt ?? ''}

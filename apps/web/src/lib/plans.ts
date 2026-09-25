@@ -46,7 +46,7 @@ export const PLANS: PlanDef[] = [
     price: 99,
     seats: 2,
     tagline: 'Sistemul complet, fără figurină.',
-    trialDays: 14,
+    trialDays: 30,
     features: [
       'Card de fidelitate digital — ștampile, recompensă, cod unic la casă',
       'Kit QR pentru tejghea (stand + cod)',
@@ -68,7 +68,7 @@ export const PLANS: PlanDef[] = [
     price: 199,
     seats: 3,
     tagline: 'Starter + figurina NFC + brandul lor pe card.',
-    trialDays: 14,
+    trialDays: 30,
     features: [
       'Tot din Starter',
       'Figurina SuperVictor cu NFC pe tejghea — tap = check-in instant, zero tastare',
@@ -89,7 +89,7 @@ export const PLANS: PlanDef[] = [
     price: 349,
     seats: 5,
     tagline: 'Branded + motorul de creștere.',
-    trialDays: 14,
+    trialDays: 30,
     features: [
       'Tot din Branded',
       'Happy Hour ×2/×3 — ștampile multiplicate în intervalul ales',
@@ -111,7 +111,7 @@ export const PLANS: PlanDef[] = [
     price: 699,
     seats: 12,
     tagline: '3+ locații, un singur raport.',
-    trialDays: 14,
+    trialDays: 30,
     features: [
       'Tot din Growth, la fiecare locație',
       'Raport consolidat pe lanț + pe locație',

@@ -449,7 +449,7 @@ adminRouter.post('/venues/:slug', async (req: Request, res: Response) => {
     if (i.monthlyFee !== undefined) patch.monthly_fee = i.monthlyFee;
     if (i.billingPeriod !== undefined) patch.billing_period = i.billingPeriod;
     if (i.trialEndsAt !== undefined) {
-      // End of that day in Bucharest, so "14 days" means fourteen whole days.
+      // End of that day in Bucharest, so "30 days" means thirty whole days.
       patch.trial_ends_at = i.trialEndsAt ? `${i.trialEndsAt}T23:59:59+03:00` : null;
     }
     if (i.plan !== undefined) patch.plan = i.plan;
