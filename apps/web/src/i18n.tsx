@@ -1271,7 +1271,7 @@ const ro: Record<TranslationKey, string> = {
   'lp.billed.monthly': 'Facturat lunar · reziliere oricând',
   'lp.billed.annual': '{n} o dată pe an · 12 luni, 10 plătite',
   'lp.guarantee': 'Planurile anuale au garanție 30 de zile, banii înapoi. Nu e pentru voi? Returnăm tot, fără întrebări. Figurina e în comodat și ne-o dați înapoi.',
-  'lp.c.cta': 'Vorbim',
+  'lp.c.cta': 'Vorbește cu noi',
   'lp.c.bill': 'Ofertă · 3+ locații, o singură factură',
   'hero.card.label': 'Cardul clientului',
   'hero.card.venue': 'Cafeneaua ta',
