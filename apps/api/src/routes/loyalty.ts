@@ -2338,13 +2338,18 @@ loyaltyRouter.post(
           // BITS reward for the completed card — same ledger the claim flow
           // uses, so it rolls up into the Profile balance and, later, into
           // Hall of Heroes via the identity link. Best-effort.
+          // Scaled to the card's length: TROPHY_BITS_REWARD is what a
+          // 10-stamp card pays, so a visit is worth the same BITS at every
+          // venue. A flat amount paid a 5-stamp card double per visit, and the
+          // prize shelf is priced in visits.
+          const trophyBits = Math.max(1, Math.round((TROPHY_BITS_REWARD * owned.venue.stamps_required) / 10));
           try {
-            await creditBits(wallet, TROPHY_BITS_REWARD, 'loyalty_trophy', {
+            await creditBits(wallet, trophyBits, 'loyalty_trophy', {
               venue: owned.venue.slug,
               assetId: minted.assetId,
               edition,
             });
-            bitsAwarded = TROPHY_BITS_REWARD;
+            bitsAwarded = trophyBits;
           } catch (bitsErr) {
             console.error('[loyalty.redeem] BITS credit failed:', bitsErr);
           }

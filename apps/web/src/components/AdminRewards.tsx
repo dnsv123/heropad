@@ -204,10 +204,10 @@ export default function AdminRewards({
         </h2>
         <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
           Pick a photo below — it is resized to 600px and stored with the item, nothing to
-          upload anywhere. Price it in BITS against what the app pays out: a stamp = 2, a
-          completed card = 1000, a friend brought = 300, passport bronze/silver/gold =
-          250/500/1000. A standard pin around 1500 (≈ one and a half cards); a rare edition
-          3000+.
+          upload anywhere. Price it in visits: one visit ≈ 102 BITS (2 per stamp + a full
+          card pays 100 per stamp, so 1000 for a 10-stamp card). A friend brought = 300,
+          passport bronze/silver/gold = 250/500/1000. The ladder (Sept 2026): sticker 1000
+          (≈10 visits), holo card 2000 (≈20), pin 4000 (≈40), standee 8000 (≈80).
         </p>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
