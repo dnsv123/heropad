@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrivy } from '../lib/auth';
@@ -142,6 +143,14 @@ export default function Business() {
   const [customer, setCustomer] = useState<CustomerInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  // What goes over the counter right now, pinned to the top of the screen:
+  // the barista reads it wherever the page is scrolled, then taps it away.
+  const [handover, setHandover] = useState<{ items: string; detail?: string } | null>(null);
+  useEffect(() => {
+    if (!handover) return;
+    const id = window.setTimeout(() => setHandover(null), 15_000);
+    return () => window.clearTimeout(id);
+  }, [handover]);
   const [statsOpen, setStatsOpen] = useState(false);
   const [analytics, setAnalytics] = useState<VenueAnalytics | null>(null);
   const [today, setToday] = useState<{ stamps: number; rewards: number; customers: number } | null>(
@@ -440,6 +449,7 @@ export default function Business() {
       >(`/api/rewards/counter/${slug}/fulfil`, { code }, token ?? undefined);
       hapticTap(20);
       setRewardCode('');
+      setHandover({ items: r.item.name, detail: t('b.ho.bits', { n: r.priceBits }) });
       setNotice({ kind: 'ok', text: t('b.rw.ok', { item: r.item.name, n: r.priceBits }) });
       // The button just pressed must disappear: drop that claim from the
       // loaded customer without a round trip.
@@ -768,12 +778,20 @@ export default function Business() {
       void loadToday();
       // A full card names everything going over the counter, milestones
       // that rode along included, so nothing earned is forgotten.
-      const items = [r.rewardLabel, ...(r.alsoMilestones ?? []).map((m) => m.label)].filter(Boolean).join(' + ');
+      const items = r.milestone
+        ? r.milestone.label
+        : [r.rewardLabel || t('b.choose.full'), ...(r.alsoMilestones ?? []).map((m) => m.label)].join(' + ');
+      const detail = r.milestone
+        ? t('b.ho.keeps')
+        : r.trophy
+          ? t('b.ho.trophy')
+          : r.trophySkipped ?? undefined;
+      setHandover({ items, detail });
       setNotice({
         kind: 'ok',
         text: r.milestone
           ? t('b.n.tier', { label: r.milestone.label })
-          : `${items ? `${t('b.n.give', { items })} ` : ''}${
+          : `${t('b.n.give', { items })} ${
               r.trophy ? t('b.n.redeemed.trophy') : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`
             }`,
       });
@@ -786,6 +804,50 @@ export default function Business() {
 
   return (
     <section className="relative overflow-hidden">
+      {/* The hand-over, pinned on top of everything. Portalled to <body> so
+          no transformed ancestor can turn "fixed" into "scrolls away". */}
+      {createPortal(
+        <AnimatePresence>
+          {handover && (
+            <motion.div
+              key={handover.items}
+              role="status"
+              aria-live="assertive"
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-x-0 z-[70] mx-auto w-full max-w-md px-3"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+            >
+              <button
+                type="button"
+                onClick={() => setHandover(null)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-[#F7A30C]/60 bg-hero-deep px-4 py-3 text-left shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)]"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F7A30C] text-hero-deep">
+                  <Glyph name="gift" className="h-6 w-6" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#FFC45A]">
+                    {t('b.ho.give')}
+                  </span>
+                  <span className="block font-display text-xl font-bold leading-tight text-white">
+                    {handover.items}
+                  </span>
+                  {handover.detail && (
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{handover.detail}</span>
+                  )}
+                </span>
+                <span className="shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-200">
+                  {t('b.ho.done')}
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-hero-glow" />
 
       <div className="mx-auto max-w-xl px-6 py-10 md:py-16">
