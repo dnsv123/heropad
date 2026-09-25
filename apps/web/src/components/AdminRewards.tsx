@@ -206,8 +206,9 @@ export default function AdminRewards({
           Pick a photo below — it is resized to 600px and stored with the item, nothing to
           upload anywhere. Price it in visits: one visit ≈ 102 BITS (2 per stamp + a full
           card pays 100 per stamp, so 1000 for a 10-stamp card). A friend brought = 300,
-          passport bronze/silver/gold = 250/500/1000. The ladder (Sept 2026): sticker 1000
-          (≈10 visits), holo card 2000 (≈20), pin 4000 (≈40), standee 8000 (≈80).
+          passport bronze/silver/gold = 250/500/1000. The ladder (Sept 2026): sticker 500
+          (≈5 visits), holo card 1500 (≈15), pin 2500 (≈25). Around 20% back on what the
+          customer spends, counting the venue's own reward: generous, not a giveaway.
         </p>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
