@@ -553,15 +553,18 @@ export default function Business() {
   function handleScan(raw: string) {
     setScanning(false);
     const text = raw.trim().toUpperCase();
-    const reward = text.startsWith('HPR:') ? text.slice(4) : null;
+    // HPR:CODE, or HPR:CODE:FULL / HPR:CODE:M6 when the customer asked for
+    // one thing in particular. The server still checks the stamps.
+    const [reward, target] = text.startsWith('HPR:') ? text.slice(4).split(':') : [null, undefined];
     const customerCode = text.startsWith('HPC:') ? text.slice(4) : CODE_RE.test(text) ? text : null;
 
     if (reward && CODE_RE.test(reward)) {
       // The reward code names its own customer server-side: scanning it IS
       // the redemption, whether or not someone was looked up first.
+      const choice = target === 'FULL' ? 'full' : /^M\d+$/.test(target ?? '') ? Number(target!.slice(1)) : undefined;
       setRedeemInput(reward);
       hapticTap(15);
-      void redeemWith(reward);
+      void redeemWith(reward, choice);
       return;
     }
     if (customerCode && CODE_RE.test(customerCode)) {
@@ -737,6 +740,8 @@ export default function Business() {
           stamps: number;
           cardsCompleted: number;
           milestone?: { at: number; label: string };
+          rewardLabel?: string | null;
+          alsoMilestones?: Array<{ at: number; label: string }>;
           trophy: { assetId: string } | null;
           trophySkipped: string | null;
         }
@@ -761,13 +766,16 @@ export default function Business() {
         });
       }
       void loadToday();
+      // A full card names everything going over the counter, milestones
+      // that rode along included, so nothing earned is forgotten.
+      const items = [r.rewardLabel, ...(r.alsoMilestones ?? []).map((m) => m.label)].filter(Boolean).join(' + ');
       setNotice({
         kind: 'ok',
         text: r.milestone
           ? t('b.n.tier', { label: r.milestone.label })
-          : r.trophy
-            ? t('b.n.redeemed.trophy')
-            : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`,
+          : `${items ? `${t('b.n.give', { items })} ` : ''}${
+              r.trophy ? t('b.n.redeemed.trophy') : `${t('b.n.redeemed')} ${r.trophySkipped ?? ''}`
+            }`,
       });
     } catch (err) {
       setNotice({ kind: 'err', text: (err as ApiErr).message });
@@ -1317,8 +1325,13 @@ export default function Business() {
                         className="btn btn-primary w-full justify-between"
                       >
                         <span className="flex items-center gap-2"><Glyph name="trophy" /> {t('b.choose.full')}</span>
-                        <span className="text-xs opacity-80">{redeemChoice.rewardLabel ?? ''}</span>
+                        <span className="text-right text-xs opacity-80">
+                          {[redeemChoice.rewardLabel, ...redeemChoice.tiers.map((m) => m.label)].filter(Boolean).join(' + ')}
+                        </span>
                       </button>
+                    )}
+                    {redeemChoice.full && redeemChoice.tiers.length > 0 && (
+                      <p className="text-[11px] leading-snug text-slate-400">{t('b.choose.fullplus')}</p>
                     )}
                     {redeemChoice.tiers.map((m) => (
                       <button

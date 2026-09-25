@@ -64,6 +64,11 @@ interface MeResponse {
 interface RedeemCodeState {
   code: string;
   expiresAt: string;
+  /** What the customer asked for: FULL, or M6 for the milestone at 6. Rides
+   *  in the QR so the barista's scan hands over exactly that. */
+  target?: string;
+  /** The same, in words, printed above the code. */
+  what?: string;
 }
 
 /**
@@ -343,12 +348,12 @@ export default function Loyalty() {
       setRedeemQr(null);
       return;
     }
-    void QRCode.toDataURL(`HPR:${redeemCode.code}`, {
+    void QRCode.toDataURL(`HPR:${redeemCode.code}${redeemCode.target ? `:${redeemCode.target}` : ''}`, {
       width: 320,
       margin: 1,
       color: { dark: '#0A1B3A', light: '#FFFFFF' },
     }).then(setRedeemQr, () => setRedeemQr(null));
-  }, [redeemCode?.code]);
+  }, [redeemCode?.code, redeemCode?.target]);
 
   // Escape closes the celebration, and the page underneath must not scroll
   // while it is up — the same manners the collectible modal already has.
@@ -392,7 +397,16 @@ export default function Loyalty() {
         token ?? undefined
       );
       hapticTap(20);
-      setRedeemCode({ code: r.code, expiresAt: r.expiresAt });
+      // A full card takes every milestone still waiting along with it (the
+      // server hands them over together); otherwise the code is for the
+      // first milestone waiting.
+      const waiting = (me?.milestones ?? []).filter((m) => m.claimable);
+      const forFull = Boolean(me?.canRedeem);
+      const what = forFull
+        ? [rewardLabel ?? t('b.choose.full'), ...waiting.map((m) => m.label)].join(' + ')
+        : waiting[0]?.label;
+      const target = forFull ? 'FULL' : waiting[0] ? `M${waiting[0].at}` : undefined;
+      setRedeemCode({ code: r.code, expiresAt: r.expiresAt, target, what });
     } catch (err) {
       setMeError((err as Error).message);
     } finally {
@@ -733,20 +747,34 @@ export default function Loyalty() {
               A reached milestone uses the same code, with its own words. */}
           {(me?.canRedeem || me?.milestoneClaimable) && !redeemCode && (
             <div className="mt-5 rounded-xl border border-hero-gold/40 bg-hero-gold/10 p-4 text-center">
+              {/* Everything waiting, by name: a milestone reached on the way
+                  stays here until it is collected, and a full card says it
+                  brings those along, so nothing earned is lost. */}
               <p className="text-sm text-hero-gold">
                 {me.canRedeem
                   ? t('loy.full.title')
                   : t('loy.tier.title', {
-                      label: me.milestones?.find((m) => m.claimable)?.label ?? '',
+                      label: (me.milestones ?? []).filter((m) => m.claimable).map((m) => m.label).join(' · '),
                     })}
               </p>
+              {me.canRedeem && (me.milestones ?? []).some((m) => m.claimable) && (
+                <p className="mt-1 text-xs text-slate-300">
+                  {t('loy.full.plus', {
+                    label: (me.milestones ?? []).filter((m) => m.claimable).map((m) => m.label).join(' · '),
+                  })}
+                </p>
+              )}
               <button
                 type="button"
                 disabled={redeemBusy}
                 onClick={() => void requestRedeemCode()}
                 className="btn btn-primary mt-3"
               >
-                {redeemBusy ? t('loy.full.generating') : me.canRedeem ? t('loy.full.btn') : t('loy.tier.btn')}
+                {redeemBusy
+                  ? t('loy.full.generating')
+                  : me.canRedeem
+                    ? t('loy.full.btn')
+                    : t('loy.tier.btn', { label: me.milestones?.find((m) => m.claimable)?.label ?? '' })}
               </button>
               <p className="mt-3 text-xs leading-relaxed text-slate-400">{t('loy.full.note')}</p>
             </div>
@@ -761,6 +789,11 @@ export default function Loyalty() {
               <p className="text-xs uppercase tracking-wider text-hero-gold">
                 {t('loy.code.label')}
               </p>
+              {redeemCode.what && (
+                <p className="mt-1 font-display text-lg font-bold text-white">
+                  {t('loy.code.for', { what: redeemCode.what })}
+                </p>
+              )}
               {redeemQr && (
                 <img
                   src={redeemQr}

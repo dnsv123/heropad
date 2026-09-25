@@ -2280,12 +2280,37 @@ loyaltyRouter.post(
         typeof owned.venue.branding?.reward === 'string'
           ? (owned.venue.branding.reward)
           : undefined;
+      // Milestones still waiting on this card go over the counter with it.
+      // Closing the card starts a new cycle, and an unclaimed milestone would
+      // silently belong to the old one: the customer earned it, so it is
+      // handed over now, and the barista is told what to give.
+      const pendingMilestones = (
+        await milestoneStates(rc.user_identity_id, owned.venue.id, progress.current, progress.cardsCompleted)
+      ).filter((m) => m.claimable);
+
       const rewardId = await redeemReward({
         identityId: rc.user_identity_id,
         venueId: owned.venue.id,
         stampsConsumed: owned.venue.stamps_required,
         rewardType: rewardLabel,
       });
+
+      const alsoMilestones: Array<{ at: number; label: string }> = [];
+      for (const m of pendingMilestones) {
+        try {
+          const ok = await claimMilestone({
+            identityId: rc.user_identity_id,
+            venueId: owned.venue.id,
+            at: m.at,
+            label: m.label,
+            cardCycle: progress.cardsCompleted,
+            validatedBy: owned.merchantIdentityId,
+          });
+          if (ok) alsoMilestones.push({ at: m.at, label: m.label });
+        } catch (msErr) {
+          console.error('[loyalty.redeem] milestone carried with the full card failed:', (msErr as Error).message);
+        }
+      }
 
       const after = await getVenueProgress(rc.user_identity_id, owned.venue.id);
 
@@ -2362,6 +2387,8 @@ loyaltyRouter.post(
       return res.status(200).json({
         ok: true,
         redeemed: true,
+        rewardLabel: rewardLabel ?? null,
+        alsoMilestones,
         stamps: after.current,
         required: owned.venue.stamps_required,
         cardsCompleted: after.cardsCompleted,
