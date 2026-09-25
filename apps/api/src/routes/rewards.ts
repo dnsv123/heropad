@@ -314,8 +314,9 @@ rewardsAdminRouter.post('/', async (req: Request, res: Response) => {
 
 // --- Admin: physical lots to venues (pins) ----------------------------------
 
-/** Default wholesale price per pin, lei. Overridable per order. */
-const PIN_UNIT_PRICE_DEFAULT = 15;
+/** Default wholesale price per pin, lei: a reorder lands at ~14 lei, see
+ *  apps/web/src/lib/plans.ts. Overridable per order. */
+const PIN_UNIT_PRICE_DEFAULT = 24;
 /** Starter kit: this many of EACH active model, free. */
 const STARTER_PER_MODEL = 5;
 

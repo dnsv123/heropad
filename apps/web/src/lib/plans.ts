@@ -73,14 +73,14 @@ export const PLANS: PlanDef[] = [
       'Tot din Starter',
       'Figurina SuperVictor cu NFC pe tejghea — tap = check-in instant, zero tastare',
       'Co-branding: logo-ul și culorile localului pe cardul clientului',
-      'Vitrina BITS pe tejghea + setul de start: 20 de pin-uri SuperVictor, incluse (nu gratis — incluse)',
+      'Vitrina BITS pe tejghea + setul de start: 20 de pin-uri SuperVictor, incluse (nu gratis, incluse) la plata anuală sau după 3 luni plătite',
       '3 conturi de angajat',
     ],
     prepare: [
       'Tot ce e la Starter',
       'Figurina cu sticker NTAG424 scris pe URL-ul localului (?tap=1)',
       'Logo-ul lor în PNG/SVG + culoarea principală (hex) → Setări local',
-      'Vitrina + setul de start din Admin → Orders',
+      'Vitrina + setul de start din Admin → Orders: la plata anuală imediat, la plata lunară după a 3-a factură plătită',
     ],
   },
   {
@@ -175,26 +175,38 @@ export const ADDONS: AddonDef[] = [
     price: 49,
     hint: 'Trofeul de card completat poartă brandul localului, nu doar SuperVictor.',
   },
+  // Physical items are priced from the real landed cost (Vograce order of
+  // Sept 2026, shipping and 21% import VAT included, the company is not a
+  // VAT payer) and never below cost × 1.4. A pin on reorder lands at ~14 lei;
+  // a new design's first 55 at ~25 lei, the mold (~86 $) being inside.
+  // The sheet: _private/PRETURI_VOGRACE.md.
   {
     key: 'pin_pack',
     label: 'Pachet de 25 de pin-uri SuperVictor',
-    price: 375,
+    price: 600,
     once: true,
-    hint: 'Un model din catalogul nostru, 25 de bucăți, 15 lei/pin. Se ține în Orders.',
+    hint: 'Un model din catalogul nostru, 25 de bucăți, 24 lei/pin. Se ține în Orders.',
+  },
+  {
+    key: 'cobranded_pin_55',
+    label: 'Pin-ul lor: 55 buc, prima comandă',
+    price: 1950,
+    once: true,
+    hint: 'Logo-ul localului pe pin. Include MATRIȚA (forma metalică, ~400 lei, se face o singură dată). Cea mai mică comandă posibilă.',
   },
   {
     key: 'cobranded_pin',
-    label: 'Pin-ul lor — 100 buc, prima comandă',
-    price: 1490,
+    label: 'Pin-ul lor: 100 buc, prima comandă',
+    price: 2750,
     once: true,
-    hint: 'Logo-ul localului pe pin. Include MATRIȚA (forma metalică, ~400 lei, se face o singură dată). Recomanda ~1.090 lei.',
+    hint: 'Logo-ul localului pe pin, cu matrița inclusă. Recomanda de 100: 1.990 lei.',
   },
   {
     key: 'cobranded_pin_reorder',
-    label: 'Pin-ul lor — 100 buc, recomandă',
-    price: 1090,
+    label: 'Pin-ul lor: 100 buc, recomandă',
+    price: 1990,
     once: true,
-    hint: 'Același design, matrița există deja — de aceea e mai ieftin.',
+    hint: 'Același design, matrița există deja (se păstrează 2 ani la fabrică), de aceea e mai ieftin.',
   },
 ];
 
