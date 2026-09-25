@@ -1,7 +1,7 @@
 {
-  "name": "HeroPad Power Pass",
+  "name": "HeroPad",
   "short_name": "HeroPad",
-  "description": "Sistem de fidelizare pentru localuri: card pe telefon, trofee de colecție, premii cu BITS.",
+  "description": "Recompensa de la localul tău, plus BITS și un trofeu pe care îl păstrezi. Cardul e pe telefon, fără aplicație de instalat.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

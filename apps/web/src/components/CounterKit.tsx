@@ -24,7 +24,7 @@ export default function CounterKit() {
             sizes="(min-width: 1024px) 520px, (min-width: 768px) 46vw, 92vw"
             width={1600}
             height={1100}
-            alt="The SuperVictor figurine beside the till at Bătrânu' Sas"
+            alt={t('kit.photo.alt')}
           />
           <span className="cap">{t('kit.cap')}</span>
         </div>

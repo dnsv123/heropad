@@ -218,16 +218,10 @@ export default function BrandEditor({ venueName, logo, accent, tagline, onSave }
               style={{ borderColor: `${draftAccent}66`, boxShadow: `0 0 40px -12px ${draftAccent}80` }}
             >
               {/* Branded = one compact row: logo + name, then their line.
-                  The "⚡ Power Pass" eyebrow steps aside — the brand is the
-                  eyebrow now. Mirrors pages/Loyalty.tsx. */}
+                  No eyebrow above it: the brand is the
+                  eyebrow. Mirrors pages/Loyalty.tsx. */}
               <div className="flex items-center justify-center gap-3">
-                {draftLogo ? (
-                  <img src={draftLogo} alt="" className="h-9 max-w-[88px] object-contain" />
-                ) : (
-                  <span className="text-[10px] uppercase tracking-[0.3em]" style={{ color: draftAccent }}>
-                    ⚡ Power Pass
-                  </span>
-                )}
+                {draftLogo && <img src={draftLogo} alt="" className="h-9 max-w-[88px] object-contain" />}
                 <p className="font-display text-xl font-bold text-white">{venueName}</p>
               </div>
               {draftTagline.trim() && (

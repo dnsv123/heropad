@@ -53,9 +53,9 @@ function VideoDialog({ onClose }: { onClose: () => void }) {
 // word ("pierde." / "lose.") is in the brand's blue; the frame stays quiet
 // so the owner reads a serious tool, and the character lives in the photo.
 //
-// The photo is real (the counter at Bătrânu' Sas); the customer's card sits
-// on its corner, drawn the way the umbrella site draws HeroPad: blue stamps
-// with a white V.
+// The photo is real (filmed at the counter of Bătrânu' Sas); the card on its
+// corner is named "your café", not theirs: we filmed there, the venue is not
+// presented as a customer. Stamps carry SuperVictor's silhouette.
 //
 // index.html paints this exact block as static HTML before React boots
 // (#prehero). Markup and classes are mirrored there — change one, change both.
@@ -115,13 +115,13 @@ export default function Hero() {
               width={1280}
               height={1600}
               eager
-              alt="A customer holding their HeroPad card at the counter of Bătrânu' Sas, the SuperVictor figurine beside the till"
+              alt={t('hero.photo.alt')}
             />
           </div>
           <div data-overlay="card" className="absolute bottom-0 left-0 w-[196px] rounded-2xl border border-ink/10 bg-paper-2 p-3.5 shadow-soft sm:w-[214px]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-cognac">{t('hero.card.label')}</p>
             <div className="mt-1 flex items-baseline justify-between gap-2">
-              <p className="truncate text-[13px] font-bold text-ink">Bătrânu' Sas</p>
+              <p className="truncate text-[13px] font-bold text-ink">{t('hero.card.venue')}</p>
               <p className="shrink-0 font-display text-lg font-bold leading-none text-ink">
                 4<span className="text-[13px] text-ink-3">/5</span>
               </p>
