@@ -5,7 +5,9 @@ import CounterKit from '../components/CounterKit';
 import ForBusinesses from '../components/ForBusinesses';
 import WorldMap from '../components/WorldMap';
 import ForWho from '../components/ForWho';
+import BreakEven from '../components/BreakEven';
 import LandingPricing from '../components/LandingPricing';
+import Objections from '../components/Objections';
 import Ecosystem from '../components/Ecosystem';
 import ClosingCta from '../components/ClosingCta';
 import { useT, type TranslationKey } from '../i18n';
@@ -17,7 +19,8 @@ import { useT, type TranslationKey } from '../i18n';
 //   we can stand behind → the double reward → how it works (three real
 //   moments) → the hero on the counter → the owner's Monday (the real
 //   dashboard) → the world as a map of portals (the one playful window) →
-//   who it fits → pricing → the universe behind the door → the invitation.
+//   who it fits → what it really costs (their own coffees) → pricing → the
+//   questions owners ask → the universe behind the door → the invitation.
 //
 // No framer-motion: every section renders at rest. A page that is simply
 // there feels faster than one that fades itself in.
@@ -57,7 +60,9 @@ export default function Home() {
       <ForBusinesses />
       <WorldMap />
       <ForWho />
+      <BreakEven />
       <LandingPricing />
+      <Objections />
       <Ecosystem />
       <ClosingCta />
     </div>
