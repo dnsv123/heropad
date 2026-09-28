@@ -1,21 +1,24 @@
-MIT License
+Copyright (c) 2026 SVU Journey SRL. All rights reserved.
 
-Copyright (c) 2026 HeroPad / SuperVictor Universe
+This repository and everything in it (source code, documentation, designs,
+images and other assets) is proprietary to SVU Journey SRL.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+It is made available publicly for viewing and evaluation only, including
+evaluation by the judges and organisers of the Colosseum hackathon.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+No licence is granted to use, copy, modify, merge, publish, distribute,
+sublicense, sell or create derivative works from this repository or any part
+of it, in source or compiled form, for any purpose, without the prior written
+permission of SVU Journey SRL.
+
+The names HeroPad and SuperVictor, the Super Victor character, the V-mark and
+the SVU logo are trademarks of SVU Journey SRL (EUIPO filing 019287298) and
+are not licensed under this notice.
+
+Versions of this repository published before 28 September 2026 carried the
+MIT licence; this notice applies from that date onwards.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+IMPLIED.
+
+Permissions and contact: partner@supervictornft.com

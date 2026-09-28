@@ -162,7 +162,7 @@ the personal-display licence granted by the cNFT terms is prohibited.
 
 ## License
 
-Code: MIT · Brand assets: All Rights Reserved · cNFTs: see `/terms` on the
-live site.
+All rights reserved, SVU Journey SRL. The repository is public for viewing
+and evaluation only; see `LICENSE`. cNFTs: see `/terms` on the live site.
 
 Built with care in Sibiu by **SuperVictor Universe**.

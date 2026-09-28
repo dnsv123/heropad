@@ -456,8 +456,6 @@ const en = {
   'fw.more': '…and any place where a customer can come back often.',
   'lp.title': 'Simple, public pricing',
   'lp.sub': 'No hidden quotes, no "let\'s talk". Unlimited customers on every plan.',
-  'lp.founding':
-    'FOUNDING PARTNER — the first 3 cafés in Sibiu: 0 lei for 2 months, then 99 lei/month FOR LIFE with the full Growth package + the SuperVictor NFC figurine + the BITS display and 20 pins, as a gift. In the contract.',
   'lp.mo': '/ month',
   'lp.s.feats': 'The complete loyalty system · QR counter kit · Live statistics · 2 team accounts · Unlimited customers',
   'lp.b.feats': 'Everything in Starter · SuperVictor NFC figurine on your counter · Your logo and colour on the card · BITS display with the first 20 pins, included with annual billing or after 3 paid months',
@@ -1271,8 +1269,6 @@ const ro: Record<TranslationKey, string> = {
   'fw.more': '…și orice loc unde clientul poate reveni des.',
   'lp.title': 'Prețuri simple, publice',
   'lp.sub': 'Fără oferte ascunse, fără „hai să vorbim". Clienți nelimitați la orice pachet.',
-  'lp.founding':
-    'FOUNDING PARTNER — primele 3 cafenele din Sibiu: 0 lei 2 luni, apoi 99 lei/lună PE VIAȚĂ cu tot pachetul Growth + figurina SuperVictor cu NFC + vitrina BITS și 20 de pin-uri, cadou. Scris în contract.',
   'lp.mo': '/ lună',
   'lp.s.feats': 'Sistemul complet de fidelizare · Kit QR pentru tejghea · Statistici live · 2 conturi de angajat · Clienți nelimitați',
   'lp.b.feats': 'Tot din Starter · Figurina SuperVictor cu NFC pe tejghea · Logo-ul și culoarea voastră pe card · Vitrina BITS cu primele 20 de pin-uri, incluse la plata anuală sau după 3 luni plătite',

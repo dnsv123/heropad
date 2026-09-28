@@ -175,11 +175,8 @@ export const ADDONS: AddonDef[] = [
     price: 49,
     hint: 'Trofeul de card completat poartă brandul localului, nu doar SuperVictor.',
   },
-  // Physical items are priced from the real landed cost (Vograce order of
-  // Sept 2026, shipping and 21% import VAT included, the company is not a
-  // VAT payer) and never below cost × 1.4. A pin on reorder lands at ~14 lei;
-  // a new design's first 55 at ~25 lei, the mold (~86 $) being inside.
-  // The sheet: _private/PRETURI_VOGRACE.md.
+  // Physical items are priced from their real landed cost; the cost sheet
+  // lives outside the repository.
   {
     key: 'pin_pack',
     label: 'Pachet de 25 de pin-uri SuperVictor',
