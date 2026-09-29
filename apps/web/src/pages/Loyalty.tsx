@@ -10,6 +10,8 @@ import StampsCard from '../components/StampsCard';
 import VenueContact, { type HappyHourNext } from '../components/VenueContact';
 import ConsentPrompt from '../components/ConsentPrompt';
 import MyCards from '../components/MyCards';
+import InstallApp from '../components/InstallApp';
+import { rememberApp } from '../lib/install';
 import { getJson, postJson } from '../services/apiClient';
 import { getItem, setItem, removeItem } from '../services/storageService';
 import { hapticTap } from '../services/platformService';
@@ -255,6 +257,7 @@ export default function Loyalty() {
           } catch {
             /* private mode — the nav falls back to /loyalty */
           }
+          rememberApp('card');
         }
       })
       .catch((err: Error) => {
@@ -860,6 +863,12 @@ export default function Loyalty() {
               <p className="text-center text-sm text-slate-500">{t('loy.loading')}</p>
             )}
           </div>
+
+          {/* After the first stamp, not before: the first visit is about the
+              card, the second is when "keep it one tap away" makes sense. */}
+          {me && (me.totalStamps > 0 || me.cardsCompleted > 0) && (
+            <InstallApp variant="card" className="mt-6 text-left" />
+          )}
         </div>
 
         {/* Bring a friend — the invite link carries the personal code. The

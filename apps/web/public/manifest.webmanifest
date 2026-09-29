@@ -2,7 +2,7 @@
   "name": "HeroPad",
   "short_name": "HeroPad",
   "description": "Recompensa de la localul tău, plus BITS și un trofeu pe care îl păstrezi. Cardul e pe telefon, fără aplicație de instalat.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -32,5 +32,6 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "id": "/"
 }

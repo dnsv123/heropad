@@ -5,7 +5,15 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { I18nProvider } from './i18n';
 import { AuthProvider } from './lib/auth';
+import { pwaStartPath } from './lib/install';
 import './styles/index.css';
+
+// The installed app starts at /?source=pwa (manifest start_url). Send it on to
+// where its person uses HeroPad before the router reads the URL; index.html
+// has already hidden the landing's static first screen for this case.
+if (window.location.pathname === '/' && new URLSearchParams(window.location.search).get('source') === 'pwa') {
+  window.history.replaceState(null, '', pwaStartPath());
+}
 
 // NOTE: no Privy import here — that is the whole point. AuthProvider renders
 // the app instantly against a stub and pulls the real SDK in a lazy chunk

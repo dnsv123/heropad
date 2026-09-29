@@ -71,6 +71,13 @@
     <link rel="preload" href="/fonts/space-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
 
     <title>Un motiv nou să revină · HeroPad</title>
+
+    <!-- The installed app opens at /?source=pwa and main.tsx sends it to the
+         card or the counter: never flash the owners' landing on the way. -->
+    <style>html.pwa-start #prehero{display:none}html.pwa-start body{background:#0A1B3A}</style>
+    <script>if (/[?&]source=pwa(&|$)/.test(location.search)) document.documentElement.classList.add('pwa-start');
+      // Chrome fires this once and early: keep it for lib/install.ts, which may load later.
+      window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__hpInstall = e; });</script>
   </head>
   <body class="bg-paper text-ink antialiased">
     <!-- PRE-RENDERED FIRST SCREEN.

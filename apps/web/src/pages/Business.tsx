@@ -33,6 +33,8 @@ import VenueStaff from '../components/VenueStaff';
 import FolderTabs from '../components/FolderTabs';
 import Glyph from '../components/Glyph';
 import LogoMark from '../components/LogoMark';
+import InstallApp from '../components/InstallApp';
+import { rememberApp } from '../lib/install';
 import { readableOnNavy } from '../lib/color';
 
 // Business page — the barista / merchant device.
@@ -308,6 +310,7 @@ export default function Business() {
       }>(`/api/loyalty/merchant/${slug}/me`, token);
       setRole(r.role);
       setStaffName(r.displayName);
+      if (r.role === 'owner' || r.role === 'staff') rememberApp('counter', `/business?venue=${slug}`);
     } catch {
       setRole(null);
     }
@@ -391,6 +394,7 @@ export default function Business() {
         return;
       }
       setRole('staff');
+      rememberApp('counter', `/business?venue=${slug}`);
       setStaffName(r.displayName);
       setNotice({ kind: 'ok', text: t('b.staffclaim.ok', { name: r.venueName ?? '' }) });
     } catch (err) {
@@ -422,6 +426,7 @@ export default function Business() {
         return;
       }
       setRole('owner');
+      rememberApp('counter', `/business?venue=${slug}`);
       setNotice({ kind: 'ok', text: 'You are now the merchant of this venue. ☕' });
     } catch (err) {
       if (opts.quiet) throw err;
@@ -1417,6 +1422,9 @@ export default function Business() {
                   </div>
                 </div>
               )}
+
+              {/* The counter as an app on the till phone: one tap, full screen. */}
+              {(role === 'owner' || role === 'staff') && <InstallApp variant="counter" className="mt-3" />}
 
               {/* BITS reward hand-over BY CODE — the fallback for a customer
                   who shows the code without being looked up first. Its own

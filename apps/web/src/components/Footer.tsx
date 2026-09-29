@@ -12,18 +12,20 @@ const COMPANY = 'SVU Journey SRL · Str. Iuliu Maniu 2H, Șelimbăr, Sibiu · CU
 
 function Anpc() {
   // The SAL pictogram, as OPANPC 270/2026 (amending Order 449/2022, in force
-  // 19 May 2026) wants it: ANPC's own file, shown in a 250 x 50 px area, linked
-  // straight to the SAL platform. The SOL badge is gone: the EU online dispute
-  // platform closed on 20 July 2025 and the order dropped every reference to it.
+  // 19 May 2026) wants it: ANPC's own file, 50 px high, linked straight to the
+  // SAL platform. The file carries its own white rounded plate on a transparent
+  // ground, so it sits on the footer as is; an extra white box around it read
+  // as a second frame. The SOL badge is gone: the EU online dispute platform
+  // closed on 20 July 2025 and the order dropped every reference to it.
   return (
     <a
       href="https://reclamatiisal.anpc.ro"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="ANPC · Soluționarea alternativă a litigiilor"
-      className="flex h-[50px] w-[250px] shrink-0 items-center justify-center rounded-md bg-white"
+      className="inline-flex shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
     >
-      <img src="/brand/anpc-sal-2026.png" alt="ANPC · Soluționarea alternativă a litigiilor" width={201} height={50} loading="lazy" />
+      <img src="/brand/anpc-sal-2026.png" alt="ANPC · Soluționarea alternativă a litigiilor" width={201} height={50} loading="lazy" className="block h-[50px] w-auto" />
     </a>
   );
 }

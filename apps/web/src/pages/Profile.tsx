@@ -5,6 +5,7 @@ import { useT } from '../i18n';
 import AccountCard from '../components/AccountCard';
 import BirthdayCard from '../components/BirthdayCard';
 import MyCode from '../components/MyCode';
+import InstallApp from '../components/InstallApp';
 import MyRoles from '../components/MyRoles';
 import PartnerVenues from '../components/PartnerVenues';
 import ProfileWallet from '../components/ProfileWallet';
@@ -89,6 +90,7 @@ export default function Profile() {
               {/* The code first: it is what a customer opens Profile FOR
                   when they stand at a counter. */}
               <MyCode />
+              <InstallApp variant="card" />
               <LoyaltyStats />
               <MyRewards />
               <PartnerVenues />
