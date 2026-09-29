@@ -832,8 +832,8 @@ const en = {
   'loy.qr.hint': 'Show this QR or read out the code at the counter.',
   'consent.title': '📬 Want news and offers?',
   'consent.body':
-    'Optional: get occasional emails about new partner venues, rewards and SuperVictor news. Nothing to do with your stamps — those work either way.',
-  'consent.yes': 'Yes, keep me posted',
+    'Optional, for ages 16 and over: get occasional emails about new partner venues, rewards and SuperVictor news. Nothing to do with your stamps — those work either way.',
+  'consent.yes': 'Yes, I am 16+, keep me posted',
   'consent.no': 'No thanks',
   'consent.saved': 'Saved. You can change this any time from your profile.',
   'consent.privacy': 'Privacy policy',
@@ -1644,8 +1644,8 @@ const ro: Record<TranslationKey, string> = {
   'loy.qr.hint': 'Arată acest QR sau spune codul la casă.',
   'consent.title': '📬 Vrei noutăți și oferte?',
   'consent.body':
-    'Opțional: primești ocazional emailuri despre localuri partenere noi, recompense și noutăți SuperVictor. Nu are legătură cu bonusurile tale — ele funcționează oricum.',
-  'consent.yes': 'Da, ține-mă la curent',
+    'Opțional, de la 16 ani în sus: primești ocazional emailuri despre localuri partenere noi, recompense și noutăți SuperVictor. Nu are legătură cu bonusurile tale — ele funcționează oricum.',
+  'consent.yes': 'Da, am peste 16 ani, ține-mă la curent',
   'consent.no': 'Nu, mulțumesc',
   'consent.saved': 'Salvat. Poți schimba oricând din profil.',
   'consent.privacy': 'Politica de confidențialitate',

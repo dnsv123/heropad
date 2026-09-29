@@ -143,7 +143,11 @@ const SECTIONS_EN: Section[] = [
     title: '15. Contact',
     body: `SVU Journey SRL, Sibiu, Romania. Terms and venue contracts:
     legal@supervictornft.com. Privacy: privacy@supervictornft.com. Support:
-    support@supervictornft.com.`,
+    support@supervictornft.com. To report content you believe is illegal or infringes
+    your rights (for example a logo or image a venue uploaded), write to
+    legal@supervictornft.com with the link or a screenshot and your reasons; we answer
+    and act without undue delay. This address is also our point of contact for
+    authorities under the EU Digital Services Act, in Romanian or English.`,
   },
 ];
 
@@ -281,7 +285,12 @@ const SECTIONS_RO: Section[] = [
     title: '15. Contact',
     body: `SVU Journey SRL, Sibiu, România. Termeni și contracte cu localurile:
     legal@supervictornft.com. Confidențialitate: privacy@supervictornft.com. Suport:
-    support@supervictornft.com.`,
+    support@supervictornft.com. Pentru a raporta un conținut pe care îl consideri ilegal
+    sau care îți încalcă drepturile (de exemplu un logo sau o imagine încărcată de un
+    local), scrie la legal@supervictornft.com cu linkul sau o captură și motivul; răspundem
+    și acționăm fără întârzieri nejustificate. Aceeași adresă este punctul nostru de
+    contact pentru autorități conform Regulamentului UE privind serviciile digitale (DSA),
+    în română sau engleză.`,
   },
 ];
 

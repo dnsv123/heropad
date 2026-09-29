@@ -86,7 +86,9 @@ const SECTIONS_EN: Section[] = [
     title: '8. Cookies & local storage',
     body: `HeroPad uses local browser storage only for things that are strictly necessary:
     keeping you logged in (Privy session), your language choice, and offline caching. No
-    advertising cookies and no third-party trackers.`,
+    advertising cookies and no third-party trackers. We count page visits with Vercel Web
+    Analytics, which sets no cookies, does not record sessions or keystrokes and does not
+    identify you: it gives us only aggregated numbers (pages viewed, country, device type).`,
   },
   {
     title: '9. Children',
@@ -176,7 +178,10 @@ const SECTIONS_RO: Section[] = [
     title: '8. Cookie-uri și stocare locală',
     body: `HeroPad folosește stocarea locală din browser exclusiv pentru elemente strict
     necesare: menținerea sesiunii tale (Privy), limba aleasă și memorarea pentru
-    funcționarea offline. Fără cookie-uri de publicitate și fără urmăritori terți.`,
+    funcționarea offline. Fără cookie-uri de publicitate și fără urmăritori terți. Numărăm
+    vizitele pe pagini cu Vercel Web Analytics, care nu pune cookie-uri, nu înregistrează
+    sesiuni sau tastări și nu te identifică: primim doar cifre agregate (pagini vizitate,
+    țară, tip de dispozitiv).`,
   },
   {
     title: '9. Minori',
