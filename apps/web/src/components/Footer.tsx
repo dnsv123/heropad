@@ -11,31 +11,20 @@ import { useT } from '../i18n';
 const COMPANY = 'SVU Journey SRL · Str. Iuliu Maniu 2H, Șelimbăr, Sibiu · CUI 47892453 · J2023000609321';
 
 function Anpc() {
-  // SAL = the national alternative-resolution body. SOL pointed at the EU ODR
-  // platform, discontinued on 20 July 2025 (Regulation (EU) 2024/3228); it now
-  // links the Commission's list of dispute-resolution bodies that replaced it.
-  // On a white chip so they read on any ground.
+  // The SAL pictogram, as OPANPC 270/2026 (amending Order 449/2022, in force
+  // 19 May 2026) wants it: ANPC's own file, shown in a 250 x 50 px area, linked
+  // straight to the SAL platform. The SOL badge is gone: the EU online dispute
+  // platform closed on 20 July 2025 and the order dropped every reference to it.
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-3">
-      <a
-        href="https://anpc.ro/ce-este-sal/"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="ANPC — Soluționarea alternativă a litigiilor"
-        className="rounded-md bg-white p-1"
-      >
-        <img src="/brand/anpc-sal.webp" alt="ANPC SAL" width={636} height={160} loading="lazy" className="h-[36px] w-auto" />
-      </a>
-      <a
-        href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Organisme de soluționare a litigiilor în UE"
-        className="rounded-md bg-white p-1"
-      >
-        <img src="/brand/anpc-sol.svg" alt="SOL" width={212} height={53} loading="lazy" className="h-[36px] w-auto" />
-      </a>
-    </div>
+    <a
+      href="https://reclamatiisal.anpc.ro"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="ANPC · Soluționarea alternativă a litigiilor"
+      className="flex h-[50px] w-[250px] shrink-0 items-center justify-center rounded-md bg-white"
+    >
+      <img src="/brand/anpc-sal-2026.png" alt="ANPC · Soluționarea alternativă a litigiilor" width={201} height={50} loading="lazy" />
+    </a>
   );
 }
 
