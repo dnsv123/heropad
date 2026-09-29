@@ -5,23 +5,12 @@ import { usePrivy } from '../lib/auth';
 
 import {
   getUserMe,
-  type BitsHistoryEntry,
   type CollectibleSummary,
   type UserMeResponse,
 } from '../lib/api';
 import { useT, type TranslationKey } from '../i18n';
 import { explorerAddress } from '../lib/explorer';
 import CollectibleModal from './CollectibleModal';
-
-/** Ledger reasons → human labels (i18n key per reason; raw reason as fallback). */
-const REASON_KEY: Record<string, TranslationKey> = {
-  stamp: 'col.r.stamp',
-  loyalty_trophy: 'col.r.trophy',
-  passport_trophy: 'col.r.passport',
-  referral_inviter: 'col.r.refinv',
-  referral_friend: 'col.r.reffriend',
-  claim: 'col.r.claim',
-};
 
 /** Collection folders, decided by the certificate's symbol. Order = display order. */
 const FOLDERS: Array<{ key: string; icon: string; label: TranslationKey; match: (s: string) => boolean }> = [
@@ -44,14 +33,13 @@ interface CollectiblesProps {
 //   - data     → BITS pill + grid of NFT cards
 export default function Collectibles({ walletAddress }: CollectiblesProps) {
   const { ready, authenticated, getAccessToken } = usePrivy();
-  const { t, lang } = useT();
+  const { t } = useT();
   const [state, setState] = useState<
     | { phase: 'loading' }
     | { phase: 'data'; data: UserMeResponse }
     | { phase: 'error'; message: string }
   >({ phase: 'loading' });
   const [active, setActive] = useState<CollectibleSummary | null>(null);
-  const [ledgerOpen, setLedgerOpen] = useState(false);
 
   const load = async () => {
     setState({ phase: 'loading' });
@@ -118,10 +106,6 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
 
   // ---- Data --------------------------------------------------------------
   const { bits, collectibles } = state.data;
-  // Defensive: a cached or older API payload may not carry the field yet —
-  // a missing ledger must degrade to "no history", never crash the Profile
-  // (which is exactly what it did on deploy day).
-  const bitsHistory = state.data.bitsHistory ?? [];
 
   // Every asset lands in exactly one folder: first matching rule wins, and
   // the last rule matches everything, so nothing can vanish.
@@ -132,24 +116,6 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
         FOLDERS.findIndex((g) => g.match(c.symbol ?? '')) === idx
     ),
   }));
-
-  const reasonLabel = (e: BitsHistoryEntry): string => {
-    const key = REASON_KEY[e.reason];
-    const base = key ? t(key) : e.reason;
-    const venue = typeof e.metadata?.venue === 'string' ? e.metadata.venue : null;
-    return venue ? `${base} · ${venue}` : base;
-  };
-
-  const fmtDate = (iso: string): string => {
-    try {
-      return new Date(iso).toLocaleDateString(lang === 'ro' ? 'ro-RO' : 'en-GB', {
-        day: 'numeric',
-        month: 'short',
-      });
-    } catch {
-      return '';
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -168,15 +134,13 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
               {t('col.bits.earned', { n: bits.earned })}
             </p>
           </div>
-          {bitsHistory.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setLedgerOpen((v) => !v)}
-              className="rounded-full border border-solana-green/40 px-3 py-1.5 text-xs text-solana-green transition hover:bg-solana-green/10"
-            >
-              {ledgerOpen ? t('col.bits.hide') : t('col.bits.show')}
-            </button>
-          )}
+          {/* The accounting lives in its own tab now (Profile → BITS). */}
+          <Link
+            to="/profile#bits"
+            className="rounded-full border border-solana-green/40 px-3 py-1.5 text-xs text-solana-green transition hover:bg-solana-green/10"
+          >
+            {t('col.bits.show')}
+          </Link>
         </div>
         <Link
           to="/rewards"
@@ -184,27 +148,6 @@ export default function Collectibles({ walletAddress }: CollectiblesProps) {
         >
           {t('loy.bits.shop')}
         </Link>
-        {ledgerOpen && (
-          <div className="mt-3 max-h-64 space-y-1 overflow-y-auto border-t border-solana-green/15 pt-3">
-            {bitsHistory.map((e, i) => (
-              <div
-                key={`${e.createdAt}-${i}`}
-                className="flex items-baseline justify-between gap-3 rounded-lg bg-hero-navy px-3 py-1.5 text-xs"
-              >
-                <span className="min-w-0 truncate text-slate-300">{reasonLabel(e)}</span>
-                <span className="flex shrink-0 items-baseline gap-2">
-                  <span className="text-slate-600">{fmtDate(e.createdAt)}</span>
-                  <span
-                    className={`font-mono font-semibold ${e.amount >= 0 ? 'text-solana-green' : 'text-red-300'}`}
-                  >
-                    {e.amount >= 0 ? '+' : ''}
-                    {e.amount}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ---- The collection, as folders ---- */}

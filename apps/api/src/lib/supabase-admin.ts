@@ -236,6 +236,61 @@ export async function countBitsEventsToday(
   return count ?? 0;
 }
 
+/**
+ * One page of the ledger for the BITS activity screen, newest first, with a
+ * cursor (the created_at of the last row shown) instead of an offset, so a
+ * credit landing while someone scrolls never shifts or repeats a row.
+ */
+export async function getBitsLedgerPage(
+  walletAddress: string,
+  opts: { limit: number; before?: string }
+): Promise<{
+  rows: Array<{ id: string; amount: number; reason: string; metadata: Record<string, unknown> | null; createdAt: string }>;
+  hasMore: boolean;
+}> {
+  let q = getSupabaseAdmin()
+    .from('bits_transactions')
+    .select('id, amount, reason, metadata, created_at')
+    .eq('wallet_address', walletAddress)
+    .order('created_at', { ascending: false })
+    .limit(opts.limit + 1);
+  if (opts.before) q = q.lt('created_at', opts.before);
+  const { data, error } = await q;
+  if (error) throw new Error(`[Supabase] getBitsLedgerPage: ${error.message}`);
+  const all = (data ?? []) as Array<{ id: string; amount: number; reason: string; metadata: Record<string, unknown> | null; created_at: string }>;
+  return {
+    rows: all.slice(0, opts.limit).map((r) => ({
+      id: String(r.id),
+      amount: Number(r.amount),
+      reason: r.reason,
+      metadata: r.metadata,
+      createdAt: r.created_at,
+    })),
+    hasMore: all.length > opts.limit,
+  };
+}
+
+/**
+ * Totals as a person reads them: "earned" is what came in (a corrected stamp
+ * lowers it), "spent" is what went on rewards net of codes that expired and
+ * gave their BITS back. current = earned - spent, same as the plain sum.
+ */
+export async function getBitsTotals(walletAddress: string): Promise<{ current: number; earned: number; spent: number }> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('bits_transactions')
+    .select('amount, reason')
+    .eq('wallet_address', walletAddress);
+  if (error) throw new Error(`[Supabase] getBitsTotals: ${error.message}`);
+  let earned = 0;
+  let spent = 0;
+  for (const row of (data ?? []) as Array<{ amount: number; reason: string }>) {
+    const a = Number(row.amount);
+    if (row.reason === 'reward_claim' || row.reason === 'reward_expired') spent -= a;
+    else earned += a;
+  }
+  return { current: earned - spent, earned, spent };
+}
+
 export async function getBitsBalance(walletAddress: string): Promise<{
   current: number;
   earned: number;

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePrivy } from '../lib/auth';
 
 import { useT } from '../i18n';
@@ -12,6 +13,8 @@ import ProfileWallet from '../components/ProfileWallet';
 import LoyaltyStats from '../components/LoyaltyStats';
 import CollectionCard from '../components/CollectionCard';
 import MyRewards from '../components/MyRewards';
+import BitsActivity from '../components/BitsActivity';
+import BitsPill from '../components/BitsPill';
 
 // /profile. The member card on top, then three tabs instead of one long
 // scroll: what you use at the counter (code, cards, rewards), what you have
@@ -21,8 +24,8 @@ import MyRewards from '../components/MyRewards';
 // Auth-gated softly: a visitor without a session sees a prompt that opens
 // Privy, never a redirect, so deep links into /profile keep working.
 
-type Tab = 'cards' | 'collection' | 'account';
-const TABS: Tab[] = ['cards', 'collection', 'account'];
+type Tab = 'cards' | 'bits' | 'collection' | 'account';
+const TABS: Tab[] = ['cards', 'bits', 'collection', 'account'];
 
 function initialTab(): Tab {
   if (typeof window === 'undefined') return 'cards';
@@ -34,6 +37,13 @@ export default function Profile() {
   const { ready, authenticated, login } = usePrivy();
   const { t } = useT();
   const [tab, setTab] = useState<Tab>(initialTab);
+  // A link to /profile#bits (from Rewards, from the collection) opens that tab
+  // even when the Profile is already on screen.
+  const { hash } = useLocation();
+  useEffect(() => {
+    const h = hash.replace('#', '');
+    if ((TABS as string[]).includes(h)) setTab(h as Tab);
+  }, [hash]);
 
   const choose = (k: Tab) => {
     setTab(k);
@@ -68,6 +78,9 @@ export default function Profile() {
             <MyRoles />
           </div>
 
+          {/* The balance, always in sight; a tap opens its history. */}
+          {tab !== 'bits' && <BitsPill onOpen={() => choose('bits')} />}
+
           <div className="mt-5 flex gap-1 rounded-full border border-white/[0.08] bg-hero-navy p-1" role="tablist">
             {TABS.map((k) => (
               <button
@@ -76,7 +89,7 @@ export default function Profile() {
                 role="tab"
                 aria-selected={tab === k}
                 onClick={() => choose(k)}
-                className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition ${
+                className={`flex-1 whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium transition sm:px-3 sm:text-sm ${
                   tab === k ? 'bg-hero-navy2 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -94,6 +107,12 @@ export default function Profile() {
               <LoyaltyStats />
               <MyRewards />
               <PartnerVenues />
+            </div>
+          )}
+
+          {tab === 'bits' && (
+            <div className="mt-5">
+              <BitsActivity />
             </div>
           )}
 

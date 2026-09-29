@@ -402,7 +402,7 @@ export default function Rewards() {
 
         <p className="mt-10 text-center text-[11px] leading-relaxed text-slate-500">
           {t('rw.footnote')}{' '}
-          <Link to="/profile" className="text-white underline underline-offset-2">
+          <Link to="/profile#bits" className="text-white underline underline-offset-2">
             {t('nav.profile')}
           </Link>
         </p>

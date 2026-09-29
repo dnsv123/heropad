@@ -3,7 +3,13 @@ import rateLimit from 'express-rate-limit';
 
 import { getOwnedCollectibles } from '../lib/helius.js';
 import { prepareTransfer, sendPreparedTransfer, TransferError } from '../lib/transfer.js';
-import { getBitsBalance, getBitsHistory } from '../lib/supabase-admin.js';
+import {
+  getBitsBalance,
+  getBitsHistory,
+  getBitsLedgerPage,
+  getBitsTotals,
+  getSupabaseAdmin,
+} from '../lib/supabase-admin.js';
 import {
   requireAuth,
   getUserSolanaWallets,
@@ -68,6 +74,95 @@ function getCached(key: string): unknown {
 function setCached(key: string, data: unknown): void {
   cache.set(key, { data, expiresAt: Date.now() + TTL_MS });
 }
+
+// GET /api/user/bits?before=<iso>&limit=<n>
+// -----------------------------------------
+// The BITS activity screen: totals on the first page, then the ledger newest
+// first, each row already named for a person (the venue's name, not its slug;
+// the reward's name, not an id). No Helius call, so it opens instantly.
+userRouter.get('/bits', requireAuth, async (req: Request, res: Response) => {
+  const privyId = (req as AuthedRequest).privyId as string;
+  let wallets: string[];
+  try {
+    wallets = await getUserSolanaWallets(privyId);
+  } catch (err) {
+    console.error('[user.bits] privy lookup failed:', (err as Error).message);
+    return res.status(502).json({ ok: false, error: 'auth_lookup_failed', message: 'Could not verify your wallet. Please try again.' });
+  }
+  const wallet = wallets[0];
+  if (!wallet) {
+    // No wallet yet means no BITS yet: an empty ledger, not an error.
+    return res.status(200).json({ ok: true, bits: { current: 0, earned: 0, spent: 0 }, entries: [], nextBefore: null });
+  }
+
+  const before = queryString(req.query.before).trim();
+  if (before && Number.isNaN(Date.parse(before))) {
+    return res.status(400).json({ ok: false, error: 'bad_cursor', message: 'Invalid cursor.' });
+  }
+  const limit = Math.min(50, Math.max(1, Number(queryString(req.query.limit)) || 30));
+
+  try {
+    const [page, bits] = await Promise.all([
+      getBitsLedgerPage(wallet, { limit, before: before || undefined }),
+      before ? Promise.resolve(null) : getBitsTotals(wallet),
+    ]);
+
+    // Names for what the rows point at, fetched once per page.
+    const venueSlugs = new Set<string>();
+    const rewardSlugs = new Set<string>();
+    const rewardIds = new Set<string>();
+    for (const r of page.rows) {
+      const m = r.metadata ?? {};
+      if (typeof m.venue === 'string') venueSlugs.add(m.venue);
+      if (r.reason === 'reward_claim' && typeof m.reward === 'string') rewardSlugs.add(m.reward);
+      if (r.reason === 'reward_expired' && typeof m.reward === 'string') rewardIds.add(m.reward);
+    }
+    const supa = getSupabaseAdmin();
+    const [venues, bySlug, byId] = await Promise.all([
+      venueSlugs.size
+        ? supa.from('venues').select('slug, name').in('slug', [...venueSlugs])
+        : Promise.resolve({ data: [] as Array<{ slug: string; name: string }> }),
+      rewardSlugs.size
+        ? supa.from('reward_items').select('slug, name').in('slug', [...rewardSlugs])
+        : Promise.resolve({ data: [] as Array<{ slug: string; name: string }> }),
+      rewardIds.size
+        ? supa.from('reward_items').select('id, name').in('id', [...rewardIds])
+        : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
+    ]);
+    const venueName = new Map((venues.data ?? []).map((v) => [v.slug as string, v.name as string]));
+    const itemBySlug = new Map((bySlug.data ?? []).map((v) => [v.slug as string, v.name as string]));
+    const itemById = new Map((byId.data ?? []).map((v) => [v.id as string, v.name as string]));
+
+    const entries = page.rows.map((r) => {
+      const m = r.metadata ?? {};
+      const venue = typeof m.venue === 'string' ? venueName.get(m.venue) ?? null : null;
+      let item: string | null = null;
+      if (r.reason === 'reward_claim' && typeof m.reward === 'string') item = itemBySlug.get(m.reward) ?? null;
+      if (r.reason === 'reward_expired' && typeof m.reward === 'string') item = itemById.get(m.reward) ?? null;
+      return {
+        id: r.id,
+        amount: r.amount,
+        reason: r.reason,
+        createdAt: r.createdAt,
+        venue,
+        item,
+        tier: typeof m.tier === 'string' ? m.tier : null,
+        count: typeof m.count === 'number' ? m.count : null,
+        edition: typeof m.edition === 'number' ? m.edition : null,
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      ...(bits ? { bits } : {}),
+      entries,
+      nextBefore: page.hasMore && page.rows.length ? page.rows[page.rows.length - 1].createdAt : null,
+    });
+  } catch (err) {
+    console.error('[user.bits] error:', (err as Error).message);
+    return res.status(500).json({ ok: false, error: 'server_error', message: 'Could not load your BITS.' });
+  }
+});
 
 userRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
   const privyId = (req as AuthedRequest).privyId as string;
