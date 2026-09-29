@@ -11,8 +11,10 @@ import { useT } from '../i18n';
 const COMPANY = 'SVU Journey SRL · Str. Iuliu Maniu 2H, Șelimbăr, Sibiu · CUI 47892453 · J2023000609321';
 
 function Anpc() {
-  // SAL = the national alternative-resolution body, SOL = the EU online-
-  // dispute platform. On a white chip so they read on any ground.
+  // SAL = the national alternative-resolution body. SOL pointed at the EU ODR
+  // platform, discontinued on 20 July 2025 (Regulation (EU) 2024/3228); it now
+  // links the Commission's list of dispute-resolution bodies that replaced it.
+  // On a white chip so they read on any ground.
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-3">
       <a
@@ -25,10 +27,10 @@ function Anpc() {
         <img src="/brand/anpc-sal.webp" alt="ANPC SAL" width={636} height={160} loading="lazy" className="h-[36px] w-auto" />
       </a>
       <a
-        href="https://ec.europa.eu/consumers/odr"
+        href="https://consumer-redress.ec.europa.eu/dispute-resolution-bodies"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Soluționarea online a litigiilor"
+        aria-label="Organisme de soluționare a litigiilor în UE"
         className="rounded-md bg-white p-1"
       >
         <img src="/brand/anpc-sol.svg" alt="SOL" width={212} height={53} loading="lazy" className="h-[36px] w-auto" />

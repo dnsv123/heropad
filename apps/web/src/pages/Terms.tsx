@@ -134,8 +134,9 @@ const SECTIONS_EN: Section[] = [
   {
     title: '14. Disputes, governing law, ANPC',
     body: `These terms are governed by Romanian law. Consumers may use the alternative
-    dispute resolution procedure of ANPC (anpc.ro, SAL) or the EU online dispute
-    resolution platform (ec.europa.eu/consumers/odr); links are in the footer. Failing
+    dispute resolution procedure of ANPC (anpc.ro, SAL) or another dispute resolution
+    body listed by the European Commission (consumer-redress.ec.europa.eu, which replaced
+    the EU online dispute platform on 20 July 2025); links are in the footer. Failing
     an amicable solution, disputes go to the competent courts in Sibiu, Romania, unless
     mandatory law in your country of residence provides otherwise.`,
   },
@@ -275,9 +276,10 @@ const SECTIONS_RO: Section[] = [
   {
     title: '14. Litigii, legea aplicabilă, ANPC',
     body: `Acești termeni sunt guvernați de legea română. Consumatorii pot apela la
-    procedura de soluționare alternativă a litigiilor a ANPC (anpc.ro, SAL) sau la
-    platforma europeană de soluționare online a litigiilor (ec.europa.eu/consumers/odr);
-    linkurile sunt în subsolul site-ului. În lipsa unei soluții amiabile, litigiile se
+    procedura de soluționare alternativă a litigiilor a ANPC (anpc.ro, SAL) sau la un alt
+    organism de soluționare a litigiilor din lista Comisiei Europene
+    (consumer-redress.ec.europa.eu, care a înlocuit pe 20 iulie 2025 platforma europeană
+    de soluționare online); linkurile sunt în subsolul site-ului. În lipsa unei soluții amiabile, litigiile se
     judecă de instanțele competente din Sibiu, România, dacă legea imperativă din țara
     ta de reședință nu prevede altfel.`,
   },
