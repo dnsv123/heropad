@@ -2,46 +2,55 @@ import { useState } from 'react';
 
 import { useT } from '../i18n';
 import { priceNumber, toUsd } from '../lib/money';
+import { COFFEES_PER_DAY, compareTo, formatPerCoffee, perCoffeeLei, type Treat } from '../lib/perCoffee';
 
-// Landing → "what it really costs": the owner types their coffee price and
-// how many they sell a day; the page answers with the handful of extra
-// coffees a week that cover the plan. The owner's own numbers, nothing
-// counted that we cannot show (reviews, the passport, happy hour).
+// Landing → "what it really costs": the owner types how many coffees they
+// sell a day and picks what they already give away with the cup (a mint, a
+// sugar sachet, a biscuit, honey); the page answers with what HeroPad costs
+// on each coffee, said in that same small thing. The thing is the big line;
+// the money sits under it, small: no amount is the headline.
 //
-// What stays from a coffee is theirs to change. The default, 55%, is the
-// pessimistic end of what we could source (Sept 2026): VAT on coffee served
-// in a café is 11% (≈ 9.9% of the price), specialty cafés spend 18–35% of
-// the price on beans, milk and cup, plus ~1% card fees. Rent and wages are
-// left out on purpose: one more coffee does not raise them.
-const PLANS = [99, 199, 349] as const;
-const DEFAULT_MARGIN = '55';
-const WEEKS_PER_MONTH = 30 / 7;
+// On purpose it never says how many customers have to come back: a target
+// reads as work the owner has to do. Cost per coffee is a plain division of
+// their own number, so it is true for every venue; what returning customers
+// bring shows up later in their dashboard, as counts, not as our promise.
+const PLANS = [
+  { name: 'Starter', price: 99 },
+  { name: 'Branded', price: 199 },
+  { name: 'Growth', price: 349 },
+] as const;
+const PICKS: Treat[] = ['mint', 'sugar', 'biscuit', 'honey'];
+
+/** "50 de cafele" / "2 cafele" / "o cafea"; "50 coffees" / "1 coffee". */
+function coffees(lang: 'ro' | 'en', n: number): string {
+  if (lang === 'en') return `${n.toLocaleString('en-US')} ${n === 1 ? 'coffee' : 'coffees'}`;
+  if (n === 1) return 'o cafea';
+  const r = n % 100;
+  return `${n.toLocaleString('ro-RO')} ${n >= 20 && (r === 0 || r >= 20) ? 'de cafele' : 'cafele'}`;
+}
 
 export default function BreakEven() {
   const { t, lang } = useT();
-  // Untouched, the price follows the language: 15 lei here, $3.5 in English
-  // (the plans are shown in dollars there too).
-  const [priceIn, setPrice] = useState<string | null>(null);
-  const [perDay, setPerDay] = useState('60');
-  const [margin, setMargin] = useState(DEFAULT_MARGIN);
-  const [plan, setPlan] = useState<number>(PLANS[0]);
+  const [perDay, setPerDay] = useState(String(COFFEES_PER_DAY));
+  const [plan, setPlan] = useState<number>(PLANS[0].price);
+  const [treat, setTreat] = useState<Treat>('mint');
 
-  const price = priceIn ?? (lang === 'en' ? '3.5' : '15');
-  const cost = lang === 'en' ? toUsd(plan) : plan;
-  const fmt = (n: number) => (lang === 'en' ? `$${n.toFixed(2).replace(/\.00$/, '')}` : `${n.toFixed(1).replace(/\.0$/, '').replace('.', ',')} lei`);
-
-  const p = Math.max(0, Number(price.replace(',', '.')) || 0);
   const d = Math.max(0, Number(perDay) || 0);
-  const perCoffee = (p * Math.min(100, Number(margin) || 0)) / 100;
-  const perMonth = perCoffee > 0 ? Math.ceil(cost / perCoffee) : null;
-  const perWeek = perMonth !== null ? Math.ceil(cost / perCoffee / WEEKS_PER_MONTH) : null;
-  const share = perWeek !== null && d > 0 ? (perWeek / (d * 7)) * 100 : null;
-  const shareText =
-    share === null
+  const lei = perCoffeeLei(plan, d);
+  const cmp = lei !== null ? compareTo(lei, treat) : null;
+  const a = t(`treat.${treat}`);
+  const said =
+    cmp === null
       ? null
-      : share < 1
-        ? lang === 'en' ? 'under 1' : 'sub 1'
-        : share.toFixed(share < 10 ? 1 : 0).replace(/\.0$/, '').replace('.', lang === 'en' ? '.' : ',');
+      : cmp.kind === 'times'
+        ? t('cmp.times', { n: lang === 'ro' && cmp.n >= 20 ? `${cmp.n} de` : String(cmp.n), pl: t(`treat.${treat}.pl`) })
+        : t(cmp.kind === 'less' ? 'cmp.less' : 'cmp.same', { a });
+  // Rounded up to the ban (cent), like the per-coffee amount, so the two
+  // never disagree at one coffee a day.
+  const perDayCost =
+    lang === 'en'
+      ? `$${(Math.ceil((toUsd(plan) / 30) * 100) / 100).toFixed(2)}`
+      : `${(Math.ceil((plan / 30) * 100) / 100).toFixed(2).replace('.', ',')} lei`;
 
   const field = 'rounded-2xl border border-ink/15 bg-paper-2 px-4 py-3 font-display text-2xl font-bold text-ink focus:border-brand focus:outline-none';
 
@@ -56,17 +65,6 @@ export default function BreakEven() {
 
       <div className="mt-9 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-5">
         <div className="panel-quiet grid content-start gap-5 p-6 sm:p-7">
-          <label htmlFor="calc-price" className="block text-sm font-semibold text-ink-2">
-            {t('calc.price')}
-            <input
-              id="calc-price"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value.replace(/[^\d.,]/g, '').slice(0, 5))}
-              autoComplete="off"
-              className={`${field} mt-1.5 w-full`}
-            />
-          </label>
           <label htmlFor="calc-day" className="block text-sm font-semibold text-ink-2">
             {t('calc.perday')}
             <input
@@ -74,31 +72,32 @@ export default function BreakEven() {
               inputMode="numeric"
               value={perDay}
               onChange={(e) => setPerDay(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              autoComplete="off"
               className={`${field} mt-1.5 w-full`}
             />
           </label>
-          <label htmlFor="calc-margin" className="block text-sm font-semibold text-ink-2">
-            {t('calc.margin')}
-            <span className="mt-1.5 flex items-center gap-3">
-              <input
-                id="calc-margin"
-                inputMode="numeric"
-                value={margin}
-                onChange={(e) => setMargin(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                autoComplete="off"
-                aria-describedby="calc-margin-hint"
-                className={`${field} w-24 text-center`}
-              />
-              <span className="font-display text-2xl font-bold text-ink">%</span>
-            </span>
-            <span id="calc-margin-hint" className="mt-1.5 block text-[13px] font-normal leading-snug text-ink-3">
-              {t('calc.margin.hint')}
-            </span>
-          </label>
+          <fieldset>
+            <legend className="text-sm font-semibold text-ink-2">{t('calc.treat')}</legend>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {PICKS.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={treat === k}
+                  onClick={() => setTreat(k)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    treat === k ? 'border-brand bg-brand text-white' : 'border-ink/15 bg-paper-2 text-ink hover:border-ink/35'
+                  }`}
+                >
+                  {t(`calc.pick.${k}`)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <fieldset>
             <legend className="text-sm font-semibold text-ink-2">{t('calc.plan')}</legend>
             <div className="mt-1.5 flex flex-wrap gap-2">
-              {PLANS.map((v) => (
+              {PLANS.map(({ name, price: v }) => (
                 <button
                   key={v}
                   type="button"
@@ -108,7 +107,7 @@ export default function BreakEven() {
                     plan === v ? 'border-brand bg-brand text-white' : 'border-ink/15 bg-paper-2 text-ink hover:border-ink/35'
                   }`}
                 >
-                  {t('calc.planv', { n: priceNumber(lang, v) })}
+                  {name} · {t('calc.planv', { n: priceNumber(lang, v) })}
                 </button>
               ))}
             </div>
@@ -116,16 +115,23 @@ export default function BreakEven() {
         </div>
 
         <div className="flex flex-col justify-center rounded-3xl bg-brand-deep p-6 text-white shadow-soft sm:p-8" aria-live="polite">
-          {perWeek === null ? (
+          {lei === null ? (
             <p className="text-lg text-white/85">{t('calc.empty')}</p>
           ) : (
             <>
               <p className="text-[15px] font-semibold text-white/80">{t('calc.need')}</p>
-              <p className="mt-1 font-display text-[4.5rem] font-bold leading-none tracking-tight text-brand-amber">{perWeek}</p>
-              <p className="mt-2 text-xl font-bold">{t('calc.unit')}</p>
-              <p className="mt-3 max-w-[40ch] text-[15px] leading-relaxed text-white/85">
-                {t('calc.then', { m: fmt(perCoffee), plan: priceNumber(lang, plan), c: perMonth ?? 0 })}
-                {shareText !== null && <> {t('calc.share', { pct: shareText })}</>}
+              {said && (
+                <>
+                  <p className="mt-2 text-balance font-display text-[2.4rem] font-bold leading-[1.05] tracking-tight text-brand-amber sm:text-[3rem]">
+                    {said.charAt(0).toUpperCase() + said.slice(1)}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold leading-snug">{t('calc.already')}</p>
+                </>
+              )}
+              {/* What the small cost buys, from features that exist today. */}
+              <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-white/90">{t('calc.value')}</p>
+              <p className="mt-2 max-w-[42ch] text-[13px] leading-relaxed text-white/70">
+                {t('calc.then', { c: formatPerCoffee(lang, lei), plan: priceNumber(lang, plan), d: perDayCost, n: coffees(lang, d) })}
               </p>
             </>
           )}

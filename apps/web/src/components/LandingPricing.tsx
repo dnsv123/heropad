@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useT } from '../i18n';
 import { annualPrice } from '../lib/plans';
 import { priceNumber } from '../lib/money';
+import { COFFEES_PER_DAY, cardComparison, formatPerCoffee, perCoffeeLei } from '../lib/perCoffee';
 import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact';
 
 // Landing → public pricing. We tell café owners "competitors hide their price
@@ -16,6 +17,11 @@ import { chainContactHref, contactHref, contactIsWhatsApp } from '../lib/contact
 //
 // The plan most owners pick is the only raised card (blue line, soft
 // shadow, a small label); the others sit flat. One loud thing per row.
+//
+// Under each price: what the plan costs on one coffee, at a stated 50 a day,
+// said as the mint (or biscuit) a café already gives away; the amount in bani
+// is the small line under it. Chain is counted per location (its floor
+// covers three).
 export default function LandingPricing() {
   const { t, lang } = useT();
   const [annual, setAnnual] = useState(true);
@@ -84,6 +90,21 @@ export default function LandingPricing() {
               <p className="mt-2 min-h-[2.6em] text-[12px] font-semibold leading-snug text-ink-3">
                 {tier.chain ? t('lp.c.bill') : annual ? t('lp.billed.annual', { n: money(annualPrice(tier.monthly)) }) : t('lp.billed.monthly')}
               </p>
+              {(() => {
+                const lei = perCoffeeLei(tier.chain ? tier.monthly / 3 : perMonth, COFFEES_PER_DAY) ?? 0;
+                const cmp = cardComparison(lei);
+                const c = formatPerCoffee(lang, lei);
+                // The thing leads ("about a mint per coffee"); the money is the small print.
+                const said = cmp ? t(cmp.kind === 'less' ? 'cmp.less' : 'cmp.same', { a: t(`treat.${cmp.treat}`) }) : c;
+                return (
+                  <p className="mt-3 rounded-2xl bg-brand-amber/15 px-3.5 py-2.5 text-[13px] leading-snug text-ink">
+                    <span className="font-bold">{t('lp.pc', { cmp: said.charAt(0).toUpperCase() + said.slice(1) })}</span>
+                    <span className="mt-0.5 block text-[11px] text-ink-3">
+                      {t(tier.chain ? 'lp.pc.at.chain' : 'lp.pc.at', { c, n: COFFEES_PER_DAY })}
+                    </span>
+                  </p>
+                );
+              })()}
 
               <ul className="mt-5 flex-1 space-y-2.5 border-t border-ink/10 pt-5">
                 {tier.feats.split(' · ').map((f) => (
