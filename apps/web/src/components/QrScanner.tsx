@@ -134,7 +134,7 @@ export default function QrScanner({ onResult, onClose, title, hint }: QrScannerP
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
+    <div className="safe-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
       <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-hero-deep p-4 shadow-2xl">
         <h3 className="text-center font-display text-base font-semibold text-hero-cyan">{title}</h3>
 

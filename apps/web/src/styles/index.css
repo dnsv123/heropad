@@ -259,3 +259,12 @@ html {
     animation: none;
   }
 }
+
+/* Full-screen overlays keep their content out of the phone's status bar and
+   home indicator. In the installed app (viewport-fit=cover, translucent
+   status bar) the page runs under the clock, the notch and the battery;
+   anything placed there cannot be tapped. Unlayered, so it beats p-4. */
+.safe-overlay {
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}

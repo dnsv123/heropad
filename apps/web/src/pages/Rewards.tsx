@@ -415,7 +415,7 @@ export default function Rewards() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-hero-deep/85 px-6 backdrop-blur-sm"
+            className="safe-overlay fixed inset-0 z-50 flex items-center justify-center bg-hero-deep/85 px-6 backdrop-blur-sm"
             onClick={() => setJustClaimed(null)}
             role="dialog"
             aria-modal="true"

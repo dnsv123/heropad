@@ -94,7 +94,23 @@ export default function Header() {
   );
 
   return (
-    <header className={`sticky top-0 z-40 border-b backdrop-blur ${c.bar}`}>
+    <header
+      className={`sticky top-0 z-40 border-b backdrop-blur ${c.bar}`}
+      // In the installed app the page runs under the status bar: keep the
+      // wordmark and the buttons below the clock, the notch and the battery.
+      // The status bar text is white, so on the cream landing the strip
+      // behind it stays navy (zero height in a normal browser tab).
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+        ...(paper && {
+          backgroundImage: 'linear-gradient(#0A1B3A, #0A1B3A)',
+          backgroundSize: '100% env(safe-area-inset-top, 0px)',
+          backgroundRepeat: 'no-repeat',
+        }),
+      }}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:py-4">
         {/* Wordmark: the mascot's face beside the name, one word, brass "Pad". */}
         <Link

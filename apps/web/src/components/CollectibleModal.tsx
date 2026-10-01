@@ -83,7 +83,7 @@ export default function CollectibleModal({ item, onClose, ownerAddress, onMoved 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        className="safe-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       >
         <motion.div
           key="card"
@@ -92,7 +92,7 @@ export default function CollectibleModal({ item, onClose, ownerAddress, onMoved 
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/15 bg-hero-deep shadow-2xl"
+          className="relative max-h-full w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/15 bg-hero-deep shadow-2xl"
         >
           {/* Close button */}
           <button
