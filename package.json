@@ -27,6 +27,7 @@
     "build:web": "npm --workspace apps/web run build",
     "build:api": "npm --workspace apps/api run build",
     "build:shared": "npm --workspace packages/shared run build",
+    "lock:api": "node apps/api/scripts/update-lockfile.mjs",
     "lint": "npm-run-all --parallel lint:*",
     "lint:web": "npm --workspace apps/web run lint",
     "lint:api": "npm --workspace apps/api run lint",

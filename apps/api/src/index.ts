@@ -93,11 +93,18 @@ function rpcCluster(): 'devnet' | 'mainnet' | 'unknown' {
   return 'unknown';
 }
 
+// Which commit is running. Railway sets RAILWAY_GIT_COMMIT_SHA on every
+// GitHub deploy; without it a failed build is invisible from outside, because
+// the previous deployment keeps answering. The repo is public, so the short
+// hash discloses nothing.
+const version = (process.env.RAILWAY_GIT_COMMIT_SHA ?? '').slice(0, 7) || 'local';
+
 // Health probe used by Railway / uptime monitors.
 app.get('/healthz', (_req, res) => {
   res.json({
     ok: true,
     service: 'heropad-api',
+    version,
     cluster: rpcCluster(),
     ts: new Date().toISOString(),
   });
