@@ -59,20 +59,38 @@ jobs:
           # Backups are encrypted (see db-backup.yml); decrypt, then unzip.
           printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --decrypt backup/*/heropad-backup-*.sql.gz.gpg | gunzip -c > dump.sql
           wc -c dump.sql
-          # The dump's policies may reference Supabase's roles, which a vanilla
-          # Postgres does not have — create them empty so the restore applies.
+          # A schema-only-public dump still points at things Supabase keeps
+          # elsewhere: its roles, auth.users (an FK from solana_wallets),
+          # auth.uid() (a policy), uuid_generate_v4() in the extensions schema,
+          # and the realtime publication. A vanilla Postgres has none of them,
+          # which is why this test never passed; give it empty stand-ins.
           docker run --rm --network host postgres:17 \
-            psql "postgresql://postgres:restore-test@localhost:5432/restore_test" \
+            psql "postgresql://postgres:restore-test@localhost:5432/restore_test" -v ON_ERROR_STOP=1 \
             -c "CREATE ROLE anon NOLOGIN" \
             -c "CREATE ROLE authenticated NOLOGIN" \
-            -c "CREATE ROLE service_role NOLOGIN"
+            -c "CREATE ROLE service_role NOLOGIN" \
+            -c "CREATE SCHEMA extensions" \
+            -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions' \
+            -c "CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions" \
+            -c "CREATE SCHEMA auth" \
+            -c "CREATE TABLE auth.users (id uuid PRIMARY KEY)" \
+            -c "CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS 'select null::uuid'" \
+            -c "CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS 'select null::text'" \
+            -c "CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS 'select null::jsonb'" \
+            -c "CREATE PUBLICATION supabase_realtime"
+          # The dump recreates schema public, which a fresh database already has.
+          sed -i 's/^CREATE SCHEMA public;$/CREATE SCHEMA IF NOT EXISTS public;/' dump.sql
           docker run --rm --network host -v "$PWD:/w" -w /w postgres:17 \
             psql "postgresql://postgres:restore-test@localhost:5432/restore_test" \
             -v ON_ERROR_STOP=1 -q -f dump.sql > restore.log 2>&1 || {
               # This log is public (public repo): print the kind of error, never
               # the rows it was about. Run locally on the decrypted dump to see more.
               echo "::group::restore error kinds"
-              grep -oE 'ERROR: +[a-z][a-z _"]{0,60}' restore.log | sort | uniq -c | head -20
+              # Object names stay readable; any quoted text that is not a plain
+              # identifier (a value, an email) is masked.
+              grep -E '^(psql:[^ ]+ )?ERROR:' restore.log | cut -c1-200 \
+                | sed -E 's/"[^"]*[^A-Za-z0-9_."][^"]*"/"…"/g; s/'"'"'[^'"'"']*'"'"'/'"'"'…'"'"'/g' \
+                | sort | uniq -c | head -20
               echo "::endgroup::"
               echo "::error::Restore FAILED — the nightly backup is not restorable."
               exit 1
