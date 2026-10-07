@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { useT } from '../i18n';
 import { PLANS } from '../lib/plans';
+import { PlanInsights, StarterInsights, type Insights } from './OwnerInsights';
 
 const STARTER_FEE = PLANS.find((p) => p.key === 'starter')?.price ?? 99;
 
@@ -33,6 +34,8 @@ export interface OwnerAnalytics {
   progress: { early: number; mid: number; almost: number; full: number };
   nearReward?: number;
   timeZone?: string;
+  plan?: string | null;
+  insights?: Insights;
 }
 
 const C_RETURN = '#1F95CF';
@@ -70,7 +73,7 @@ function niceMax(v: number): number {
   return 10 * pow;
 }
 
-export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; required: number }) {
+export default function OwnerDashboard({ a, required, slug }: { a: OwnerAnalytics; required: number; slug?: string }) {
   const { t, lang } = useT();
   const [hover, setHover] = useState<number | null>(null);
   const [heatHover, setHeatHover] = useState<{ d: number; h: number } | null>(null);
@@ -204,6 +207,8 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
           <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t('d.report.note')}</p>
         </div>
       )}
+
+      <StarterInsights ins={a.insights} />
 
       {/* Customers per day, returning under new: the loyalty is the dark
           part growing. One axis, clean ticks, hover for the day. */}
@@ -432,6 +437,8 @@ export default function OwnerDashboard({ a, required }: { a: OwnerAnalytics; req
         </div>
         <p className="mt-3 text-[10px] text-slate-600">{t('b.stats.pii')}</p>
       </figure>
+
+      <PlanInsights ins={a.insights} slug={slug} />
     </div>
   );
 }

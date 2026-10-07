@@ -1505,7 +1505,7 @@ export default function Business() {
                     label: t('b.tab.stats'),
                     render: () =>
                       analytics ? (
-                        <OwnerDashboard a={analytics} required={venue?.stampsRequired ?? 10} />
+                        <OwnerDashboard a={analytics} required={venue?.stampsRequired ?? 10} slug={slug} />
                       ) : (
                         <p className="py-6 text-center text-xs text-slate-500">
                           {t('b.hist.loading')}

@@ -50,7 +50,7 @@ export const PLANS: PlanDef[] = [
     features: [
       'Card de fidelitate digital — ștampile, recompensă, cod unic la casă',
       'Kit QR pentru tejghea (stand + cod)',
-      'Statistici live: clienți unici, rată de revenire, recompense date',
+      'Statistici live: clienți noi, cine revine (rata de revenire), cine nu mai vine, la câte zile revin',
       '2 conturi de angajat cu istoric pe nume',
       'Pașaportul SuperVictor — localul apare pe harta clienților',
       'Clienți nelimitați',
@@ -74,6 +74,7 @@ export const PLANS: PlanDef[] = [
       'Figurina SuperVictor cu NFC pe tejghea — tap = check-in instant, zero tastare',
       'Co-branding: logo-ul și culorile localului pe cardul clientului',
       'Vitrina BITS pe tejghea + setul de start: 20 de pin-uri SuperVictor, incluse (nu gratis, incluse) la plata anuală sau după 3 luni plătite',
+      'Statistici în plus: clienți veniți prin pașaport, ce se ridică din vitrina BITS, clienții cei mai fideli (fără nume), bonusuri pe angajat',
       '3 conturi de angajat',
     ],
     prepare: [
@@ -96,7 +97,7 @@ export const PLANS: PlanDef[] = [
       'Invitație la recenzie Google exact în momentul recompensei',
       'Surprize de zi de naștere (clientul alege să spună ziua; localul vede doar „azi")',
       '„Ce se întâmplă săptămâna asta" — anunțul localului pe cardul clienților',
-      'Analitice avansate: pe angajat, pe zi, pe sursă (figurină vs QR)',
+      'Analitice complete: câți clienți noi revin în 30/60/90 de zile, ce aduce Happy Hour, zile de naștere, pe sursă (figurină, QR, cod), export CSV',
       '5 conturi de angajat',
     ],
     prepare: [

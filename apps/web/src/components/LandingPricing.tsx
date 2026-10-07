@@ -29,10 +29,10 @@ export default function LandingPricing() {
   const money = (ron: number) => priceNumber(lang, ron) + (lang === 'ro' ? ' lei' : '');
 
   const tiers = [
-    { name: 'Starter', monthly: 99, feats: t('lp.s.feats'), hl: false, chain: false },
-    { name: 'Branded', monthly: 199, feats: t('lp.b.feats'), hl: true, chain: false },
-    { name: 'Growth', monthly: 349, feats: t('lp.g.feats'), hl: false, chain: false },
-    { name: 'Chain', monthly: 699, feats: t('lp.c.feats'), hl: false, chain: true },
+    { name: 'Starter', tag: t('lp.s.tag'), monthly: 99, feats: t('lp.s.feats'), hl: false, chain: false },
+    { name: 'Branded', tag: t('lp.b.tag'), monthly: 199, feats: t('lp.b.feats'), hl: true, chain: false },
+    { name: 'Growth', tag: t('lp.g.tag'), monthly: 349, feats: t('lp.g.feats'), hl: false, chain: false },
+    { name: 'Chain', tag: t('lp.c.tag'), monthly: 699, feats: t('lp.c.feats'), hl: false, chain: true },
   ];
 
   const seg = (on: boolean) =>
@@ -79,6 +79,7 @@ export default function LandingPricing() {
                 </span>
               )}
               <p className="font-display text-lg font-bold text-ink">{tier.name}</p>
+              <p className="mt-0.5 min-h-[2.5em] text-[13px] leading-snug text-ink-2">{tier.tag}</p>
               <p className="mt-3 font-display text-[2.6rem] font-bold leading-none tracking-tight text-ink">
                 {tier.chain && <span className="mr-1 text-base font-semibold text-ink-3">{t('lp.from')}</span>}
                 {priceNumber(lang, perMonth)}
