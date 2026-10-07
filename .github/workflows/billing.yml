@@ -61,8 +61,10 @@ jobs:
           done
 
           echo "HTTP $CODE"
-          cat /tmp/billing.json 2>/dev/null || true
-          echo
+          # This log is public (public repo). Print the counts only: the full
+          # response names each venue, its amount and the link to its invoice,
+          # and those stay in the API's own log on Railway.
+          jq -c '{ok, period, summary}' /tmp/billing.json 2>/dev/null || echo "(no JSON body)"
 
           if [ "$CODE" = "200" ]; then
             echo "Batch completed ✓"
@@ -72,5 +74,5 @@ jobs:
             echo "::error::Rejected — BILLING_CRON_SECRET here does not match the one on Railway."
             exit 1
           fi
-          echo "::error::Invoicing batch did not complete (HTTP $CODE). See the response above."
+          echo "::error::Invoicing batch did not complete (HTTP $CODE). The details are in the API log on Railway ([billing.cron])."
           exit 1

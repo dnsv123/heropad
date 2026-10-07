@@ -436,6 +436,10 @@ billingCronRouter.post('/cron', async (req: Request, res: Response) => {
       failed: results.filter((r) => r.status === 'failed').length,
     };
     console.log(`[billing.cron] ${period}`, JSON.stringify(summary));
+    // The GitHub log only shows the counts (public repo); the why lives here.
+    for (const r of results.filter((x) => x.status === 'failed')) {
+      console.warn(`[billing.cron] failed ${r.slug}: ${r.message ?? 'unknown'}`);
+    }
     // Housekeeping that rides on the daily cron: the grant-replay guard only
     // needs to remember the window in which a retry can still happen.
     try {
