@@ -53,8 +53,11 @@ jobs:
           ls -lhR backup
 
       - name: Restore into the throwaway database
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          gunzip -c backup/*/heropad-backup-*.sql.gz > dump.sql
+          # Backups are encrypted (see db-backup.yml); decrypt, then unzip.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --decrypt backup/*/heropad-backup-*.sql.gz.gpg | gunzip -c > dump.sql
           wc -c dump.sql
           # The dump's policies may reference Supabase's roles, which a vanilla
           # Postgres does not have — create them empty so the restore applies.
@@ -66,8 +69,10 @@ jobs:
           docker run --rm --network host -v "$PWD:/w" -w /w postgres:17 \
             psql "postgresql://postgres:restore-test@localhost:5432/restore_test" \
             -v ON_ERROR_STOP=1 -q -f dump.sql > restore.log 2>&1 || {
-              echo "::group::restore errors (last 60 lines)"
-              tail -60 restore.log
+              # This log is public (public repo): print the kind of error, never
+              # the rows it was about. Run locally on the decrypted dump to see more.
+              echo "::group::restore error kinds"
+              grep -oE 'ERROR: +[a-z][a-z _"]{0,60}' restore.log | sort | uniq -c | head -20
               echo "::endgroup::"
               echo "::error::Restore FAILED — the nightly backup is not restorable."
               exit 1

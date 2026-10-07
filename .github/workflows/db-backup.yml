@@ -5,6 +5,12 @@
 # plain SQL dump into GitHub (private repo) so the data survives losing
 # Supabase entirely.
 #
+# ENCRYPTED, ALWAYS. The repository is public (Colosseum), and on a public repo
+# any signed-in GitHub user can download a workflow artifact. So the dump is
+# encrypted (gpg, AES-256, symmetric) before it is uploaded, and without the
+# passphrase the job stops before it reads a single row: no backup is better
+# than a public one.
+#
 # Setup (one-time): repo → Settings → Secrets and variables → Actions →
 #   New repository secret: SUPABASE_DB_URL
 #   Value: Supabase → Project Settings → Database → Connection string →
@@ -16,6 +22,11 @@
 #
 #   If the password contains @ : / ? # or %, percent-encode it in the URI
 #   (@ → %40, : → %3A, / → %2F, # → %23, % → %25).
+#
+#   Second secret: BACKUP_PASSPHRASE, a long random passphrase (32+ chars).
+#   Keep a copy in a password manager: without it no backup can be restored.
+#   Decrypt locally with:
+#     gpg --decrypt heropad-backup-<date>.sql.gz.gpg | gunzip > dump.sql
 #
 # pg_dump runs inside the official postgres:17 image so the job never depends
 # on apt repositories being reachable or consistent on the runner.
@@ -30,7 +41,7 @@ on:
     - cron: '23 2 * * *' # 02:23 UTC daily
   workflow_dispatch:
 
-# Least privilege: this job only reads the repo and uploads an artifact.
+# Least privilege: this job only reads the repo and uploads an (encrypted) artifact.
 permissions:
   contents: read
 
@@ -41,10 +52,15 @@ jobs:
     steps:
       # Fails loudly and specifically, instead of letting pg_dump die with a
       # generic error. Prints host/port only — never the user or the password.
-      - name: Check connection string
+      - name: Check connection string and passphrase
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
+          if [ ${#BACKUP_PASSPHRASE} -lt 20 ]; then
+            echo "::error::BACKUP_PASSPHRASE is missing or shorter than 20 characters. Nothing is dumped without it: the repo is public and an unencrypted artifact would be downloadable by anyone signed in to GitHub."
+            exit 1
+          fi
           if [ -z "$SUPABASE_DB_URL" ]; then
             echo "::error::SUPABASE_DB_URL secret is not set — see the header of this file."
             exit 1
@@ -106,10 +122,24 @@ jobs:
           echo "Tables found in dump:"
           gzip -dc heropad-backup-*.sql.gz | grep -c 'CREATE TABLE' || true
 
-      - name: Upload artifact
+      - name: Encrypt (AES-256), then remove the plain dump
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          for f in heropad-backup-*.sql.gz; do
+            printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$f.gpg" "$f"
+            shred -u "$f" 2>/dev/null || rm -f "$f"
+          done
+          ls -lh heropad-backup-*.sql.gz.gpg
+          if ls heropad-backup-*.sql.gz >/dev/null 2>&1; then
+            echo "::error::A plain dump is still on disk — refusing to upload."
+            exit 1
+          fi
+
+      - name: Upload artifact (encrypted only)
         uses: actions/upload-artifact@v5
         with:
           name: heropad-db-${{ env.STAMP }}
-          path: heropad-backup-*.sql.gz
+          path: heropad-backup-*.sql.gz.gpg
           retention-days: 30
           if-no-files-found: error
