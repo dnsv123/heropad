@@ -66,12 +66,18 @@ export default function VenueHistory({
   slug,
   embedded = false,
   byStaff = '',
+  byCode = '',
+  byCodeNonce = 0,
 }: {
   slug: string;
   /** Inside a folder tab the panel is already visible; drop its own toggle. */
   embedded?: boolean;
   /** Set from the Team panel: show only what this person did. */
   byStaff?: string;
+  /** Set from the stats (loyal customers): show this customer's whole history. */
+  byCode?: string;
+  /** Changes on every pick, so the same customer can be opened again. */
+  byCodeNonce?: number;
 }) {
   const { getAccessToken } = usePrivy();
   const { t, lang } = useT();
@@ -124,7 +130,8 @@ export default function VenueHistory({
   );
 
   useEffect(() => {
-    if (open && events === null) void load(from, to, '', byStaff);
+    // A customer picked in the stats loads below, with their own range.
+    if (open && events === null && !byCode) void load(from, to, '', byStaff);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -138,6 +145,13 @@ export default function VenueHistory({
     void load(r.from, r.to, '', byStaff);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byStaff]);
+
+  // The stats picked a loyal customer: everything they did here, all time.
+  useEffect(() => {
+    if (!byCode) return;
+    focusCustomer(byCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byCode, byCodeNonce]);
 
   function applyPreset(p: Preset) {
     const r = rangeForPreset(p);

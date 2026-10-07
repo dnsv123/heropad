@@ -73,7 +73,18 @@ function niceMax(v: number): number {
   return 10 * pow;
 }
 
-export default function OwnerDashboard({ a, required, slug }: { a: OwnerAnalytics; required: number; slug?: string }) {
+export default function OwnerDashboard({
+  a,
+  required,
+  slug,
+  onCustomer,
+}: {
+  a: OwnerAnalytics;
+  required: number;
+  slug?: string;
+  /** A loyal customer's code was tapped: open their history. */
+  onCustomer?: (code: string) => void;
+}) {
   const { t, lang } = useT();
   const [hover, setHover] = useState<number | null>(null);
   const [heatHover, setHeatHover] = useState<{ d: number; h: number } | null>(null);
@@ -438,7 +449,7 @@ export default function OwnerDashboard({ a, required, slug }: { a: OwnerAnalytic
         <p className="mt-3 text-[10px] text-slate-600">{t('b.stats.pii')}</p>
       </figure>
 
-      <PlanInsights ins={a.insights} slug={slug} />
+      <PlanInsights ins={a.insights} slug={slug} onCustomer={onCustomer} />
     </div>
   );
 }

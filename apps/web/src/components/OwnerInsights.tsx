@@ -23,7 +23,7 @@ export interface Insights {
   branded?: null | {
     passportArrivals?: number;
     shelf?: { total: number; last30: number; top: Array<{ name: string; count: number }> };
-    loyal?: Array<{ tag: string; visits: number; lastVisit: string; onCard: number }>;
+    loyal?: Array<{ tag: string; code?: string | null; visits: number; lastVisit: string; onCard: number }>;
     staff30?: Array<{ label: string; stamps: number; visits: number }>;
   };
   growth?: null | {
@@ -142,7 +142,16 @@ function csvDownload(rows: NonNullable<NonNullable<Insights['growth']>['daily365
 }
 
 /** Branded, Growth, and what the next plan adds. */
-export function PlanInsights({ ins, slug = '' }: { ins: Insights | undefined; slug?: string }) {
+export function PlanInsights({
+  ins,
+  slug = '',
+  onCustomer,
+}: {
+  ins: Insights | undefined;
+  slug?: string;
+  /** Opens the History tab narrowed to this customer's code. */
+  onCustomer?: (code: string) => void;
+}) {
   const { t, lang } = useT();
   if (!ins || !ins.tier) return null;
   const num = (n: number) => n.toLocaleString(locale(lang));
@@ -200,8 +209,21 @@ export function PlanInsights({ ins, slug = '' }: { ins: Insights | undefined; sl
               </thead>
               <tbody className="text-slate-200">
                 {b.loyal!.map((c) => (
-                  <tr key={c.tag} className="border-t border-white/[0.06]">
-                    <td className="py-1.5 font-mono">{c.tag}</td>
+                  <tr key={c.code ?? c.tag} className="border-t border-white/[0.06]">
+                    <td className="py-1.5 font-mono">
+                      {c.code && onCustomer ? (
+                        <button
+                          type="button"
+                          onClick={() => onCustomer(c.code as string)}
+                          aria-label={t('ins.loyal.open', { code: c.code })}
+                          className="font-mono text-hero-cyan underline decoration-hero-cyan/40 underline-offset-2 hover:text-white"
+                        >
+                          {c.code}
+                        </button>
+                      ) : (
+                        c.code ?? c.tag
+                      )}
+                    </td>
                     <td className="py-1.5 text-right">{num(c.visits)}</td>
                     <td className="py-1.5 text-right">{fmtDay(c.lastVisit, lang)}</td>
                     <td className="py-1.5 text-right">{num(c.onCard)}</td>
@@ -210,7 +232,9 @@ export function PlanInsights({ ins, slug = '' }: { ins: Insights | undefined; sl
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t('ins.loyal.note')}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            {t(b.loyal!.some((c) => c.code) ? 'ins.loyal.note.code' : 'ins.loyal.note')}
+          </p>
         </div>
       )}
 

@@ -1192,7 +1192,7 @@ async function gatherInsights(q: {
     birthdays = known;
   }
 
-  return computeInsights({
+  const out = computeInsights({
     venueId: q.venueId,
     tier,
     timeZone: q.timeZone,
@@ -1206,6 +1206,26 @@ async function gatherInsights(q: {
     birthdays,
     happyHour: tier === 'growth' ? happyHourOf(q.branding) : null,
   });
+
+  // The loyal list shows the code the staff already reads at the counter, so
+  // the owner can open that customer's history. Only these few are looked up,
+  // and the internal identity id never leaves the server.
+  const loyal = out.branded?.loyal ?? [];
+  if (loyal.length > 0) {
+    const ids = loyal.map((l) => l.who).filter((x): x is string => !!x);
+    const codeOf = new Map<string, string | null>();
+    try {
+      const { data: rows } = await supa.from('user_identity').select('id, loyalty_code').in('id', ids);
+      for (const r of (rows ?? []) as Array<{ id: string; loyalty_code: string | null }>) codeOf.set(r.id, r.loyalty_code);
+    } catch (err) {
+      console.warn('[analytics] loyal codes skipped:', (err as Error).message);
+    }
+    for (const l of loyal) {
+      l.code = l.who ? codeOf.get(l.who) ?? null : null;
+      delete l.who;
+    }
+  }
+  return out;
 }
 
 // --- Cross-venue stats (Profile) ------------------------------------------------

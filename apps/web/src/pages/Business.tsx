@@ -162,6 +162,9 @@ export default function Business() {
   const [queued, setQueued] = useState<QueuedGrant[]>([]);
   /** Set from the Team folder; opens History narrowed to that person. */
   const [inspectStaff, setInspectStaff] = useState('');
+  // A customer picked in the stats: History opens on their code. The counter
+  // lets the same code be picked twice in a row and still reload.
+  const [inspectCode, setInspectCode] = useState<{ code: string; n: number } | null>(null);
   const [folderTab, setFolderTab] = useState('team');
   const [setRequired, setSetRequired] = useState('');
   const [setReward, setSetReward] = useState('');
@@ -1493,6 +1496,7 @@ export default function Business() {
                       <VenueStaff
                         slug={slug}
                         onInspect={(name) => {
+                          setInspectCode(null);
                           setInspectStaff(name);
                           setFolderTab('history');
                         }}
@@ -1505,7 +1509,16 @@ export default function Business() {
                     label: t('b.tab.stats'),
                     render: () =>
                       analytics ? (
-                        <OwnerDashboard a={analytics} required={venue?.stampsRequired ?? 10} slug={slug} />
+                        <OwnerDashboard
+                          a={analytics}
+                          required={venue?.stampsRequired ?? 10}
+                          slug={slug}
+                          onCustomer={(code) => {
+                            setInspectStaff('');
+                            setInspectCode((prev) => ({ code, n: (prev?.n ?? 0) + 1 }));
+                            setFolderTab('history');
+                          }}
+                        />
                       ) : (
                         <p className="py-6 text-center text-xs text-slate-500">
                           {t('b.hist.loading')}
@@ -1517,7 +1530,13 @@ export default function Business() {
                     icon: <Glyph name="history" />,
                     label: t('b.tab.hist'),
                     render: () => (
-                      <VenueHistory slug={slug} embedded byStaff={inspectStaff} />
+                      <VenueHistory
+                        slug={slug}
+                        embedded
+                        byStaff={inspectStaff}
+                        byCode={inspectCode?.code}
+                        byCodeNonce={inspectCode?.n}
+                      />
                     ),
                   },
                   {

@@ -70,7 +70,9 @@ export interface VenueInsights {
     /** Customers whose first HeroPad stamp anywhere was at another venue. */
     passportArrivals: number;
     shelf: { total: number; last30: number; top: Array<{ name: string; count: number }> };
-    loyal: Array<{ tag: string; visits: number; lastVisit: string; onCard: number }>;
+    /** `code` is the loyalty code the staff reads at the counter (filled in by the
+     *  caller); `who` is internal and is removed before the response leaves. */
+    loyal: Array<{ tag: string; code?: string | null; who?: string; visits: number; lastVisit: string; onCard: number }>;
     /** Last 30 days, per person at the counter. label: 'owner' | 'unknown' | 'former' | staff name. */
     staff30: Array<{ label: string; stamps: number; visits: number }>;
   };
@@ -254,6 +256,7 @@ export function computeInsights(input: InsightInput): VenueInsights {
     .sort(([, a], [, b]) => b.length - a.length || b[b.length - 1].localeCompare(a[a.length - 1]))
     .slice(0, 5)
     .map(([who, list]) => ({
+      who,
       tag: pseudonym(venueId, who),
       visits: list.length,
       lastVisit: list[list.length - 1],
