@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { noteRoute } from './lib/auth';
 
@@ -94,6 +94,9 @@ export default function App() {
           <Route path="/loyalty" element={<Loyalty />} />
           <Route path="/passport" element={<Passport />} />
           <Route path="/rewards" element={<Rewards />} />
+          {/* The QR printed on the pin's backing card. A link we own, so where
+              it leads can change without reprinting a single card. */}
+          <Route path="/pin" element={<Navigate to="/rewards" replace />} />
           <Route path="/business" element={<Business />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/partner" element={<Partner />} />
