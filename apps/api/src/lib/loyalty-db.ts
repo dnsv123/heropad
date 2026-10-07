@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto';
 
 import { getSupabaseAdmin } from './supabase-admin.js';
+import { computeInsights, tierForPlan, type HappyHourWindow, type VenueInsights } from './venue-insights.js';
 
 // Loyalty data layer (schema 003 + 004).
 // ---------------------------------------------------------------------------
@@ -855,6 +856,41 @@ export interface VenueAnalytics {
   nearReward: number;
   /** The venue's clock, echoed so the client labels days and hours right. */
   timeZone: string;
+  /** The venue's plan as stored (null = set up before plans existed). */
+  plan?: string | null;
+  /** The deeper numbers, opened by plan (venue-insights.ts). Absent when they
+   *  could not be computed: the base dashboard never waits on them. */
+  insights?: VenueInsights;
+}
+
+/** Every row of a query, 1,000 at a time (PostgREST's default page). Without
+ *  this a busy venue's numbers would silently stop at the first thousand. */
+async function allRows<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>
+): Promise<T[]> {
+  const size = 1000;
+  const out: T[] = [];
+  for (let from = 0; ; from += size) {
+    const { data, error } = await page(from, from + size - 1);
+    if (error) throw new Error(error.message);
+    out.push(...((data ?? []) as T[]));
+    if (!data || data.length < size) return out;
+  }
+}
+
+function chunks<T>(list: T[], n = 150): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < list.length; i += n) out.push(list.slice(i, i + n));
+  return out;
+}
+
+function happyHourOf(branding: Record<string, unknown> | null | undefined): HappyHourWindow | null {
+  const hh = branding?.happyHour as Partial<HappyHourWindow> | undefined;
+  if (!hh || !Array.isArray(hh.days) || typeof hh.start !== 'string' || typeof hh.end !== 'string') return null;
+  const days = hh.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+  if (days.length === 0) return null;
+  const mult = Number(hh.mult) >= 2 && Number(hh.mult) <= 3 ? Number(hh.mult) : 2;
+  return { days, start: hh.start, end: hh.end, mult };
 }
 
 /** 'YYYY-MM-DD', weekday (0 = Mon) and hour of an instant, on a venue's clock. */
@@ -878,20 +914,30 @@ function localParts(fmt: Intl.DateTimeFormat, iso: string): { day: string; wd: n
 export async function getVenueAnalytics(
   venueId: string,
   required: number,
-  timeZone = 'Europe/Bucharest'
+  timeZone = 'Europe/Bucharest',
+  /** Given by the owner's stats route: opens the plan's deeper numbers. */
+  insightsFor?: { ownerIdentityId: string | null; branding: Record<string, unknown> | null }
 ): Promise<VenueAnalytics> {
   const supa = getSupabaseAdmin();
 
   const [
-    { data: stampRows, error: sErr },
+    stampRows,
     { data: rewardRows, error: rErr },
     { count: milestoneCount, error: mErr },
   ] = await Promise.all([
-    supa
-      .from('stamps')
-      .select('user_identity_id, created_at')
-      .eq('venue_id', venueId)
-      .is('revoked_at', null),
+    allRows<{ user_identity_id: string; created_at: string; granted_by: string | null; source: string | null }>(
+      (from, to) =>
+        supa
+          .from('stamps')
+          .select('user_identity_id, created_at, granted_by, source')
+          .eq('venue_id', venueId)
+          .is('revoked_at', null)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+    ).catch((err: Error) => {
+      throw new Error(`[Supabase] analytics stamps: ${err.message}`);
+    }),
     supa
       .from('rewards_redeemed')
       .select('user_identity_id, stamps_consumed, trophy_asset_id')
@@ -901,7 +947,6 @@ export async function getVenueAnalytics(
       .select('id', { count: 'exact', head: true })
       .eq('venue_id', venueId),
   ]);
-  if (sErr) throw new Error(`[Supabase] analytics stamps: ${sErr.message}`);
   if (rErr) throw new Error(`[Supabase] analytics rewards: ${rErr.message}`);
   // Milestones are additive (migration 025); a missing table must not take
   // the whole dashboard down.
@@ -931,7 +976,7 @@ export async function getVenueAnalytics(
     });
   }
 
-  const stamps = (stampRows ?? []) as Array<{ user_identity_id: string; created_at: string }>;
+  const stamps = stampRows;
   const rewards = (rewardRows ?? []) as Array<{
     user_identity_id: string;
     stamps_consumed: number;
@@ -1017,7 +1062,29 @@ export async function getVenueAnalytics(
     .slice(-14)
     .map(([day, d]) => ({ day, stamps: d.stamps, customers: d.customers.size }));
 
+  let plan: string | null = null;
+  let insights: VenueInsights | undefined;
+  if (insightsFor) {
+    try {
+      const { data: planRow } = await supa.from('venues').select('plan').eq('id', venueId).maybeSingle();
+      plan = (planRow as { plan?: string | null } | null)?.plan ?? null;
+      insights = await gatherInsights({
+        venueId,
+        plan,
+        timeZone,
+        stamps,
+        consumedByCustomer,
+        ownerIdentityId: insightsFor.ownerIdentityId,
+        branding: insightsFor.branding,
+      });
+    } catch (err) {
+      console.warn('[analytics] insights skipped:', (err as Error).message);
+    }
+  }
+
   return {
+    plan,
+    insights,
     uniqueCustomers: daysByCustomer.size,
     totalStamps: stamps.length,
     stampsLast30,
@@ -1035,6 +1102,110 @@ export async function getVenueAnalytics(
     nearReward,
     timeZone,
   };
+}
+
+/**
+ * Reads only what the venue's plan opens, then hands it to computeInsights.
+ * Starter needs nothing beyond the stamps; Branded adds the passport, the
+ * BITS shelf and the staff labels; Growth adds birthdays and Happy Hour.
+ */
+async function gatherInsights(q: {
+  venueId: string;
+  plan: string | null;
+  timeZone: string;
+  stamps: Array<{ user_identity_id: string; created_at: string; granted_by: string | null; source: string | null }>;
+  consumedByCustomer: Map<string, number>;
+  ownerIdentityId: string | null;
+  branding: Record<string, unknown> | null;
+}): Promise<VenueInsights> {
+  const supa = getSupabaseAdmin();
+  const tier = tierForPlan(q.plan);
+  const customers = [...new Set(q.stamps.map((s) => s.user_identity_id))];
+
+  let otherFirstStamp: Map<string, number> | undefined;
+  let shelfClaims: Array<{ name: string; fulfilledAt: string }> | undefined;
+  let staffNames: Map<string, string> | undefined;
+  let birthdays: Map<string, { day: number; month: number }> | undefined;
+
+  if (tier !== 'starter') {
+    const firstElsewhere = new Map<string, number>();
+    for (const ids of chunks(customers)) {
+      const rows = await allRows<{ user_identity_id: string; created_at: string }>((from, to) =>
+        supa
+          .from('stamps')
+          .select('user_identity_id, created_at')
+          .in('user_identity_id', ids)
+          .neq('venue_id', q.venueId)
+          .is('revoked_at', null)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+      );
+      for (const r of rows) {
+        if (!firstElsewhere.has(r.user_identity_id)) {
+          firstElsewhere.set(r.user_identity_id, new Date(r.created_at).getTime());
+        }
+      }
+    }
+    otherFirstStamp = firstElsewhere;
+
+    const { data: claims, error: cErr } = await supa
+      .from('reward_claims')
+      .select('reward_id, fulfilled_at')
+      .eq('venue_id', q.venueId)
+      .eq('status', 'fulfilled');
+    if (cErr) throw new Error(`reward_claims: ${cErr.message}`);
+    const claimRows = (claims ?? []) as Array<{ reward_id: string; fulfilled_at: string | null }>;
+    const itemIds = [...new Set(claimRows.map((c) => c.reward_id))];
+    const names = new Map<string, string>();
+    if (itemIds.length > 0) {
+      const { data: items } = await supa.from('reward_items').select('id, name').in('id', itemIds);
+      for (const it of (items ?? []) as Array<{ id: string; name: string }>) names.set(it.id, it.name);
+    }
+    shelfClaims = claimRows
+      .filter((c) => c.fulfilled_at)
+      .map((c) => ({ name: names.get(c.reward_id) ?? '?', fulfilledAt: c.fulfilled_at as string }));
+
+    const { data: staff } = await supa
+      .from('venue_staff')
+      .select('identity_id, display_name')
+      .eq('venue_id', q.venueId);
+    const labels = new Map<string, string>();
+    for (const row of (staff ?? []) as Array<{ identity_id: string | null; display_name: string }>) {
+      if (row.identity_id) labels.set(row.identity_id, row.display_name);
+    }
+    staffNames = labels;
+  }
+
+  if (tier === 'growth') {
+    const known = new Map<string, { day: number; month: number }>();
+    for (const ids of chunks(customers)) {
+      const { data: rows } = await supa
+        .from('user_identity')
+        .select('id, birthday_day, birthday_month')
+        .in('id', ids)
+        .not('birthday_day', 'is', null);
+      for (const r of (rows ?? []) as Array<{ id: string; birthday_day: number | null; birthday_month: number | null }>) {
+        if (r.birthday_day && r.birthday_month) known.set(r.id, { day: r.birthday_day, month: r.birthday_month });
+      }
+    }
+    birthdays = known;
+  }
+
+  return computeInsights({
+    venueId: q.venueId,
+    tier,
+    timeZone: q.timeZone,
+    now: Date.now(),
+    ownerIdentityId: q.ownerIdentityId,
+    stamps: q.stamps,
+    consumedByCustomer: q.consumedByCustomer,
+    otherFirstStamp,
+    shelfClaims,
+    staffNames,
+    birthdays,
+    happyHour: tier === 'growth' ? happyHourOf(q.branding) : null,
+  });
 }
 
 // --- Cross-venue stats (Profile) ------------------------------------------------
