@@ -129,6 +129,13 @@ app.use((_req, res) => {
 
 // Generic error handler — hides internals from clients.
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  // A body that is not JSON, or too big, is the client's mistake: answer 400
+  // or 413, and do not log the error object, which carries the raw body.
+  const status = (err as { status?: number }).status;
+  if (status === 400 || status === 413) {
+    res.status(status).json({ ok: false, error: status === 413 ? 'payload_too_large' : 'bad_request' });
+    return;
+  }
   console.error('[API error]', err);
   res.status(500).json({
     ok: false,

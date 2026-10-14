@@ -853,6 +853,71 @@ export default function Business() {
               </button>
             </motion.div>
           )}
+          {/* The code is good for more than one thing: the barista says what
+              goes over the counter. Pinned like the hand-over, over a dimmed
+              page, so it is seen wherever the page is scrolled. Full card
+              first when it is there, then the milestones, each a big button. */}
+          {redeemChoice && (
+            <motion.div
+              key="redeem-choice"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="redeem-choice-title"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-black/60 px-3 pb-6"
+              style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget && !busy) setRedeemChoice(null);
+              }}
+            >
+              <div className="card-sm card-gold w-full max-w-md p-4 shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)]">
+                <p id="redeem-choice-title" className="font-display text-lg font-bold text-hero-gold">
+                  {t('b.choose')}
+                </p>
+                <div className="mt-3 grid gap-2">
+                  {redeemChoice.full && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void redeemWith(redeemChoice.code, 'full')}
+                      className="btn btn-primary w-full justify-between"
+                    >
+                      <span className="flex items-center gap-2"><Glyph name="trophy" /> {t('b.choose.full')}</span>
+                      <span className="text-right text-xs opacity-80">
+                        {[redeemChoice.rewardLabel, ...redeemChoice.tiers.map((m) => m.label)].filter(Boolean).join(' + ')}
+                      </span>
+                    </button>
+                  )}
+                  {redeemChoice.full && redeemChoice.tiers.length > 0 && (
+                    <p className="text-[11px] leading-snug text-slate-400">{t('b.choose.fullplus')}</p>
+                  )}
+                  {redeemChoice.tiers.map((m) => (
+                    <button
+                      key={m.at}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void redeemWith(redeemChoice.code, m.at)}
+                      className="btn btn-secondary w-full justify-between"
+                    >
+                      <span className="flex items-center gap-2"><Glyph name="gift" /> {m.label}</span>
+                      <span className="text-xs opacity-80">{t('ms.at', { n: m.at })}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setRedeemChoice(null)}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    {t('b.choose.cancel')}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}
@@ -1380,51 +1445,9 @@ export default function Business() {
                 </div>
               </div>
 
-              {/* The code is good for more than one thing: the barista says
-                  what is going over the counter. Full card first when it is
-                  there, then the milestones, each a big button. */}
-              {redeemChoice && (
-                <div className="card-sm card-gold mt-3 p-4">
-                  <p className="text-xs font-semibold text-hero-gold">{t('b.choose')}</p>
-                  <div className="mt-2 grid gap-2">
-                    {redeemChoice.full && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void redeemWith(redeemChoice.code, 'full')}
-                        className="btn btn-primary w-full justify-between"
-                      >
-                        <span className="flex items-center gap-2"><Glyph name="trophy" /> {t('b.choose.full')}</span>
-                        <span className="text-right text-xs opacity-80">
-                          {[redeemChoice.rewardLabel, ...redeemChoice.tiers.map((m) => m.label)].filter(Boolean).join(' + ')}
-                        </span>
-                      </button>
-                    )}
-                    {redeemChoice.full && redeemChoice.tiers.length > 0 && (
-                      <p className="text-[11px] leading-snug text-slate-400">{t('b.choose.fullplus')}</p>
-                    )}
-                    {redeemChoice.tiers.map((m) => (
-                      <button
-                        key={m.at}
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void redeemWith(redeemChoice.code, m.at)}
-                        className="btn btn-secondary w-full justify-between"
-                      >
-                        <span className="flex items-center gap-2"><Glyph name="gift" /> {m.label}</span>
-                        <span className="text-xs opacity-80">{t('ms.at', { n: m.at })}</span>
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setRedeemChoice(null)}
-                      className="btn btn-ghost btn-sm"
-                    >
-                      {t('b.choose.cancel')}
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* "What are you handing over?" opens pinned on top of the
+                  screen (see the portal above), not here: under the reward
+                  field it fell below the fold on a phone. */}
 
               {/* The counter as an app on the till phone: one tap, full screen. */}
               {(role === 'owner' || role === 'staff') && <InstallApp variant="counter" className="mt-3" />}

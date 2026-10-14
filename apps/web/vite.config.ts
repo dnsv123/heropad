@@ -72,6 +72,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // No public source maps: nothing reads them (no error tracker), and once
+    // the repository is private they would publish the front-end source.
+    sourcemap: false,
   },
 });

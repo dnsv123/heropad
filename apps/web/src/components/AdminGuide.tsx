@@ -52,8 +52,42 @@ export default function AdminGuide() {
           Pe cardul fiecărui local (tab-ul Venues) sunt butoanele{' '}
           <b className="text-white">Starter · Branded · Growth · Chain · Founding</b>. Apeși unul
           → vezi <b>ce primește</b> (lista pe care o citești patronului), <b>ce pregătești tu</b>{' '}
-          (pașii fizici) și <b>extra-opțiunile</b> (+/−). Apoi „Aplică": pilot gratuit sau plătește
-          de acum. Un singur tap setează prețul, conturile de angajat și perioada gratuită.
+          (pașii fizici) și <b>extra-opțiunile</b> (+/−). Alegi <b>Lunar</b> sau <b>Anual</b>, apoi
+          „Aplică": pilot gratuit sau plătește de acum. Un singur tap setează prețul, conturile de
+          angajat și perioada gratuită.
+        </p>
+        <p className={li}>
+          <span className={num}>Prima lună e gratuită la toate planurile:</span> 30 de zile de pilot
+          la Starter, Branded, Growth și Chain. La Founding, 60 de zile. „Aplică, pilot gratuit” pune
+          pe local data la care se termină pilotul; până atunci nu pleacă nicio factură. „Aplică,
+          plătește de acum” sare peste pilot.
+        </p>
+        <p className={li}>
+          <span className={num}>Anual:</span> plătesc 10 luni și primesc 12 (pe site scrie „2 luni
+          gratis”), facturat o singură dată. Planurile anuale au garanție de 30 de zile, banii
+          înapoi; figurina, fiind în comodat, se returnează.
+        </p>
+        <p className={li}>
+          <span className={num}>Conturi de angajat:</span> 2 la Starter, 3 la Branded, 5 la Growth și
+          Founding, 12 la Chain. Un loc în plus se adaugă din extra-opțiuni.
+        </p>
+        <p className={li}>
+          <span className={num}>Vitrina BITS și cele 20 de pin-uri</span> (Branded și peste): la plata
+          anuală le trimiți imediat, la plata lunară după a 3-a factură plătită, din Admin → Orders.
+          La Founding sunt cadou, de la început.
+        </p>
+        <p className={li}>
+          <span className={num}>Statisticile cresc cu planul.</span> Starter: clienții care nu mai
+          vin și la câte zile revine un client. Branded adaugă: clienții veniți prin pașaport, ce se
+          ridică din vitrină, cei mai fideli 5 clienți (cu codul lor, care deschide istoricul) și
+          bonusurile pe angajat. Growth adaugă: câți clienți noi revin în 30/60/90 de zile, ce aduce
+          Happy Hour, zilele de naștere, bonusurile pe sursă și exportul CSV.
+        </p>
+        <p className={li}>
+          <span className={num}>Founding</span> (primele 3 localuri din Sibiu; nu e pe site, o spui
+          față în față): 99 lei pe lună pe viață, cât timp rămân activi, scris în contract. Primesc
+          tot ce e în Growth, inclusiv co-brandingul, plus figurina în comodat, vitrina și primele 20
+          de pin-uri cadou și 60 de zile gratuite.
         </p>
         <p className={li}>
           <span className={num}>Regula prețului:</span> butonul scrie <span className={mono}>monthly_fee</span> =
@@ -68,10 +102,11 @@ export default function AdminGuide() {
           local la momentul aplicării.
         </p>
         <p className={li}>
-          <span className={num}>La tejghea, în 20 de secunde:</span> „Starter e 99 pe lună — card
+          <span className={num}>La tejghea, în 20 de secunde:</span> „Starter e 99 pe lună: card
           digital, stand QR, statistici, doi angajați. Branded, 199, adaugă figurina cu NFC și
           brandul vostru pe card. Growth, 349, adaugă Happy Hour, recenzii Google și zilele de
-          naștere. Primele două luni sunt gratuite la toate." Apoi apeși butonul.
+          naștere. Prima lună e gratuită la toate. Dacă plătiți anual, plătiți 10 luni și primiți
+          12." Apoi apeși butonul.
         </p>
       </div>
 
@@ -108,7 +143,7 @@ export default function AdminGuide() {
         <p className={li}><span className={num}>1.</span> Ownerul, în /business → tab <b>Team</b> → scrie numele angajatului → <b>Add</b>. Primește un <b>cod de activare (6 caractere)</b>.</p>
         <p className={li}><span className={num}>2.</span> Butonul <b>Copy invite</b> de lângă angajat copiază mesajul complet (link + cod) — îl trimite pe WhatsApp.</p>
         <p className={li}><span className={num}>3.</span> Angajatul deschide linkul, se loghează cu <b>Gmail-ul lui personal</b>, bagă codul de 6 caractere în aceeași căsuță → e în echipă.</p>
-        <p className={li}>De ce contează: fiecare ștampilă rămâne semnată de cine a dat-o — ownerul vede în History exact activitatea fiecărui om. Locuri în echipă: 2 la Starter (motiv natural de upgrade).</p>
+        <p className={li}>De ce contează: fiecare ștampilă rămâne semnată de cine a dat-o — ownerul vede în History exact activitatea fiecărui om. Locuri în echipă: 2 la Starter, 3 la Branded, 5 la Growth și Founding, 12 la Chain.</p>
       </div>
 
       {/* ---- Onboarding partener ---- */}
@@ -214,7 +249,7 @@ export default function AdminGuide() {
       {/* ---- Figurinele ---- */}
       <div className={card}>
         <h2 className={h}>🗿 Figurinele — ale cui sunt?</h2>
-        <p className={li}><b>Comodat (împrumut de folosință), nu vânzare.</b> Figurina rămâne proprietatea SuperVictor Universe; localul o folosește cât timp e abonat la Branded+ — e inclusă în preț, ca un echipament în chirie. <b>Excepție: cele 3 Founding Partners o primesc inclusă</b> (tot în comodat) — vitrina lor e marketingul nostru; pentru ei, Branded înseamnă doar co-branding-ul.</p>
+        <p className={li}><b>Comodat (împrumut de folosință), nu vânzare.</b> Figurina rămâne proprietatea SuperVictor Universe; localul o folosește cât timp e abonat la Branded+ — e inclusă în preț, ca un echipament în chirie. <b>Founding Partners o primesc și ei, tot în comodat</b>, la 99 lei pe lună, împreună cu tot ce e în Growth, inclusiv co-brandingul.</p>
         <p className={li}>De ce așa: la reziliere figurina se întoarce (brandul nu rămâne pe tejgheaua unui fost client) · justifică diferența de tier lunar fără să vinzi stoc · o clauză simplă de comodat în contract acoperă pierderea/deteriorarea (taxă de înlocuire, ex. 150 lei).</p>
         <p className={li}>Stickerele QR și tagurile NFC simple = consumabile, le dai gratuit, nu se contabilizează.</p>
       </div>
